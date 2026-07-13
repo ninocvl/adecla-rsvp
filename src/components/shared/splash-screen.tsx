@@ -12,6 +12,9 @@ export function SplashScreen() {
 
   useEffect(() => {
     if (sessionStorage.getItem(STORAGE_KEY)) {
+      // sessionStorage solo existe en el cliente: el estado inicial del server
+      // debe ser "visible" y aquí se corrige en cuanto hidrata.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhase("gone");
       return;
     }

@@ -172,6 +172,8 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
             <Text style={styles.addressLine}>RNC: {ADECLA.rnc}</Text>
           </View>
           <View style={styles.logoBlock}>
+            {/* Image de @react-pdf/renderer: no admite alt (falso positivo de jsx-a11y) */}
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image src={logoSrc} style={styles.logo} />
             <Text style={styles.tagline}>
               ASOCIACIÓN DE DESARROLLADORES Y CONSTRUCTORES PROVINCIA LA
