@@ -57,6 +57,54 @@ export async function getLandingEvents(): Promise<LandingEvent[]> {
   });
 }
 
+export interface WizardPrice {
+  affiliation: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR";
+  amountUsd: number | null;
+  isEnabled: boolean;
+}
+
+export interface WizardEvent {
+  id: string;
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+  playersPerTeam: number;
+  dates: LandingEventDate[];
+  prices: WizardPrice[];
+}
+
+export async function getWizardEvents(): Promise<WizardEvent[]> {
+  const events = await prisma.event.findMany({
+    where: { status: "PUBLISHED" },
+    include: {
+      dates: { where: { isActive: true }, orderBy: { date: "asc" } },
+      prices: { orderBy: { affiliation: "asc" } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return events.map((event) => ({
+    id: event.id,
+    slug: event.slug,
+    name: event.name,
+    imageUrl: event.imageUrl,
+    playersPerTeam: event.playersPerTeam,
+    dates: event.dates.map((d) => ({
+      id: d.id,
+      date: d.date,
+      label: d.label,
+      venue: d.venue,
+      capacity: d.capacity,
+      available: Math.max(0, d.capacity - d.reservedCount),
+    })),
+    prices: event.prices.map((p) => ({
+      affiliation: p.affiliation,
+      amountUsd: p.amountUsd === null ? null : Number(p.amountUsd),
+      isEnabled: p.isEnabled,
+    })),
+  }));
+}
+
 export async function getExchangeRate(): Promise<number> {
   const setting = await prisma.setting.findUnique({
     where: { key: "usd_to_dop_rate" },
