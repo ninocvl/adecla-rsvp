@@ -42,10 +42,10 @@ export function RegistrationCard({
         </p>
         <p>
           <span className="text-muted-foreground">Monto: </span>
-          <span className="font-medium">
+          <span className="font-medium tabular-nums">
             {formatUsd(registration.totalUsd.toString())}
           </span>{" "}
-          <span className="text-muted-foreground">
+          <span className="text-muted-foreground tabular-nums">
             (≈ {formatDop(registration.totalDopRef.toString())})
           </span>
         </p>

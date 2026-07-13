@@ -55,7 +55,7 @@ export function PriceSummary({
           </div>
           <div className="flex justify-between gap-2">
             <dt className="text-muted-foreground">Precio unitario</dt>
-            <dd className="text-right font-medium">
+            <dd className="text-right font-medium tabular-nums">
               {unitPriceUsd !== null ? formatUsd(unitPriceUsd) : "—"}
             </dd>
           </div>
@@ -63,12 +63,12 @@ export function PriceSummary({
         <Separator />
         <div className="flex items-baseline justify-between gap-2">
           <span className="font-medium">Total</span>
-          <span className="text-xl font-semibold">
+          <span className="text-xl font-semibold tabular-nums">
             {totalUsd !== null ? formatUsd(totalUsd) : "—"}
           </span>
         </div>
         {totalUsd !== null && (
-          <p className="text-right text-muted-foreground">
+          <p className="text-right text-muted-foreground tabular-nums">
             ≈ {formatDop(totalUsd * rate)}{" "}
             <span className="text-xs">(1 USD = RD${rate.toFixed(0)})</span>
           </p>

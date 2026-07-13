@@ -15,14 +15,14 @@ export const metadata: Metadata = {
 export default async function NuevaInscripcionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ evento?: string }>;
+  searchParams: Promise<{ evento?: string; fecha?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.companyId) {
     redirect("/login?callbackUrl=/inscripciones/nueva");
   }
 
-  const [{ evento }, events, rate, company] = await Promise.all([
+  const [{ evento, fecha }, events, rate, company] = await Promise.all([
     searchParams,
     getWizardEvents(),
     getExchangeRate(),
@@ -34,6 +34,7 @@ export default async function NuevaInscripcionPage({
         contactName: true,
         email: true,
         phone: true,
+        affiliationType: true,
       },
     }),
   ]);
@@ -50,6 +51,7 @@ export default async function NuevaInscripcionPage({
         company={company}
         rate={rate}
         initialEventSlug={evento}
+        initialEventDateId={fecha}
       />
     </div>
   );

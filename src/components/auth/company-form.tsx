@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerCompanyAction } from "@/server/actions/auth.actions";
 import {
   registerCompanySchema,
   type RegisterCompanyInput,
 } from "@/lib/validations/auth.schema";
+import { AFFILIATION_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FieldProps {
   id: keyof RegisterCompanyInput;
@@ -31,14 +39,17 @@ interface FieldProps {
   autoComplete?: string;
 }
 
-const fields: FieldProps[] = [
+const topFields: FieldProps[] = [
   {
     id: "legalName",
     label: "Razón social",
     placeholder: "Constructora Ejemplo, S.R.L.",
     autoComplete: "organization",
   },
-  { id: "rnc", label: "RNC", placeholder: "1-30-12345-6" },
+  { id: "rnc", label: "RNC", placeholder: "130123456" },
+];
+
+const bottomFields: FieldProps[] = [
   {
     id: "contactName",
     label: "Nombre del contacto",
@@ -81,9 +92,20 @@ export function CompanyForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RegisterCompanyInput>({
     resolver: zodResolver(registerCompanySchema),
+    defaultValues: {
+      legalName: "",
+      rnc: "",
+      affiliationType: undefined,
+      contactName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   function onSubmit(data: RegisterCompanyInput) {
@@ -97,6 +119,26 @@ export function CompanyForm() {
         setServerError(result.error);
       }
     });
+  }
+
+  function renderField(field: FieldProps) {
+    return (
+      <div key={field.id} className="space-y-2">
+        <Label htmlFor={field.id}>{field.label}</Label>
+        <Input
+          id={field.id}
+          type={field.type ?? "text"}
+          placeholder={field.placeholder}
+          autoComplete={field.autoComplete}
+          {...register(field.id)}
+        />
+        {errors[field.id] && (
+          <p className="text-sm text-destructive">
+            {errors[field.id]?.message}
+          </p>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -115,23 +157,43 @@ export function CompanyForm() {
               {serverError}
             </Alert>
           )}
-          {fields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.id}>{field.label}</Label>
-              <Input
-                id={field.id}
-                type={field.type ?? "text"}
-                placeholder={field.placeholder}
-                autoComplete={field.autoComplete}
-                {...register(field.id)}
-              />
-              {errors[field.id] && (
-                <p className="text-sm text-destructive">
-                  {errors[field.id]?.message}
-                </p>
+          {topFields.map(renderField)}
+
+          <div className="space-y-2">
+            <Label htmlFor="affiliationType">Tipo de empresa</Label>
+            <Controller
+              name="affiliationType"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger id="affiliationType" className="w-full">
+                    <SelectValue placeholder="Selecciona el tipo de empresa">
+                      {(value: string | null) =>
+                        value ? AFFILIATION_LABELS[value] : null
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(AFFILIATION_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
-            </div>
-          ))}
+            />
+            {errors.affiliationType && (
+              <p className="text-sm text-destructive">
+                {errors.affiliationType.message}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Define la tarifa de inscripción a los torneos.
+            </p>
+          </div>
+
+          {bottomFields.map(renderField)}
         </CardContent>
         <CardFooter className="mt-6 flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isPending}>

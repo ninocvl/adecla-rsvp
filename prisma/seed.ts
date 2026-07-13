@@ -56,17 +56,19 @@ async function main() {
       date: new Date("2026-07-25T12:00:00Z"),
       label: "Primera Parada",
       venue: "Punta Espada Golf Club, Cap Cana",
+      imageUrl: "/images/golf-25-julio.jpg",
     },
     {
       date: new Date("2026-09-05T12:00:00Z"),
       label: "Tercera Parada",
       venue: "La Cana Golf Club, Punta Cana Resort",
+      imageUrl: "/images/golf-05-septiembre.jpg",
     },
   ];
   for (const d of golfDates) {
     await prisma.eventDate.upsert({
       where: { eventId_date: { eventId: golf.id, date: d.date } },
-      update: { label: d.label, venue: d.venue },
+      update: { label: d.label, venue: d.venue, imageUrl: d.imageUrl },
       create: { eventId: golf.id, capacity: 150, ...d },
     });
   }

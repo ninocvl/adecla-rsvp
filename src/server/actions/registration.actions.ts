@@ -40,25 +40,27 @@ export async function createRegistrationAction(
   const data = parsed.data;
   const quantity = data.participants.length;
 
-  // Los datos de precio, fecha y tasa se releen del servidor: nunca del cliente.
-  const [company, event, eventDate, price, rateSetting] = await Promise.all([
-    prisma.company.findUnique({ where: { id: companyId } }),
+  // La afiliación viene de la empresa (fijada al registrarse), nunca del
+  // cliente: nadie puede enviar una categoría más barata que la suya.
+  const company = await prisma.company.findUnique({ where: { id: companyId } });
+  if (!company) {
+    return { ok: false, error: "No encontramos los datos de tu empresa." };
+  }
+
+  const [event, eventDate, price, rateSetting] = await Promise.all([
     prisma.event.findUnique({ where: { id: data.eventId } }),
     prisma.eventDate.findUnique({ where: { id: data.eventDateId } }),
     prisma.eventPrice.findUnique({
       where: {
         eventId_affiliation: {
           eventId: data.eventId,
-          affiliation: data.affiliation,
+          affiliation: company.affiliationType,
         },
       },
     }),
     prisma.setting.findUnique({ where: { key: "usd_to_dop_rate" } }),
   ]);
 
-  if (!company) {
-    return { ok: false, error: "No encontramos los datos de tu empresa." };
-  }
   if (!event || event.status !== "PUBLISHED") {
     return { ok: false, error: "Este evento no está disponible." };
   }
@@ -68,7 +70,8 @@ export async function createRegistrationAction(
   if (!price || !price.isEnabled || price.amountUsd === null) {
     return {
       ok: false,
-      error: "La tarifa para ese tipo de afiliación todavía no está definida.",
+      error:
+        "Tu categoría de afiliación todavía no tiene tarifa para este evento.",
     };
   }
   if (quantity > event.playersPerTeam) {
@@ -111,7 +114,7 @@ export async function createRegistrationAction(
           companyId: company.id,
           eventId: event.id,
           eventDateId: eventDate.id,
-          affiliation: data.affiliation,
+          affiliation: company.affiliationType,
           status: "PROFORMA_GENERADA",
           quantity,
           unitPriceUsd: unitPriceUsd.toFixed(2),
@@ -154,8 +157,8 @@ export async function createRegistrationAction(
               dateLabel: eventDate.label,
               venue: eventDate.venue,
             },
-            affiliation: data.affiliation,
-            affiliationLabel: AFFILIATION_LABELS[data.affiliation],
+            affiliation: company.affiliationType,
+            affiliationLabel: AFFILIATION_LABELS[company.affiliationType],
             quantity,
             unitPriceUsd: unitPriceUsd.toFixed(2),
             totalUsd: totalUsd.toFixed(2),

@@ -59,7 +59,7 @@ export function RegistrationTable({
                   {r.quantity}
                 </span>
               </TableCell>
-              <TableCell className="text-right font-medium">
+              <TableCell className="text-right font-medium tabular-nums">
                 {formatUsd(r.totalUsd.toString())}
               </TableCell>
               <TableCell>

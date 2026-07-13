@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-13T00:00:00.000Z",
+  "title": "Design System: ADECLA RSVP",
+  "extensions": {
+    "colorMeta": {
+      "teal-oficial": {
+        "role": "primary",
+        "displayName": "Teal Oficial",
+        "canonical": "oklch(0.661 0.116 185.9)",
+        "tonalRamp": ["#001e19", "#00433c", "#00776d", "#00a99d", "#4acfc2", "#ade5dd", "#c3fcf4"]
+      },
+      "teal-secundario": {
+        "role": "secondary",
+        "displayName": "Teal Secundario",
+        "canonical": "oklch(0.680 0.097 212.1)",
+        "tonalRamp": ["#00192a", "#003e4f", "#007183", "#3aa2b5", "#64c8dc", "#b4e1ea", "#caf8ff"]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "oklch(0.32 0.025 200)",
+        "tonalRamp": ["#000e0f", "#102324", "#233738", "#455a5b", "#6f8586", "#9cb3b4", "#d5e1e1"]
+      },
+      "gris-claro": {
+        "role": "neutral",
+        "displayName": "Gris Claro",
+        "canonical": "oklch(0.934 0 89.9)",
+        "tonalRamp": ["#161616", "#484848", "#808080", "#aeaeae", "#cecece", "#e9e9e9", "#f5f5f5"]
+      },
+      "blanco-hueso": {
+        "role": "neutral",
+        "displayName": "Blanco Hueso",
+        "canonical": "oklch(0.99 0.007 106.5)"
+      },
+      "destructivo": {
+        "role": "error",
+        "displayName": "Terracota",
+        "canonical": "oklch(0.55 0.16 33)"
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero de landing, confirmación de inscripción." },
+      "headline": { "displayName": "Headline", "purpose": "Encabezados de sección y de página." },
+      "body": { "displayName": "Body", "purpose": "Formularios, tablas, descripciones." },
+      "label": { "displayName": "Label", "purpose": "Badges de estado, encabezados de tabla." }
+    },
+    "shadows": [
+      { "name": "hover-lift", "value": "0 12px 24px -8px oklch(0.32 0.025 200 / 0.18)", "purpose": "Hover en tarjetas de evento interactivas." },
+      { "name": "focus-ring", "value": "0 0 0 3px oklch(0.661 0.116 185.9 / 0.35)", "purpose": "Foco de teclado en botones e inputs." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Transiciones de estado por defecto (ease-out-expo)." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botón de acción principal (Inscribirme, Continuar, Generar inscripción).",
+      "html": "<button class=\"ds-btn-primary\">Inscribirme</button>",
+      "css": ".ds-btn-primary { background: #00776d; color: #fcfcf7; padding: 10px 18px; border-radius: 8px; font-family: 'Public Sans', ui-sans-serif, system-ui; font-weight: 600; font-size: 0.875rem; border: none; transition: background 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s; } .ds-btn-primary:hover { background: #005f57; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.661 0.116 185.9 / 0.35); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción secundaria (Atrás, Cancelar).",
+      "html": "<button class=\"ds-btn-outline\">Atrás</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #233738; padding: 10px 18px; border-radius: 8px; border: 1px solid #e9e9e9; font-family: 'Public Sans', ui-sans-serif, system-ui; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; } .ds-btn-outline:hover { background: #e9e9e9; }"
+    },
+    {
+      "name": "Event Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Tarjeta de fecha de torneo en la landing.",
+      "html": "<div class=\"ds-card\"><span class=\"ds-card-eyebrow\">25 de julio de 2026</span><h3 class=\"ds-card-title\">Primera Parada</h3><p class=\"ds-card-body\">Punta Espada Golf Club, Cap Cana</p></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e9e9e9; border-radius: 14px; padding: 20px; transition: box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-card:hover { box-shadow: 0 12px 24px -8px oklch(0.32 0.025 200 / 0.18); transform: translateY(-2px); } .ds-card-eyebrow { font-family: 'Public Sans', ui-sans-serif, system-ui; font-size: 0.8rem; font-weight: 600; color: #00776d; } .ds-card-title { font-family: 'Fraunces', Georgia, serif; font-weight: 520; font-size: 1.5rem; color: #233738; margin: 4px 0; } .ds-card-body { font-family: 'Public Sans', ui-sans-serif, system-ui; color: #455a5b; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Estado de una inscripción (proforma, pendiente, confirmada, cancelada).",
+      "html": "<span class=\"ds-badge ds-badge-confirmed\">Confirmada</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 10px; font-family: 'Public Sans', ui-sans-serif, system-ui; font-size: 0.75rem; font-weight: 600; border: 1px solid transparent; } .ds-badge-confirmed { background: #d3f3e6; color: #0f5132; border-color: #a9e5c9; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto de formulario (registro, wizard).",
+      "html": "<input class=\"ds-input\" placeholder=\"empresa@ejemplo.com\" />",
+      "css": ".ds-input { background: #ffffff; border: 1px solid #e9e9e9; border-radius: 8px; padding: 8px 12px; font-family: 'Public Sans', ui-sans-serif, system-ui; font-size: 0.875rem; color: #233738; transition: box-shadow 0.15s; } .ds-input:focus-visible { outline: none; border-color: #00a99d; box-shadow: 0 0 0 3px oklch(0.661 0.116 185.9 / 0.35); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El acta notarial del club de golf",
+    "overview": "ADECLA vive en dos registros a la vez: es un gremio serio (membresías, RNC, proformas, cuotas por categoría de afiliado) y también el organizador de un torneo en los campos más codiciados de Cap Cana y Punta Cana. El sistema visual no elige entre ambos: la tipografía con carácter y el teal institucional cargan la calidez del evento, mientras la jerarquía de datos (montos, estados, fechas) se mantiene tan legible como un documento oficial. Esta identidad parte del brand book oficial de ADECLA: paleta de teal (#00a99d) y su complemento (#42a8bb), gris y blanco hueso institucionales. El logotipo usa Roboto y se respeta intacto, pero Roboto no se extiende al resto de la interfaz: Fraunces aporta el carácter editorial en titulares y Public Sans sostiene con precisión los formularios, tablas y montos.",
+    "keyCharacteristics": [
+      "Teal oficial reservado para acento y estados activos, nunca como fondo extenso.",
+      "Titulares en Fraunces con peso variable, nunca en mayúscula sostenida.",
+      "Datos y dinero siempre en Public Sans con tabular-nums.",
+      "Superficies planas por defecto; la elevación aparece solo como respuesta a interacción.",
+      "Ningún dorado, gradiente ni glassmorphism."
+    ],
+    "rules": [
+      { "name": "La Regla del Teal Escaso", "body": "El teal oficial y su versión de botón combinados nunca superan el 10% de la superficie de una pantalla.", "section": "colors" },
+      { "name": "La Regla de la Tinta, no el Negro", "body": "Ningún texto usa negro puro ni el #212322 plano del brand book directamente; todo texto oscuro pasa por la Tinta (#233738).", "section": "colors" },
+      { "name": "La Regla del Número Tabular", "body": "Todo monto y todo código de inscripción usa font-variant-numeric: tabular-nums.", "section": "typography" },
+      { "name": "La Regla de la Sombra Ganada", "body": "Ninguna tarjeta tiene sombra en reposo; la sombra se gana con hover o foco.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar Fraunces solo en titulares, nunca en párrafos largos ni tablas.",
+      "Do usar tabular-nums en todo monto y código de inscripción.",
+      "Do mantener el teal oficial y su variante de botón por debajo del 10% de cobertura de pantalla.",
+      "Do usar Tinta (#233738) como color de texto por defecto.",
+      "Do dejar las tarjetas planas en reposo."
+    ],
+    "donts": [
+      "Don't usar Poppins, Inter por defecto, o cualquier combinación Poppins+serif genérica.",
+      "Don't usar Roboto fuera del logotipo.",
+      "Don't usar el negro oficial #212322 plano como color de texto.",
+      "Don't inventar un acento dorado.",
+      "Don't usar gradientes decorativos, texto con background-clip en gradiente, ni glassmorphism sin propósito funcional.",
+      "Don't repetir tarjetas idénticas de icono+título+texto.",
+      "Don't usar texto gris claro de baja legibilidad por elegancia."
+    ]
+  }
+}

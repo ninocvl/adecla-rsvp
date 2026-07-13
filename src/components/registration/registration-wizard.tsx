@@ -22,6 +22,7 @@ export interface WizardCompany {
   contactName: string;
   email: string;
   phone: string;
+  affiliationType: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR";
 }
 
 interface RegistrationWizardProps {
@@ -29,15 +30,21 @@ interface RegistrationWizardProps {
   company: WizardCompany;
   rate: number;
   initialEventSlug?: string;
+  initialEventDateId?: string;
 }
 
-type Affiliation = "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR";
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-sm font-semibold text-muted-foreground">{children}</p>
+  );
+}
 
 export function RegistrationWizard({
   events,
   company,
   rate,
   initialEventSlug,
+  initialEventDateId,
 }: RegistrationWizardProps) {
   const initialEvent =
     events.find((e) => e.slug === initialEventSlug) ??
@@ -45,12 +52,15 @@ export function RegistrationWizard({
 
   const [step, setStep] = useState(0);
   const [eventId, setEventId] = useState<string | undefined>(initialEvent?.id);
-  const [eventDateId, setEventDateId] = useState<string>();
-  const [affiliation, setAffiliation] = useState<Affiliation>();
+  const [eventDateId, setEventDateId] = useState<string | undefined>(
+    initialEventDateId
+  );
   const [participants, setParticipants] = useState<ParticipantValue[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [result, setResult] = useState<{ id: string; code: string }>();
   const [isPending, startTransition] = useTransition();
+
+  const affiliation = company.affiliationType;
 
   const event = useMemo(
     () => events.find((e) => e.id === eventId),
@@ -60,18 +70,20 @@ export function RegistrationWizard({
   const price = event?.prices.find((p) => p.affiliation === affiliation);
   const unitPriceUsd =
     price?.isEnabled && price.amountUsd !== null ? price.amountUsd : null;
+  const priceUnavailable = !!event && unitPriceUsd === null;
 
-  const step1Ready =
-    !!event && !!eventDate && !!affiliation && unitPriceUsd !== null;
+  // eventDate ya queda undefined por sí solo si eventDateId no pertenece al
+  // evento seleccionado (event.dates.find no encuentra coincidencia), así que
+  // no hace falta un efecto para "limpiar" el estado.
+  const step1Ready = !!event && !!eventDate && unitPriceUsd !== null;
 
   function submit() {
-    if (!event || !eventDate || !affiliation) return;
+    if (!event || !eventDate) return;
     setServerError(null);
     startTransition(async () => {
       const response = await createRegistrationAction({
         eventId: event.id,
         eventDateId: eventDate.id,
-        affiliation,
         participants,
       });
       if (response.ok) {
@@ -97,7 +109,7 @@ export function RegistrationWizard({
           {step === 0 && (
             <section className="space-y-6">
               <div className="space-y-3">
-                <h2 className="font-medium">Evento</h2>
+                <SectionLabel>Evento</SectionLabel>
                 <div
                   role="radiogroup"
                   aria-label="Evento"
@@ -109,10 +121,7 @@ export function RegistrationWizard({
                       type="button"
                       role="radio"
                       aria-checked={eventId === e.id}
-                      onClick={() => {
-                        setEventId(e.id);
-                        setEventDateId(undefined);
-                      }}
+                      onClick={() => setEventId(e.id)}
                       className={cn(
                         "rounded-lg border p-4 text-left transition-colors",
                         eventId === e.id
@@ -132,7 +141,7 @@ export function RegistrationWizard({
 
               {event && (
                 <div className="space-y-3">
-                  <h2 className="font-medium">Fecha</h2>
+                  <SectionLabel>Fecha</SectionLabel>
                   <div role="radiogroup" aria-label="Fecha" className="grid gap-3">
                     {event.dates.map((d) => {
                       const full = d.available <= 0;
@@ -171,43 +180,28 @@ export function RegistrationWizard({
               )}
 
               {event && (
-                <div className="space-y-3">
-                  <h2 className="font-medium">Tipo de afiliación</h2>
-                  <div
-                    role="radiogroup"
-                    aria-label="Tipo de afiliación"
-                    className="grid gap-3 sm:grid-cols-3"
-                  >
-                    {event.prices.map((p) => {
-                      const enabled = p.isEnabled && p.amountUsd !== null;
-                      return (
-                        <button
-                          key={p.affiliation}
-                          type="button"
-                          role="radio"
-                          aria-checked={affiliation === p.affiliation}
-                          disabled={!enabled}
-                          onClick={() => setAffiliation(p.affiliation)}
-                          className={cn(
-                            "rounded-lg border p-4 text-left transition-colors",
-                            affiliation === p.affiliation
-                              ? "border-primary bg-accent"
-                              : "hover:border-primary/40",
-                            !enabled && "cursor-not-allowed opacity-50"
-                          )}
-                        >
-                          <p className="font-medium">
-                            {AFFILIATION_LABELS[p.affiliation]}
-                          </p>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {enabled
-                              ? `${formatUsd(p.amountUsd as number)} por participante`
-                              : "Próximamente"}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="rounded-lg border bg-muted/40 p-4">
+                  <SectionLabel>Tu tarifa</SectionLabel>
+                  {priceUnavailable ? (
+                    <p className="mt-1 text-sm text-destructive">
+                      Tu categoría de afiliación (
+                      {AFFILIATION_LABELS[affiliation]}) todavía no tiene
+                      tarifa para este evento. Escríbenos si crees que esto es
+                      un error.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm">
+                      Como empresa{" "}
+                      <span className="font-medium">
+                        {AFFILIATION_LABELS[affiliation]}
+                      </span>
+                      , tu tarifa es{" "}
+                      <span className="font-medium">
+                        {formatUsd(unitPriceUsd as number)}
+                      </span>{" "}
+                      por participante.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -233,6 +227,14 @@ export function RegistrationWizard({
                     <div>
                       <dt className="text-sm text-muted-foreground">RNC</dt>
                       <dd className="font-medium">{company.rnc}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm text-muted-foreground">
+                        Tipo de empresa
+                      </dt>
+                      <dd className="font-medium">
+                        {AFFILIATION_LABELS[affiliation]}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-sm text-muted-foreground">
@@ -277,7 +279,7 @@ export function RegistrationWizard({
             />
           )}
 
-          {step === 3 && event && eventDate && affiliation && (
+          {step === 3 && event && eventDate && (
             <section className="space-y-6">
               {serverError && (
                 <Alert variant="destructive" role="alert">
@@ -352,7 +354,7 @@ export function RegistrationWizard({
                 </h2>
                 <p className="mt-2 text-muted-foreground">
                   Tu código de inscripción es{" "}
-                  <span className="font-mono font-semibold text-foreground">
+                  <span className="font-mono font-semibold tabular-nums text-foreground">
                     {result.code}
                   </span>
                   . La proforma quedó generada, pendiente de pago, y la
@@ -389,9 +391,7 @@ export function RegistrationWizard({
             eventName={event?.name}
             dateText={eventDate ? formatEventDate(eventDate.date) : undefined}
             venue={eventDate?.venue}
-            affiliationLabel={
-              affiliation ? AFFILIATION_LABELS[affiliation] : undefined
-            }
+            affiliationLabel={AFFILIATION_LABELS[affiliation]}
             unitPriceUsd={unitPriceUsd}
             quantity={Math.max(1, participants.length)}
             rate={rate}

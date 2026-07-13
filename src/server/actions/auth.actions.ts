@@ -72,6 +72,7 @@ export async function registerCompanyAction(
         create: {
           legalName: data.legalName,
           rnc,
+          affiliationType: data.affiliationType,
           contactName: data.contactName,
           email,
           phone: data.phone,

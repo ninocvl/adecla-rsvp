@@ -24,10 +24,12 @@ export const participantSchema = z.object({
 
 export type ParticipantInput = z.input<typeof participantSchema>;
 
+// La afiliación NO viaja desde el cliente: el servidor la toma de
+// company.affiliationType (fijada al registrar la empresa), para que nadie
+// pueda enviar una categoría más barata que la de su propia empresa.
 export const createRegistrationSchema = z.object({
   eventId: z.string().min(1, "Selecciona un evento"),
   eventDateId: z.string().min(1, "Selecciona una fecha"),
-  affiliation: z.enum(AFFILIATIONS, "Selecciona el tipo de afiliación"),
   participants: z
     .array(participantSchema)
     .min(1, "Registra al menos un participante")

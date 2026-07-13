@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getLandingEvents } from "@/server/queries/events.queries";
+import { getLandingCards } from "@/server/queries/events.queries";
 import { NOTA_PAGO } from "@/lib/constants";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -9,7 +9,7 @@ import { EventCard } from "@/components/events/event-card";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const events = await getLandingEvents();
+  const cards = await getLandingCards();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -26,8 +26,8 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+            {cards.map((card) => (
+              <EventCard key={card.id} card={card} />
             ))}
           </div>
           <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>

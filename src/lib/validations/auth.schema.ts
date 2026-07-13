@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidDominicanTaxId } from "./dominican-id";
 
 export const loginSchema = z.object({
   email: z.email("Escribe un correo válido"),
@@ -7,8 +8,13 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-// RNC dominicano: 9 u 11 dígitos, con o sin guiones.
-const rncRegex = /^\d{1}-?\d{2}-?\d{5}-?\d{1}$|^\d{9}$|^\d{11}$/;
+const rncFormatRegex = /^\d{1}-?\d{2}-?\d{5}-?\d{1}$|^\d{9}$|^\d{11}$/;
+
+export const AFFILIATION_TYPES = [
+  "CONSTRUCTOR",
+  "PROVEEDOR",
+  "DESARROLLADOR",
+] as const;
 
 export const registerCompanySchema = z
   .object({
@@ -19,7 +25,11 @@ export const registerCompanySchema = z
     rnc: z
       .string()
       .trim()
-      .regex(rncRegex, "El RNC debe tener 9 u 11 dígitos"),
+      .regex(rncFormatRegex, "El RNC debe tener 9 dígitos (o cédula de 11)")
+      .refine(isValidDominicanTaxId, {
+        message: "Ese RNC o cédula no es válido — revisa los dígitos",
+      }),
+    affiliationType: z.enum(AFFILIATION_TYPES, "Selecciona el tipo de empresa"),
     contactName: z
       .string()
       .min(3, "Escribe el nombre del contacto")
