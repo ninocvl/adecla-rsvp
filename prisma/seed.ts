@@ -11,16 +11,16 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   // 1. Usuario administrador
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@adecla.com";
-  const adminPassword = process.env.ADMIN_PASSWORD ?? "adecla-admin-2026";
-  if (!process.env.ADMIN_PASSWORD) {
-    console.warn(
-      "⚠ ADMIN_PASSWORD no está definido en .env — usando la contraseña por defecto (solo para desarrollo)."
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    throw new Error(
+      "ADMIN_PASSWORD no está definido. Configúralo en .env (local) o en las variables de entorno del proyecto (producción) antes de sembrar la base de datos."
     );
   }
   const passwordHash = await bcrypt.hash(adminPassword, 10);
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { role: "ADMIN" },
+    update: { role: "ADMIN", passwordHash },
     create: { email: adminEmail, passwordHash, role: "ADMIN" },
   });
   console.log(`✔ Admin: ${adminEmail}`);
