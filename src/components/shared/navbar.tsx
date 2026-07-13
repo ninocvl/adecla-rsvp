@@ -16,14 +16,14 @@ export async function Navbar() {
           {user ? (
             <>
               {user.role === "ADMIN" ? (
-                <Button variant="ghost" size="sm" render={<Link href="/admin" />}>
+                <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/admin" />}>
                   Panel admin
                 </Button>
               ) : (
                 <Button
                   variant="ghost"
                   size="sm"
-                  render={<Link href="/dashboard" />}
+                  nativeButton={false} render={<Link href="/dashboard" />}
                 >
                   Mi panel
                 </Button>
@@ -36,10 +36,10 @@ export async function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+              <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/login" />}>
                 Iniciar sesión
               </Button>
-              <Button size="sm" render={<Link href="/registro" />}>
+              <Button size="sm" nativeButton={false} render={<Link href="/registro" />}>
                 Registrar empresa
               </Button>
             </>
