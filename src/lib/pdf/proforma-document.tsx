@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
 
 interface ProformaDocumentProps {
   data: ProformaSnapshot;
-  logoSrc: string;
+  logoSrc?: string;
 }
 
 export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
