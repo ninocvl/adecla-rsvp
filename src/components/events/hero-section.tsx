@@ -13,14 +13,14 @@ export function HeroSection() {
             variant="outline"
             className="mb-4 border-white/25 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-sm"
           >
-            Circuito deportivo ADECLA 2026
+            Punta Espada · La Cana
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            Inscribe a tu empresa en los torneos de ADECLA
+            Inscríbete en los torneos
           </h1>
           <p className="mt-4 text-lg text-white/85">
-            Golf en Punta Espada y La Cana, y muy pronto pádel. Cuéntanos de
-            tu empresa, elige la fecha y recibe tu proforma al instante.
+            Golf en Punta Espada y La Cana este año. Pádel, más adelante. El
+            formulario toma un par de minutos y la proforma llega enseguida.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button
@@ -38,7 +38,7 @@ export function HeroSection() {
               nativeButton={false}
               render={<Link href="/registro" />}
             >
-              Inscribir mi empresa
+              Inscribir
             </Button>
           </div>
         </div>
