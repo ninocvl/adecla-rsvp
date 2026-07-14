@@ -15,15 +15,15 @@ export function HeroSection() {
             Inscribe a tu empresa en los torneos de ADECLA
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Golf en Punta Espada y La Cana, y muy pronto pádel. Registra tu
-            empresa, elige la fecha y recibe tu proforma al instante.
+            Golf en Punta Espada y La Cana, y muy pronto pádel. Cuéntanos de
+            tu empresa, elige la fecha y recibe tu proforma al instante.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button size="lg" nativeButton={false} render={<Link href="#eventos" />}>
               Ver eventos
             </Button>
             <Button size="lg" variant="outline" nativeButton={false} render={<Link href="/registro" />}>
-              Registrar mi empresa
+              Inscribir mi empresa
             </Button>
           </div>
         </div>

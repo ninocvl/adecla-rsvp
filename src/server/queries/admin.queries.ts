@@ -8,7 +8,7 @@ const PENDING_STATUSES: RegistrationStatus[] = [
 ];
 
 export async function getAdminMetrics() {
-  const [publishedEvents, participantsCount, pending, confirmed, dates] =
+  const [publishedEvents, participantsCount, pending, confirmed, companies, dates] =
     await Promise.all([
       prisma.event.count({ where: { status: "PUBLISHED" } }),
       prisma.participant.count({
@@ -18,6 +18,7 @@ export async function getAdminMetrics() {
         where: { status: { in: PENDING_STATUSES } },
       }),
       prisma.registration.count({ where: { status: "CONFIRMADA" } }),
+      prisma.company.count(),
       prisma.eventDate.findMany({
         where: { isActive: true },
         include: { event: { select: { name: true } } },
@@ -30,6 +31,7 @@ export async function getAdminMetrics() {
     participantsCount,
     pending,
     confirmed,
+    companies,
     dates: dates.map((d) => ({
       id: d.id,
       eventName: d.event.name,
@@ -76,3 +78,17 @@ export async function getEventsForFilter() {
     orderBy: { createdAt: "asc" },
   });
 }
+
+// Lista de empresas registradas para que el admin vea quién quiere afiliarse
+// y lo gestione en su propio Excel/sistema de afiliados — el sistema aquí
+// solo da visibilidad, no un flujo de aprobación.
+export async function getAdminCompanies() {
+  return prisma.company.findMany({
+    include: {
+      _count: { select: { registrations: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export type AdminCompany = Awaited<ReturnType<typeof getAdminCompanies>>[number];

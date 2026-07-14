@@ -96,12 +96,12 @@ export function LoginForm() {
             {isPending ? "Entrando…" : "Entrar"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            ¿Tu empresa aún no tiene cuenta?{" "}
+            ¿Tu empresa aún no está inscrita?{" "}
             <Link
               href="/registro"
               className="font-medium text-primary hover:underline"
             >
-              Regístrala aquí
+              Hazlo aquí
             </Link>
           </p>
         </CardFooter>

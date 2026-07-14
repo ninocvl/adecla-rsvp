@@ -27,16 +27,30 @@ export default async function AdminPage() {
             Resumen del circuito y estado de las inscripciones.
           </p>
         </div>
-        <Button
-          nativeButton={false}
-          render={<Link href="/admin/inscripciones" />}
-        >
-          Ver inscripciones
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/admin/empresas" />}
+          >
+            Ver empresas
+          </Button>
+          <Button
+            nativeButton={false}
+            render={<Link href="/admin/inscripciones" />}
+          >
+            Ver inscripciones
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard label="Eventos publicados" value={metrics.publishedEvents} />
+        <MetricCard
+          label="Empresas inscritas"
+          value={metrics.companies}
+          hint="Confirma la afiliación en tu registro de socios"
+        />
         <MetricCard
           label="Total inscritos"
           value={metrics.participantsCount}

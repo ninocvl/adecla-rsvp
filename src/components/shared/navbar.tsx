@@ -40,7 +40,7 @@ export async function Navbar() {
                 Iniciar sesión
               </Button>
               <Button size="sm" nativeButton={false} render={<Link href="/registro" />}>
-                Registrar empresa
+                Inscribirme
               </Button>
             </>
           )}

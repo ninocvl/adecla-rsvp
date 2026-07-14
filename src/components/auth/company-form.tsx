@@ -144,10 +144,9 @@ export function CompanyForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Registra tu empresa</CardTitle>
+        <CardTitle className="text-xl">Inscribe tu empresa</CardTitle>
         <CardDescription>
-          Crea la cuenta de tu empresa para inscribirte en los eventos de
-          ADECLA.
+          Cuéntanos de tu empresa para participar en los torneos de ADECLA.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -197,7 +196,7 @@ export function CompanyForm() {
         </CardContent>
         <CardFooter className="mt-6 flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Creando cuenta…" : "Crear cuenta"}
+            {isPending ? "Inscribiendo…" : "Inscribir mi empresa"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{" "}
