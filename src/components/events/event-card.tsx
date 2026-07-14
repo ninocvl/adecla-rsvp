@@ -32,7 +32,7 @@ export function EventCard({ card }: { card: LandingCard }) {
   const priceGroups = groupPriceTiers(card.priceTiers);
 
   return (
-    <Card className="flex flex-col overflow-hidden pt-0 transition-shadow duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
       <div className="relative aspect-[16/10] bg-secondary">
         {card.imageUrl ? (
           <Image

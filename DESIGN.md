@@ -108,7 +108,7 @@ La paleta viene directamente del brand book de ADECLA; la única adaptación es 
 - **Terracota** (#c4432a / oklch(0.55 0.16 33)): estados cancelados, errores de validación. No es un rojo genérico de framework — tiene la misma temperatura cálida que el resto de la paleta.
 
 ### Named Rules
-**La Regla del Teal Escaso.** El teal oficial y su versión de botón combinados nunca superan el 10% de la superficie de una pantalla. Es acento, no fondo.
+**La Regla del Teal Escaso (con una excepción declarada).** Fuera del hero de la landing, el teal oficial y su versión de botón combinados no superan el 10% de la superficie de una pantalla — sigue siendo acento, no fondo, en formularios, tablas y el panel admin, donde el blanco ayuda a leer datos. El hero es la única superficie que rompe la regla a propósito: un bloque de degradado teal oscuro (`.hero-teal`, de `#00958a` a `#00453f`) para que el sitio no se sienta "todo blanco" desde el primer segundo.
 
 **La Regla de la Tinta, no el Negro.** Ningún texto usa negro puro ni el #212322 plano del brand book directamente. Todo texto oscuro pasa por la Tinta (#233738) o una variante de su rampa tonal.
 
@@ -133,10 +133,10 @@ La paleta viene directamente del brand book de ADECLA; la única adaptación es 
 
 ## 4. Elevation
 
-Sistema plano por defecto: las tarjetas se separan del fondo por color de superficie (blanco puro sobre hueso) y un borde de 1px en Gris Claro, no por sombra. La sombra aparece únicamente como respuesta a interacción — hover en `EventCard`, focus-visible en inputs — nunca en reposo.
+Sistema plano por defecto: las tarjetas se separan del fondo por color de superficie (blanco puro sobre hueso) y un borde de 1px en Gris Claro, no por sombra. La sombra aparece únicamente como respuesta a interacción — hover en `EventCard`, focus-visible en inputs — nunca en reposo. El único lugar con textura en reposo es el hero: una capa de grano casi imperceptible (`.grain-overlay`, opacidad 0.05) sobre el degradado teal, para que el bloque de color no se sienta como un vector plano.
 
 ### Shadow Vocabulary
-- **hover-lift** (`box-shadow: 0 12px 24px -8px oklch(0.32 0.025 200 / 0.18)`): al pasar el mouse sobre una tarjeta de evento interactiva. Se retira `prefers-reduced-motion`.
+- **shadow-teal-hover** (`box-shadow: 0 16px 32px -14px oklch(0.32 0.025 200 / 0.28)` + `translateY(-3px)`): al pasar el mouse sobre una tarjeta de evento o los flyers del hero. Sombra con el tinte de la Tinta, no gris genérico. Se retira con `prefers-reduced-motion`.
 - **focus-ring** (`box-shadow: 0 0 0 3px oklch(0.661 0.116 185.9 / 0.35)`): foco de teclado en botones e inputs, en vez del azul por defecto del navegador.
 
 ### Named Rules
