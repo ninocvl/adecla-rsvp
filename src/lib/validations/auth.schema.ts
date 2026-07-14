@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { isValidDominicanTaxId } from "./dominican-id";
 
 export const loginSchema = z.object({
   email: z.email("Escribe un correo válido"),
@@ -8,6 +7,10 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+// Solo se valida el formato (dígitos, largo razonable). El dígito verificador
+// no se comprueba: lo revisa manualmente el administrador al confirmar la
+// inscripción, para no bloquear registros por un algoritmo que no podemos
+// contrastar contra la DGII.
 const rncFormatRegex = /^\d{1}-?\d{2}-?\d{5}-?\d{1}$|^\d{9}$|^\d{11}$/;
 
 export const AFFILIATION_TYPES = [
@@ -25,10 +28,7 @@ export const registerCompanySchema = z
     rnc: z
       .string()
       .trim()
-      .regex(rncFormatRegex, "El RNC debe tener 9 dígitos (o cédula de 11)")
-      .refine(isValidDominicanTaxId, {
-        message: "Ese RNC o cédula no es válido — revisa los dígitos",
-      }),
+      .regex(rncFormatRegex, "El RNC debe tener 9 dígitos (o cédula de 11)"),
     affiliationType: z.enum(AFFILIATION_TYPES, "Selecciona el tipo de empresa"),
     contactName: z
       .string()

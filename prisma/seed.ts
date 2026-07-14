@@ -76,7 +76,7 @@ async function main() {
   const golfPrices = [
     { affiliation: "CONSTRUCTOR", amountUsd: "250.00", isEnabled: true },
     { affiliation: "PROVEEDOR", amountUsd: "600.00", isEnabled: true },
-    { affiliation: "DESARROLLADOR", amountUsd: null, isEnabled: false },
+    { affiliation: "DESARROLLADOR", amountUsd: "250.00", isEnabled: true },
   ] as const;
   for (const p of golfPrices) {
     await prisma.eventPrice.upsert({

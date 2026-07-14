@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { LandingCard } from "@/server/queries/events.queries";
+import { AFFILIATION_LABELS } from "@/lib/constants";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,24 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 
+// Agrupa las categorías que comparten el mismo precio (ej. Constructor y
+// Desarrollador a USD 250) para no repetir el monto — nunca un precio único.
+function groupPriceTiers(tiers: LandingCard["priceTiers"]) {
+  const byAmount = new Map<number, string[]>();
+  for (const tier of tiers) {
+    const labels = byAmount.get(tier.amountUsd) ?? [];
+    labels.push(AFFILIATION_LABELS[tier.affiliation]);
+    byAmount.set(tier.amountUsd, labels);
+  }
+  return [...byAmount.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([amountUsd, labels]) => ({ amountUsd, labels }));
+}
+
 export function EventCard({ card }: { card: LandingCard }) {
   const isDate = card.kind === "date";
   const full = isDate && (card.available ?? 0) <= 0;
+  const priceGroups = groupPriceTiers(card.priceTiers);
 
   return (
     <Card className="flex flex-col overflow-hidden pt-0 transition-shadow duration-300 hover:shadow-lg hover:-translate-y-0.5">
@@ -75,22 +91,39 @@ export function EventCard({ card }: { card: LandingCard }) {
 
       <CardContent className="flex-1 space-y-3">
         {isDate ? (
-          <div className="flex items-end justify-between border-t pt-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Desde</p>
-              <p className="text-xl font-semibold tabular-nums">
-                {card.minPriceUsd !== null
-                  ? formatUsd(card.minPriceUsd)
-                  : "Por definir"}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {" "}
-                  / participante
-                </span>
+          <div className="space-y-3 border-t pt-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                Tarifa por participante, según tu categoría de afiliación
               </p>
+              <Badge
+                variant={full ? "outline" : "secondary"}
+                className="shrink-0"
+              >
+                {full ? "Sin cupos" : `${card.available} cupos`}
+              </Badge>
             </div>
-            <Badge variant={full ? "outline" : "secondary"}>
-              {full ? "Sin cupos" : `${card.available} cupos disponibles`}
-            </Badge>
+            {priceGroups.length > 0 ? (
+              <dl className="space-y-1">
+                {priceGroups.map((group) => (
+                  <div
+                    key={group.amountUsd}
+                    className="flex items-baseline justify-between text-sm"
+                  >
+                    <dt className="text-muted-foreground">
+                      {group.labels.join(" / ")}
+                    </dt>
+                    <dd className="font-semibold tabular-nums">
+                      {formatUsd(group.amountUsd)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Tarifas por definir
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

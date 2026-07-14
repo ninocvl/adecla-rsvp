@@ -10,6 +10,11 @@ export interface LandingEventDate {
   available: number;
 }
 
+export interface LandingPriceTier {
+  affiliation: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR";
+  amountUsd: number;
+}
+
 // Cada tarjeta de la landing es UNA fecha (una "parada"), no un evento con
 // varias fechas agrupadas — así cada parada tiene su propio flyer, cupos y CTA.
 export interface LandingCard {
@@ -20,6 +25,9 @@ export interface LandingCard {
   description: string | null;
   imageUrl: string | null;
   minPriceUsd: number | null;
+  // Desglose completo por categoría: el precio depende de si eres
+  // Constructor, Proveedor o Desarrollador — nunca un monto único.
+  priceTiers: LandingPriceTier[];
   date?: Date;
   label?: string;
   venue?: string;
@@ -39,10 +47,11 @@ export async function getLandingCards(): Promise<LandingCard[]> {
 
   const cards: LandingCard[] = [];
   for (const event of events) {
-    const priceValues = event.prices
-      .map((p) => Number(p.amountUsd))
-      .filter((n) => !Number.isNaN(n));
-    const minPriceUsd = priceValues.length ? Math.min(...priceValues) : null;
+    const priceTiers: LandingPriceTier[] = event.prices
+      .map((p) => ({ affiliation: p.affiliation, amountUsd: Number(p.amountUsd) }))
+      .filter((p): p is LandingPriceTier => !Number.isNaN(p.amountUsd))
+      .sort((a, b) => a.amountUsd - b.amountUsd);
+    const minPriceUsd = priceTiers.length ? priceTiers[0].amountUsd : null;
 
     if (event.status === "PUBLISHED" && event.dates.length > 0) {
       for (const d of event.dates) {
@@ -54,6 +63,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           description: event.description,
           imageUrl: d.imageUrl ?? event.imageUrl,
           minPriceUsd,
+          priceTiers,
           date: d.date,
           label: d.label,
           venue: d.venue,
@@ -70,6 +80,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
         description: event.description,
         imageUrl: event.imageUrl,
         minPriceUsd,
+        priceTiers,
       });
     }
   }
