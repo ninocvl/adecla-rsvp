@@ -44,12 +44,17 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <MetricCard label="Eventos publicados" value={metrics.publishedEvents} />
         <MetricCard
           label="Empresas inscritas"
           value={metrics.companies}
           hint="Confirma la afiliación en tu registro de socios"
+        />
+        <MetricCard
+          label="Piden afiliarse"
+          value={metrics.affiliationRequests}
+          hint="Contáctalas para el proceso de afiliación"
         />
         <MetricCard
           label="Total inscritos"

@@ -48,3 +48,6 @@ next-env.d.ts
 #env files
 .venv
 .env*.local
+
+# Datos reales de contacto de afiliados de ADECLA (PII) — nunca al repo público.
+prisma/affiliates-seed-data.json

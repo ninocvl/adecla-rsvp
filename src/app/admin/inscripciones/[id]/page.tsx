@@ -29,7 +29,7 @@ export default async function AdminInscripcionDetallePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const registration = await getRegistrationDetail(id, { isAdmin: true });
+  const registration = await getRegistrationDetail(id);
   if (!registration) {
     notFound();
   }

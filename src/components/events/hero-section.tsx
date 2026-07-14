@@ -36,7 +36,7 @@ export function HeroSection() {
               variant="outline"
               className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
               nativeButton={false}
-              render={<Link href="/registro" />}
+              render={<Link href="/inscripciones/nueva" />}
             >
               Inscribir
             </Button>

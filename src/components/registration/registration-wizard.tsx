@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import { createRegistrationAction } from "@/server/actions/registration.actions";
+import type { CompanyStepInput } from "@/lib/validations/registration.schema";
 import type { WizardEvent } from "@/server/queries/events.queries";
+import type { ActiveAffiliate } from "@/server/queries/affiliates.queries";
 import { AFFILIATION_LABELS } from "@/lib/constants";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,20 +15,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Stepper } from "./stepper";
 import { PriceSummary } from "./price-summary";
+import { CompanyStep } from "./company-step";
 import { ParticipantForm, type ParticipantValue } from "./participant-form";
-
-export interface WizardCompany {
-  legalName: string;
-  rnc: string;
-  contactName: string;
-  email: string;
-  phone: string;
-  affiliationType: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR";
-}
 
 interface RegistrationWizardProps {
   events: WizardEvent[];
-  company: WizardCompany;
+  affiliates: ActiveAffiliate[];
   rate: number;
   initialEventSlug?: string;
   initialEventDateId?: string;
@@ -41,7 +34,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function RegistrationWizard({
   events,
-  company,
+  affiliates,
   rate,
   initialEventSlug,
   initialEventDateId,
@@ -51,6 +44,7 @@ export function RegistrationWizard({
     (events.length === 1 ? events[0] : undefined);
 
   const [step, setStep] = useState(0);
+  const [company, setCompany] = useState<CompanyStepInput>();
   const [eventId, setEventId] = useState<string | undefined>(initialEvent?.id);
   const [eventDateId, setEventDateId] = useState<string | undefined>(
     initialEventDateId
@@ -60,7 +54,7 @@ export function RegistrationWizard({
   const [result, setResult] = useState<{ id: string; code: string }>();
   const [isPending, startTransition] = useTransition();
 
-  const affiliation = company.affiliationType;
+  const affiliation = company?.affiliationType;
 
   const event = useMemo(
     () => events.find((e) => e.id === eventId),
@@ -70,7 +64,7 @@ export function RegistrationWizard({
   const price = event?.prices.find((p) => p.affiliation === affiliation);
   const unitPriceUsd =
     price?.isEnabled && price.amountUsd !== null ? price.amountUsd : null;
-  const priceUnavailable = !!event && unitPriceUsd === null;
+  const priceUnavailable = !!event && !!affiliation && unitPriceUsd === null;
 
   // eventDate ya queda undefined por sí solo si eventDateId no pertenece al
   // evento seleccionado (event.dates.find no encuentra coincidencia), así que
@@ -78,10 +72,11 @@ export function RegistrationWizard({
   const step1Ready = !!event && !!eventDate && unitPriceUsd !== null;
 
   function submit() {
-    if (!event || !eventDate) return;
+    if (!company || !event || !eventDate) return;
     setServerError(null);
     startTransition(async () => {
       const response = await createRegistrationAction({
+        ...company,
         eventId: event.id,
         eventDateId: eventDate.id,
         participants,
@@ -107,6 +102,17 @@ export function RegistrationWizard({
       >
         <div className="space-y-6">
           {step === 0 && (
+            <CompanyStep
+              affiliates={affiliates}
+              defaultValues={company}
+              onNext={(data) => {
+                setCompany(data);
+                setStep(1);
+              }}
+            />
+          )}
+
+          {step === 1 && company && (
             <section className="space-y-6">
               <div className="space-y-3">
                 <SectionLabel>Evento</SectionLabel>
@@ -185,7 +191,7 @@ export function RegistrationWizard({
                   {priceUnavailable ? (
                     <p className="mt-1 text-sm text-destructive">
                       Tu categoría de afiliación (
-                      {AFFILIATION_LABELS[affiliation]}) todavía no tiene
+                      {AFFILIATION_LABELS[company.affiliationType]}) todavía no tiene
                       tarifa para este evento. Escríbenos si crees que esto es
                       un error.
                     </p>
@@ -193,7 +199,7 @@ export function RegistrationWizard({
                     <p className="mt-1 text-sm">
                       Como empresa{" "}
                       <span className="font-medium">
-                        {AFFILIATION_LABELS[affiliation]}
+                        {AFFILIATION_LABELS[company.affiliationType]}
                       </span>
                       , tu tarifa es{" "}
                       <span className="font-medium">
@@ -205,65 +211,13 @@ export function RegistrationWizard({
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <Button disabled={!step1Ready} onClick={() => setStep(1)}>
-                  Continuar
-                </Button>
-              </div>
-            </section>
-          )}
-
-          {step === 1 && (
-            <section className="space-y-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <dl className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <dt className="text-sm text-muted-foreground">
-                        Razón social
-                      </dt>
-                      <dd className="font-medium">{company.legalName}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted-foreground">RNC</dt>
-                      <dd className="font-medium">{company.rnc}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted-foreground">
-                        Tipo de empresa
-                      </dt>
-                      <dd className="font-medium">
-                        {AFFILIATION_LABELS[affiliation]}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted-foreground">
-                        Contacto
-                      </dt>
-                      <dd className="font-medium">{company.contactName}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted-foreground">Correo</dt>
-                      <dd className="font-medium">{company.email}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted-foreground">
-                        Teléfono
-                      </dt>
-                      <dd className="font-medium">{company.phone}</dd>
-                    </div>
-                  </dl>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    La proforma se emitirá con estos datos y se enviará a este
-                    correo.
-                  </p>
-                </CardContent>
-              </Card>
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep(0)}>
                   Atrás
                 </Button>
-                <Button onClick={() => setStep(2)}>Continuar</Button>
+                <Button disabled={!step1Ready} onClick={() => setStep(2)}>
+                  Continuar
+                </Button>
               </div>
             </section>
           )}
@@ -279,7 +233,7 @@ export function RegistrationWizard({
             />
           )}
 
-          {step === 3 && event && eventDate && (
+          {step === 3 && company && event && eventDate && (
             <section className="space-y-6">
               {serverError && (
                 <Alert variant="destructive" role="alert">
@@ -288,6 +242,15 @@ export function RegistrationWizard({
               )}
               <Card>
                 <CardContent className="space-y-4 pt-6">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Empresa</p>
+                    <p className="font-medium">{company.legalName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      RNC {company.rnc} ·{" "}
+                      {AFFILIATION_LABELS[company.affiliationType]}
+                    </p>
+                  </div>
+                  <Separator />
                   <div>
                     <p className="text-sm text-muted-foreground">Evento</p>
                     <p className="font-medium">{event.name}</p>
@@ -321,6 +284,10 @@ export function RegistrationWizard({
                       </p>
                     )}
                   </div>
+                  <p className="text-sm text-muted-foreground">
+                    La proforma se emitirá con estos datos y se enviará al
+                    correo de la empresa.
+                  </p>
                 </CardContent>
               </Card>
               <div className="flex justify-between">
@@ -374,24 +341,17 @@ export function RegistrationWizard({
                 >
                   Descargar proforma
                 </Button>
-                <Button
-                  variant="outline"
-                  nativeButton={false}
-                  render={<Link href="/dashboard" />}
-                >
-                  Ir a mi panel
-                </Button>
               </div>
             </section>
           )}
         </div>
 
-        {step < 4 && (
+        {step > 0 && step < 4 && (
           <PriceSummary
             eventName={event?.name}
             dateText={eventDate ? formatEventDate(eventDate.date) : undefined}
             venue={eventDate?.venue}
-            affiliationLabel={AFFILIATION_LABELS[affiliation]}
+            affiliationLabel={affiliation ? AFFILIATION_LABELS[affiliation] : undefined}
             unitPriceUsd={unitPriceUsd}
             quantity={Math.max(1, participants.length)}
             rate={rate}

@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emailService } from "@/server/services/email";
 import {
   createRegistrationSchema,
+  normalizeRnc,
   type CreateRegistrationInput,
 } from "@/lib/validations/registration.schema";
 import { AFFILIATION_LABELS } from "@/lib/constants";
@@ -20,16 +20,6 @@ class CapacityError extends Error {}
 export async function createRegistrationAction(
   input: CreateRegistrationInput
 ): Promise<CreateRegistrationResult> {
-  const session = await auth();
-  if (
-    !session?.user ||
-    session.user.role !== "COMPANY" ||
-    !session.user.companyId
-  ) {
-    return { ok: false, error: "Inicia sesión con tu empresa para inscribirte." };
-  }
-  const companyId = session.user.companyId;
-
   const parsed = createRegistrationSchema.safeParse(input);
   if (!parsed.success) {
     return {
@@ -39,23 +29,28 @@ export async function createRegistrationAction(
   }
   const data = parsed.data;
   const quantity = data.participants.length;
+  const rnc = normalizeRnc(data.rnc);
+  const email = data.email.toLowerCase();
 
-  // La afiliación viene de la empresa (fijada al registrarse), nunca del
-  // cliente: nadie puede enviar una categoría más barata que la suya.
-  const company = await prisma.company.findUnique({ where: { id: companyId } });
-  if (!company) {
-    return { ok: false, error: "No encontramos los datos de tu empresa." };
+  // Nunca se confía en el nombre/tipo que mande el cliente para el vínculo de
+  // afiliado: se relee el registro real del listado de socios. Para una
+  // empresa afiliada conocida, su tipo de afiliación real (no el que mandó el
+  // formulario) es el que fija la tarifa.
+  const affiliate =
+    data.isAffiliated && data.affiliateId
+      ? await prisma.affiliate.findUnique({ where: { id: data.affiliateId } })
+      : null;
+  if (data.isAffiliated && !affiliate) {
+    return { ok: false, error: "Selecciona tu empresa de la lista." };
   }
+  const affiliationType = affiliate?.affiliationType ?? data.affiliationType;
 
   const [event, eventDate, price, rateSetting] = await Promise.all([
     prisma.event.findUnique({ where: { id: data.eventId } }),
     prisma.eventDate.findUnique({ where: { id: data.eventDateId } }),
     prisma.eventPrice.findUnique({
       where: {
-        eventId_affiliation: {
-          eventId: data.eventId,
-          affiliation: company.affiliationType,
-        },
+        eventId_affiliation: { eventId: data.eventId, affiliation: affiliationType },
       },
     }),
     prisma.setting.findUnique({ where: { key: "usd_to_dop_rate" } }),
@@ -88,6 +83,32 @@ export async function createRegistrationAction(
 
   try {
     const result = await prisma.$transaction(async (tx) => {
+      // Sin cuenta de por medio, la misma empresa puede volver a rellenar el
+      // formulario para inscribirse en otra fecha: se reconoce por RNC y se
+      // actualiza en vez de bloquear con "ya existe una empresa con ese RNC".
+      const company = await tx.company.upsert({
+        where: { rnc },
+        create: {
+          legalName: data.legalName,
+          rnc,
+          contactName: data.contactName,
+          email,
+          phone: data.phone,
+          affiliationType,
+          affiliateId: affiliate?.id,
+          wantsToAffiliate: !data.isAffiliated && data.wantsToAffiliate,
+        },
+        update: {
+          legalName: data.legalName,
+          contactName: data.contactName,
+          email,
+          phone: data.phone,
+          affiliationType,
+          affiliateId: affiliate?.id,
+          wantsToAffiliate: !data.isAffiliated && data.wantsToAffiliate,
+        },
+      });
+
       // Toma de cupos atómica: una sola sentencia condicional, sin carreras.
       const updated = await tx.$executeRaw`
         UPDATE "EventDate"
@@ -114,7 +135,7 @@ export async function createRegistrationAction(
           companyId: company.id,
           eventId: event.id,
           eventDateId: eventDate.id,
-          affiliation: company.affiliationType,
+          affiliation: affiliationType,
           status: "PROFORMA_GENERADA",
           quantity,
           unitPriceUsd: unitPriceUsd.toFixed(2),
@@ -157,8 +178,8 @@ export async function createRegistrationAction(
               dateLabel: eventDate.label,
               venue: eventDate.venue,
             },
-            affiliation: company.affiliationType,
-            affiliationLabel: AFFILIATION_LABELS[company.affiliationType],
+            affiliation: affiliationType,
+            affiliationLabel: AFFILIATION_LABELS[affiliationType],
             quantity,
             unitPriceUsd: unitPriceUsd.toFixed(2),
             totalUsd: totalUsd.toFixed(2),
@@ -172,16 +193,16 @@ export async function createRegistrationAction(
         },
       });
 
-      return registration;
+      return { registration, company };
     });
 
     // El correo nunca bloquea la inscripción.
     emailService
       .sendProformaCreated({
-        to: company.email,
-        companyName: company.legalName,
-        contactName: company.contactName,
-        registrationCode: result.code,
+        to: result.company.email,
+        companyName: result.company.legalName,
+        contactName: result.company.contactName,
+        registrationCode: result.registration.code,
         eventName: event.name,
         eventDate: formatEventDate(eventDate.date),
         totalUsd: formatUsd(totalUsd),
@@ -189,10 +210,13 @@ export async function createRegistrationAction(
       })
       .catch((e) => console.error("Error enviando correo de proforma:", e));
 
-    revalidatePath("/dashboard");
     revalidatePath("/");
 
-    return { ok: true, registrationId: result.id, code: result.code };
+    return {
+      ok: true,
+      registrationId: result.registration.id,
+      code: result.registration.code,
+    };
   } catch (error) {
     if (error instanceof CapacityError) {
       return {

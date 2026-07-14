@@ -44,18 +44,47 @@ model User {
 }
 
 model Company {
-  id              String          @id @default(cuid())
-  userId          String          @unique
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  legalName       String
-  rnc             String          @unique
-  contactName     String
-  email           String
-  phone           String
-  affiliationType AffiliationType
-  registrations   Registration[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id               String          @id @default(cuid())
+  // Opcional a propósito: hoy las empresas se inscriben con un formulario,
+  // sin crear cuenta (decisión de producto para no complicar el registro
+  // mientras el volumen es bajo). El vínculo a User queda listo para
+  // activarse más adelante sin tener que rediseñar el modelo.
+  userId           String?         @unique
+  user             User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  legalName        String
+  rnc              String          @unique
+  contactName      String
+  email            String
+  phone            String
+  affiliationType  AffiliationType
+  // Si se registró seleccionando su empresa del listado de socios de ADECLA,
+  // queda vinculada aquí — así el admin ve de un vistazo si es la misma
+  // empresa que ya conocía o una nueva que se está registrando por primera vez.
+  affiliateId      String?
+  affiliate        Affiliate?      @relation(fields: [affiliateId], references: [id])
+  // Marcada por empresas que dijeron no ser afiliadas pero quieren serlo;
+  // Katherin las contacta para el proceso de afiliación fuera del sistema.
+  wantsToAffiliate Boolean         @default(false)
+  registrations    Registration[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+// Copia de solo lectura del listado de socios de ADECLA (importado del
+// Excel que maneja Katherin). No es una cuenta ni tiene login: solo sirve
+// para que el formulario de registro autocomplete datos conocidos y evite
+// que la misma empresa quede duplicada con nombres distintos.
+model Affiliate {
+  id              String           @id @default(cuid())
+  sourceId        String?
+  name            String
+  affiliationType AffiliationType?
+  contactName     String?
+  phone           String?
+  email           String?
+  status          String?
+  companies       Company[]
+  createdAt       DateTime         @default(now())
 }
 
 model Event {

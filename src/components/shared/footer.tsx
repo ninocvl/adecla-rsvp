@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ADECLA } from "@/lib/constants";
 
 export function Footer() {
@@ -12,6 +13,14 @@ export function Footer() {
           <p>{ADECLA.direccion.join(", ")}</p>
           <p>RNC: {ADECLA.rnc}</p>
         </div>
+      </div>
+      <div className="border-t px-4 py-3 text-center">
+        <Link
+          href="/login"
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Administrador
+        </Link>
       </div>
     </footer>
   );

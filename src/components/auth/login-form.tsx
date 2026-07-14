@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginAction } from "@/server/actions/auth.actions";
@@ -40,7 +39,7 @@ export function LoginForm() {
       const result = await loginAction(data);
       if (result.ok) {
         const callbackUrl = searchParams.get("callbackUrl");
-        router.push(callbackUrl ?? "/dashboard");
+        router.push(callbackUrl ?? "/admin");
         router.refresh();
       } else {
         setServerError(result.error);
@@ -51,10 +50,8 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Iniciar sesión</CardTitle>
-        <CardDescription>
-          Accede con el correo que registraste para tu empresa.
-        </CardDescription>
+        <CardTitle className="text-xl">Acceso administrador</CardTitle>
+        <CardDescription>Panel de administración de ADECLA.</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
@@ -69,7 +66,7 @@ export function LoginForm() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="empresa@ejemplo.com"
+              placeholder="admin@adecla.com"
               {...register("email")}
             />
             {errors.email && (
@@ -95,15 +92,6 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Entrando…" : "Entrar"}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            ¿Tu empresa aún no está inscrita?{" "}
-            <Link
-              href="/registro"
-              className="font-medium text-primary hover:underline"
-            >
-              Hazlo aquí
-            </Link>
-          </p>
         </CardFooter>
       </form>
     </Card>

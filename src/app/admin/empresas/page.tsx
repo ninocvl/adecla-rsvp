@@ -24,9 +24,10 @@ export default async function AdminEmpresasPage() {
       <div>
         <h1 className="text-2xl font-semibold">Empresas</h1>
         <p className="mt-1 text-muted-foreground">
-          Empresas que se han inscrito en el sistema. Confirma la afiliación
-          en tu propio registro de socios de ADECLA — esta lista es solo
-          para verlas, no aprueba ni rechaza a nadie automáticamente.
+          Empresas que se han inscrito en el sistema. La columna Afiliación
+          muestra si se vincularon a un socio conocido del listado (revisa
+          nombres repetidos ahí) o si pidieron afiliarse. Confírmalo en tu
+          propio registro de socios antes de aceptar a nadie.
         </p>
       </div>
 
@@ -44,6 +45,7 @@ export default async function AdminEmpresasPage() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Contacto</TableHead>
                 <TableHead>Correo / Teléfono</TableHead>
+                <TableHead>Afiliación</TableHead>
                 <TableHead>Inscripciones</TableHead>
                 <TableHead>Desde</TableHead>
               </TableRow>
@@ -66,6 +68,21 @@ export default async function AdminEmpresasPage() {
                   <TableCell className="text-muted-foreground">
                     <div>{c.email}</div>
                     <div>{c.phone}</div>
+                  </TableCell>
+                  <TableCell>
+                    {c.affiliate ? (
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                        Socio: {c.affiliate.name}
+                      </Badge>
+                    ) : c.wantsToAffiliate ? (
+                      <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+                        Quiere afiliarse
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No afiliada
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center tabular-nums">
                     {c._count.registrations}

@@ -13,7 +13,7 @@ export default async function AdminLayout({
     redirect("/login?callbackUrl=/admin");
   }
   if (session.user.role !== "ADMIN") {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   return (
