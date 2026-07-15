@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { logoutAction } from "@/server/actions/auth.actions";
 import { Logo } from "@/components/shared/logo";
+import { AdminNavLink } from "@/components/shared/admin-nav-link";
 import { Button } from "@/components/ui/button";
 
 export async function Navbar() {
@@ -15,9 +16,7 @@ export async function Navbar() {
         <nav className="flex items-center gap-2 sm:gap-3">
           {isAdmin ? (
             <>
-              <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/admin" />}>
-                Panel admin
-              </Button>
+              <AdminNavLink />
               <form action={logoutAction}>
                 <Button type="submit" variant="outline" size="sm">
                   Cerrar sesión

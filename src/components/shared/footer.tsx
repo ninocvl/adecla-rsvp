@@ -3,9 +3,10 @@ import { ADECLA } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+    <footer className="border-t bg-background">
+      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-10 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <div>
+          <span className="section-rule" aria-hidden />
           <p className="font-medium text-foreground">{ADECLA.nombre}</p>
           <p>{ADECLA.nombreLegal}</p>
         </div>

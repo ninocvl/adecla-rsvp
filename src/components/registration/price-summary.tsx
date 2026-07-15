@@ -25,7 +25,7 @@ export function PriceSummary({
   const totalUsd = unitPriceUsd !== null ? unitPriceUsd * quantity : null;
 
   return (
-    <Card className="h-fit">
+    <Card className="h-fit border-t-2 border-t-primary">
       <CardHeader>
         <CardTitle className="text-base">Tu inscripción</CardTitle>
       </CardHeader>

@@ -102,18 +102,20 @@ export function RegistrationWizard({
       >
         <div className="space-y-6">
           {step === 0 && (
-            <CompanyStep
-              affiliates={affiliates}
-              defaultValues={company}
-              onNext={(data) => {
-                setCompany(data);
-                setStep(1);
-              }}
-            />
+            <div key="step-0" className="step-fade-in">
+              <CompanyStep
+                affiliates={affiliates}
+                defaultValues={company}
+                onNext={(data) => {
+                  setCompany(data);
+                  setStep(1);
+                }}
+              />
+            </div>
           )}
 
           {step === 1 && company && (
-            <section className="space-y-6">
+            <section key="step-1" className="step-fade-in space-y-6">
               <div className="space-y-3">
                 <SectionLabel>Evento</SectionLabel>
                 <div
@@ -129,9 +131,9 @@ export function RegistrationWizard({
                       aria-checked={eventId === e.id}
                       onClick={() => setEventId(e.id)}
                       className={cn(
-                        "rounded-lg border p-4 text-left transition-colors",
+                        "rounded-lg border p-4 text-left transition-all",
                         eventId === e.id
-                          ? "border-primary bg-accent"
+                          ? "scale-[1.01] border-primary bg-accent"
                           : "hover:border-primary/40"
                       )}
                     >
@@ -160,9 +162,9 @@ export function RegistrationWizard({
                           disabled={full}
                           onClick={() => setEventDateId(d.id)}
                           className={cn(
-                            "flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors",
+                            "flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition-all",
                             eventDateId === d.id
-                              ? "border-primary bg-accent"
+                              ? "scale-[1.01] border-primary bg-accent"
                               : "hover:border-primary/40",
                             full && "cursor-not-allowed opacity-50"
                           )}
@@ -223,18 +225,20 @@ export function RegistrationWizard({
           )}
 
           {step === 2 && (
-            <ParticipantForm
-              defaultValues={participants}
-              onBack={() => setStep(1)}
-              onNext={(p) => {
-                setParticipants(p);
-                setStep(3);
-              }}
-            />
+            <div key="step-2" className="step-fade-in">
+              <ParticipantForm
+                defaultValues={participants}
+                onBack={() => setStep(1)}
+                onNext={(p) => {
+                  setParticipants(p);
+                  setStep(3);
+                }}
+              />
+            </div>
           )}
 
           {step === 3 && company && event && eventDate && (
-            <section className="space-y-6">
+            <section key="step-3" className="step-fade-in space-y-6">
               {serverError && (
                 <Alert variant="destructive" role="alert">
                   {serverError}
@@ -302,7 +306,7 @@ export function RegistrationWizard({
           )}
 
           {step === 4 && result && (
-            <section className="mx-auto max-w-xl space-y-6 text-center">
+            <section key="step-4" className="step-fade-in mx-auto max-w-xl space-y-6 text-center">
               <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10">
                 <svg
                   viewBox="0 0 24 24"

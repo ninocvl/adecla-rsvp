@@ -30,23 +30,25 @@ interface FieldProps {
   autoComplete?: string;
 }
 
-const identityFields: FieldProps[] = [
-  {
-    id: "legalName",
-    label: "Razón social",
-    placeholder: "Constructora Ejemplo, S.R.L.",
-    autoComplete: "organization",
-  },
-  { id: "rnc", label: "RNC", placeholder: "130123456" },
-];
+// Razón social y tipo de empresa se fijan al elegir la empresa de la lista
+// de socios. El resto se deja siempre en blanco para que lo llene quien está
+// inscribiendo: de una misma empresa pueden participar distintos socios o
+// empleados, cada uno con su propio nombre de contacto y correo.
+const legalNameField: FieldProps = {
+  id: "legalName",
+  label: "Razón social",
+  placeholder: "Constructora Ejemplo, S.R.L.",
+  autoComplete: "organization",
+};
 
-const contactFields: FieldProps[] = [
+const manualFields: FieldProps[] = [
   {
     id: "contactName",
     label: "Nombre del contacto",
     placeholder: "Juan Pérez",
     autoComplete: "name",
   },
+  { id: "rnc", label: "RNC", placeholder: "130123456" },
   {
     id: "email",
     label: "Correo electrónico",
@@ -130,9 +132,6 @@ export function CompanyStep({
     setComboboxOpen(false);
     setValue("affiliateId", affiliate.id, { shouldValidate: true });
     setValue("legalName", affiliate.name);
-    if (affiliate.contactName) setValue("contactName", affiliate.contactName);
-    if (affiliate.phone) setValue("phone", affiliate.phone);
-    if (affiliate.email) setValue("email", affiliate.email);
     if (affiliate.affiliationType) {
       setValue("affiliationType", affiliate.affiliationType);
     }
@@ -168,9 +167,9 @@ export function CompanyStep({
             type="button"
             onClick={() => chooseAffiliation(true)}
             className={cn(
-              "rounded-lg border p-3 text-left text-sm transition-colors",
+              "rounded-lg border p-3 text-left text-sm transition-all",
               isAffiliated === true
-                ? "border-primary bg-accent"
+                ? "scale-[1.01] border-primary bg-accent"
                 : "hover:border-primary/40"
             )}
           >
@@ -180,9 +179,9 @@ export function CompanyStep({
             type="button"
             onClick={() => chooseAffiliation(false)}
             className={cn(
-              "rounded-lg border p-3 text-left text-sm transition-colors",
+              "rounded-lg border p-3 text-left text-sm transition-all",
               isAffiliated === false
-                ? "border-primary bg-accent"
+                ? "scale-[1.01] border-primary bg-accent"
                 : "hover:border-primary/40"
             )}
           >
@@ -269,9 +268,7 @@ export function CompanyStep({
 
       {isAffiliated !== undefined && isAffiliated !== null && (
         <>
-          {identityFields.map((f) =>
-            renderField(f, f.id === "legalName" && !!selectedAffiliate)
-          )}
+          {renderField(legalNameField, !!selectedAffiliate)}
 
           <div className="space-y-2">
             <Label htmlFor="affiliationType">Tipo de empresa</Label>
@@ -307,7 +304,7 @@ export function CompanyStep({
             </p>
           </div>
 
-          {contactFields.map((f) => renderField(f))}
+          {manualFields.map((f) => renderField(f))}
         </>
       )}
 

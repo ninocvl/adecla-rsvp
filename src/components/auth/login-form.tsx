@@ -48,7 +48,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card>
+    <Card className="border-t-2 border-t-primary">
       <CardHeader>
         <CardTitle className="text-xl">Acceso administrador</CardTitle>
         <CardDescription>Panel de administración de ADECLA.</CardDescription>

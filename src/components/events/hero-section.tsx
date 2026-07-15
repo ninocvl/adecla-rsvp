@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/shared/reveal";
 
 export function HeroSection() {
   return (
@@ -41,6 +42,27 @@ export function HeroSection() {
               Inscribir
             </Button>
           </div>
+
+          <Reveal delayMs={150} className="mt-10 flex justify-center gap-4 lg:hidden">
+            <div className="shadow-teal-hover w-[130px] -rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[150px]">
+              <Image
+                src="/images/golf-25-julio.jpg"
+                alt="Flyer: Primera parada del torneo de golf, Punta Espada Golf Club, 25 de julio"
+                width={150}
+                height={188}
+                className="h-auto w-full"
+              />
+            </div>
+            <div className="shadow-teal-hover mt-6 w-[130px] rotate-2 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[150px]">
+              <Image
+                src="/images/golf-05-septiembre.jpg"
+                alt="Flyer: Tercera parada del torneo de golf, La Cana Golf Club, 5 de septiembre"
+                width={150}
+                height={188}
+                className="h-auto w-full"
+              />
+            </div>
+          </Reveal>
         </div>
 
         <div className="relative mx-auto hidden h-[420px] w-full max-w-md lg:block">

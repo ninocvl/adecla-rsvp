@@ -7,9 +7,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-muted/40">
-      <header className="flex justify-center border-b bg-white py-4">
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="flex flex-col items-center border-b bg-white py-5">
         <Logo />
+        <span className="section-rule mt-3" aria-hidden />
       </header>
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">{children}</div>

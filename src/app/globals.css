@@ -209,3 +209,61 @@
     transform: none;
   }
 }
+
+/* Dirección D: acento teal mínimo para marcar el inicio de una sección fuera
+   del hero — reemplaza el h2 idéntico repetido en cada bloque de la landing
+   sin convertir el teal en fondo. 2px de alto: cobertura despreciable,
+   muy por debajo del 10% que permite la Regla del Teal Escaso. */
+.section-rule {
+  display: block;
+  width: 2.75rem;
+  height: 2px;
+  margin-bottom: 0.75rem;
+  background: var(--brand-teal);
+  border-radius: 999px;
+}
+
+/* Dirección E: revelado al hacer scroll — opacidad + traslación breve,
+   activada una sola vez por IntersectionObserver (ver Reveal en
+   src/components/shared/reveal.tsx). Respeta prefers-reduced-motion igual
+   que .splash-logo y .shadow-teal-hover. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Dirección E: transición corta al cambiar de paso en el wizard de
+   inscripción, para que el salto entre pasos no se sienta como un refresh
+   de formulario. */
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.step-fade-in {
+  animation: step-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-fade-in {
+    animation: none;
+  }
+}
