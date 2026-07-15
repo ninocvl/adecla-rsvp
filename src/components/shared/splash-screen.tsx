@@ -49,9 +49,9 @@ export function SplashScreen() {
         <Image
           src="/images/logo-adecla.jpg"
           alt=""
-          width={260}
-          height={90}
-          className="h-auto w-[220px] object-contain sm:w-[260px]"
+          width={360}
+          height={124}
+          className="h-auto w-[300px] object-contain sm:w-[360px]"
           priority
         />
       </div>

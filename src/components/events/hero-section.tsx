@@ -20,8 +20,12 @@ export function HeroSection() {
             Inscríbete en los torneos
           </h1>
           <p className="mt-4 text-lg text-white/85">
-            Golf en Punta Espada y La Cana este año. Pádel, más adelante. El
-            formulario toma un par de minutos y la proforma llega enseguida.
+            Forma parte del ADECLA Golf Tour &amp; Pádel Tournament 2026.
+            Inscríbete para los torneos de golf en Punta Espada y La Cana en
+            pocos minutos y recibe tu proforma de manera inmediata.
+          </p>
+          <p className="mt-2 text-sm font-medium text-white">
+            Las inscripciones para Pádel estarán disponibles próximamente.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button

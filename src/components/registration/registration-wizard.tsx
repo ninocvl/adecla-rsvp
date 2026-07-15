@@ -12,6 +12,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Stepper } from "./stepper";
 import { PriceSummary } from "./price-summary";
@@ -46,12 +47,14 @@ export function RegistrationWizard({
   const [step, setStep] = useState(0);
   const [company, setCompany] = useState<CompanyStepInput>();
   const [eventId, setEventId] = useState<string | undefined>(initialEvent?.id);
-  const [eventDateId, setEventDateId] = useState<string | undefined>(
-    initialEventDateId
+  const [eventDateIds, setEventDateIds] = useState<string[]>(
+    initialEventDateId ? [initialEventDateId] : []
   );
+  const [samePlayersConfirmed, setSamePlayersConfirmed] = useState(false);
   const [participants, setParticipants] = useState<ParticipantValue[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ id: string; code: string }>();
+  const [result, setResult] =
+    useState<{ registrationId: string; code: string }[]>();
   const [isPending, startTransition] = useTransition();
 
   const affiliation = company?.affiliationType;
@@ -60,29 +63,42 @@ export function RegistrationWizard({
     () => events.find((e) => e.id === eventId),
     [events, eventId]
   );
-  const eventDate = event?.dates.find((d) => d.id === eventDateId);
+  const selectedDates = useMemo(
+    () => event?.dates.filter((d) => eventDateIds.includes(d.id)) ?? [],
+    [event, eventDateIds]
+  );
   const price = event?.prices.find((p) => p.affiliation === affiliation);
   const unitPriceUsd =
     price?.isEnabled && price.amountUsd !== null ? price.amountUsd : null;
   const priceUnavailable = !!event && !!affiliation && unitPriceUsd === null;
 
-  // eventDate ya queda undefined por sí solo si eventDateId no pertenece al
-  // evento seleccionado (event.dates.find no encuentra coincidencia), así que
-  // no hace falta un efecto para "limpiar" el estado.
-  const step1Ready = !!event && !!eventDate && unitPriceUsd !== null;
+  function toggleDate(dateId: string) {
+    setEventDateIds((prev) =>
+      prev.includes(dateId)
+        ? prev.filter((id) => id !== dateId)
+        : [...prev, dateId]
+    );
+    setSamePlayersConfirmed(false);
+  }
+
+  const step1Ready =
+    !!event &&
+    selectedDates.length > 0 &&
+    unitPriceUsd !== null &&
+    (selectedDates.length === 1 || samePlayersConfirmed);
 
   function submit() {
-    if (!company || !event || !eventDate) return;
+    if (!company || !event || selectedDates.length === 0) return;
     setServerError(null);
     startTransition(async () => {
       const response = await createRegistrationAction({
         ...company,
         eventId: event.id,
-        eventDateId: eventDate.id,
+        eventDateIds: selectedDates.map((d) => d.id),
         participants,
       });
       if (response.ok) {
-        setResult({ id: response.registrationId, code: response.code });
+        setResult(response.registrations);
         setStep(4);
       } else {
         setServerError(response.error);
@@ -129,7 +145,11 @@ export function RegistrationWizard({
                       type="button"
                       role="radio"
                       aria-checked={eventId === e.id}
-                      onClick={() => setEventId(e.id)}
+                      onClick={() => {
+                        setEventId(e.id);
+                        setEventDateIds([]);
+                        setSamePlayersConfirmed(false);
+                      }}
                       className={cn(
                         "rounded-lg border p-4 text-left transition-all",
                         eventId === e.id
@@ -149,21 +169,34 @@ export function RegistrationWizard({
 
               {event && (
                 <div className="space-y-3">
-                  <SectionLabel>Fecha</SectionLabel>
-                  <div role="radiogroup" aria-label="Fecha" className="grid gap-3">
+                  <SectionLabel>
+                    Fecha{event.dates.length > 1 ? "s" : ""}
+                  </SectionLabel>
+                  {event.dates.length > 1 && (
+                    <p className="text-xs text-muted-foreground">
+                      Puedes elegir más de una fecha si vas a inscribir a los
+                      mismos participantes en cada parada.
+                    </p>
+                  )}
+                  <div
+                    role="group"
+                    aria-label="Fecha"
+                    className="grid gap-3"
+                  >
                     {event.dates.map((d) => {
                       const full = d.available <= 0;
+                      const checked = eventDateIds.includes(d.id);
                       return (
                         <button
                           key={d.id}
                           type="button"
-                          role="radio"
-                          aria-checked={eventDateId === d.id}
+                          role="checkbox"
+                          aria-checked={checked}
                           disabled={full}
-                          onClick={() => setEventDateId(d.id)}
+                          onClick={() => toggleDate(d.id)}
                           className={cn(
                             "flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition-all",
-                            eventDateId === d.id
+                            checked
                               ? "scale-[1.01] border-primary bg-accent"
                               : "hover:border-primary/40",
                             full && "cursor-not-allowed opacity-50"
@@ -187,6 +220,28 @@ export function RegistrationWizard({
                 </div>
               )}
 
+              {event && selectedDates.length > 1 && (
+                <label className="flex items-start gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
+                  <Checkbox
+                    checked={samePlayersConfirmed}
+                    onCheckedChange={(checked) =>
+                      setSamePlayersConfirmed(checked === true)
+                    }
+                    className="mt-0.5"
+                  />
+                  <span>
+                    <span className="font-medium">
+                      Los mismos participantes juegan en todas las fechas
+                      elegidas.
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      Si van a jugar personas distintas en cada fecha, elige
+                      solo una fecha aquí e inscribe la otra por separado.
+                    </span>
+                  </span>
+                </label>
+              )}
+
               {event && (
                 <div className="rounded-lg border bg-muted/40 p-4">
                   <SectionLabel>Tu tarifa</SectionLabel>
@@ -207,7 +262,10 @@ export function RegistrationWizard({
                       <span className="font-medium">
                         {formatUsd(unitPriceUsd as number)}
                       </span>{" "}
-                      por participante.
+                      por participante
+                      {selectedDates.length > 1
+                        ? `, por cada una de las ${selectedDates.length} fechas elegidas.`
+                        : "."}
                     </p>
                   )}
                 </div>
@@ -237,7 +295,7 @@ export function RegistrationWizard({
             </div>
           )}
 
-          {step === 3 && company && event && eventDate && (
+          {step === 3 && company && event && selectedDates.length > 0 && (
             <section key="step-3" className="step-fade-in space-y-6">
               {serverError && (
                 <Alert variant="destructive" role="alert">
@@ -259,16 +317,20 @@ export function RegistrationWizard({
                     <p className="text-sm text-muted-foreground">Evento</p>
                     <p className="font-medium">{event.name}</p>
                   </div>
-                  <div className="rounded-lg bg-accent p-4">
-                    <p className="text-sm text-accent-foreground">
-                      Fecha del evento
-                    </p>
-                    <p className="text-lg font-semibold">
-                      {formatEventDate(eventDate.date)}
-                    </p>
+                  <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      {eventDate.label} · {eventDate.venue}
+                      Fecha{selectedDates.length > 1 ? "s" : ""} del evento
                     </p>
+                    {selectedDates.map((d) => (
+                      <div key={d.id} className="rounded-lg bg-accent p-4">
+                        <p className="text-lg font-semibold">
+                          {formatEventDate(d.date)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {d.label} · {d.venue}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                   <Separator />
                   <div>
@@ -289,8 +351,9 @@ export function RegistrationWizard({
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    La proforma se emitirá con estos datos y se enviará al
-                    correo de la empresa.
+                    {selectedDates.length > 1
+                      ? "Se generará una proforma por cada fecha, con estos mismos datos, y se enviarán al correo de la empresa."
+                      : "La proforma se emitirá con estos datos y se enviará al correo de la empresa."}
                   </p>
                 </CardContent>
               </Card>
@@ -321,30 +384,55 @@ export function RegistrationWizard({
               </div>
               <div>
                 <h2 className="text-2xl font-semibold">
-                  Inscripción generada
+                  {result.length > 1
+                    ? "Inscripciones generadas"
+                    : "Inscripción generada"}
                 </h2>
                 <p className="mt-2 text-muted-foreground">
-                  Tu código de inscripción es{" "}
-                  <span className="font-mono font-semibold tabular-nums text-foreground">
-                    {result.code}
-                  </span>
-                  . La proforma quedó generada, pendiente de pago, y la
-                  enviaremos al correo registrado de tu empresa.
+                  {result.length > 1 ? (
+                    <>
+                      Tus códigos de inscripción son{" "}
+                      {result.map((r, i) => (
+                        <span key={r.registrationId}>
+                          <span className="font-mono font-semibold tabular-nums text-foreground">
+                            {r.code}
+                          </span>
+                          {i < result.length - 1 ? " y " : ""}
+                        </span>
+                      ))}
+                      . Las proformas quedaron generadas, pendientes de pago,
+                      y las enviaremos al correo registrado de tu empresa.
+                    </>
+                  ) : (
+                    <>
+                      Tu código de inscripción es{" "}
+                      <span className="font-mono font-semibold tabular-nums text-foreground">
+                        {result[0].code}
+                      </span>
+                      . La proforma quedó generada, pendiente de pago, y la
+                      enviaremos al correo registrado de tu empresa.
+                    </>
+                  )}
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-3">
-                <Button
-                  nativeButton={false}
-                  render={
-                    <a
-                      href={`/api/proformas/${result.id}/pdf`}
-                      target="_blank"
-                      rel="noopener"
-                    />
-                  }
-                >
-                  Descargar proforma
-                </Button>
+                {result.map((r) => (
+                  <Button
+                    key={r.registrationId}
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={`/api/proformas/${r.registrationId}/pdf`}
+                        target="_blank"
+                        rel="noopener"
+                      />
+                    }
+                  >
+                    {result.length > 1
+                      ? `Descargar proforma ${r.code}`
+                      : "Descargar proforma"}
+                  </Button>
+                ))}
               </div>
             </section>
           )}
@@ -353,8 +441,10 @@ export function RegistrationWizard({
         {step > 0 && step < 4 && (
           <PriceSummary
             eventName={event?.name}
-            dateText={eventDate ? formatEventDate(eventDate.date) : undefined}
-            venue={eventDate?.venue}
+            dates={selectedDates.map((d) => ({
+              text: formatEventDate(d.date),
+              venue: d.venue,
+            }))}
             affiliationLabel={affiliation ? AFFILIATION_LABELS[affiliation] : undefined}
             unitPriceUsd={unitPriceUsd}
             quantity={Math.max(1, participants.length)}

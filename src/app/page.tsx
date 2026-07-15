@@ -62,7 +62,7 @@ export default async function HomePage() {
                 adelante.
               </p>
             </div>
-            <Reveal className="relative order-first mx-4 h-[320px] sm:h-[420px] lg:order-none lg:mx-0 lg:h-[480px]">
+            <Reveal className="relative order-first mx-4 mb-8 h-[320px] sm:h-[420px] lg:order-none lg:mx-0 lg:mb-0 lg:h-[480px]">
               <Image
                 src="/images/campo-informacion.jpg"
                 alt="Flyer: un campo de clase mundial, 27 hoyos diseñados por P.B. Dye con vistas al mar Caribe"

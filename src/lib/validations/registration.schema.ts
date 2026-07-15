@@ -91,7 +91,11 @@ export type CompanyStepInput = z.input<typeof companyStepSchema>;
 export const createRegistrationSchema = companyFieldsSchema
   .extend({
     eventId: z.string().min(1, "Selecciona un evento"),
-    eventDateId: z.string().min(1, "Selecciona una fecha"),
+    // Los mismos participantes se inscriben en todas las fechas elegidas:
+    // una empresa puede jugar la primera y la tercera parada en un solo envío.
+    eventDateIds: z
+      .array(z.string())
+      .min(1, "Selecciona al menos una fecha"),
     participants: z
       .array(participantSchema)
       .min(1, "Registra al menos un participante")

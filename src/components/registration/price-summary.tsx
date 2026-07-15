@@ -3,10 +3,14 @@ import { formatDop, formatUsd } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+interface SelectedDate {
+  text: string;
+  venue: string;
+}
+
 interface PriceSummaryProps {
   eventName?: string;
-  dateText?: string;
-  venue?: string;
+  dates: SelectedDate[];
   affiliationLabel?: string;
   unitPriceUsd: number | null;
   quantity: number;
@@ -15,14 +19,14 @@ interface PriceSummaryProps {
 
 export function PriceSummary({
   eventName,
-  dateText,
-  venue,
+  dates,
   affiliationLabel,
   unitPriceUsd,
   quantity,
   rate,
 }: PriceSummaryProps) {
-  const totalUsd = unitPriceUsd !== null ? unitPriceUsd * quantity : null;
+  const totalUsd =
+    unitPriceUsd !== null ? unitPriceUsd * quantity * Math.max(1, dates.length) : null;
 
   return (
     <Card className="h-fit border-t-2 border-t-primary">
@@ -36,15 +40,21 @@ export function PriceSummary({
             <dd className="text-right font-medium">{eventName ?? "—"}</dd>
           </div>
           <div className="flex justify-between gap-2">
-            <dt className="text-muted-foreground">Fecha</dt>
-            <dd className="text-right font-medium">{dateText ?? "—"}</dd>
+            <dt className="text-muted-foreground">
+              {dates.length > 1 ? "Fechas" : "Fecha"}
+            </dt>
+            <dd className="text-right font-medium">
+              {dates.length === 0 ? (
+                "—"
+              ) : (
+                <ul>
+                  {dates.map((d) => (
+                    <li key={d.text}>{d.text}</li>
+                  ))}
+                </ul>
+              )}
+            </dd>
           </div>
-          {venue && (
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Sede</dt>
-              <dd className="text-right">{venue}</dd>
-            </div>
-          )}
           <div className="flex justify-between gap-2">
             <dt className="text-muted-foreground">Afiliación</dt>
             <dd className="text-right font-medium">{affiliationLabel ?? "—"}</dd>

@@ -3,6 +3,7 @@ import { getAdminCompanies } from "@/server/queries/admin.queries";
 import { AFFILIATION_LABELS } from "@/lib/constants";
 import { formatShortDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -21,14 +22,32 @@ export default async function AdminEmpresasPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Empresas</h1>
-        <p className="mt-1 text-muted-foreground">
-          Empresas que se han inscrito en el sistema. La columna Afiliación
-          muestra si se vincularon a un socio conocido del listado (revisa
-          nombres repetidos ahí) o si pidieron afiliarse. Confírmalo en tu
-          propio registro de socios antes de aceptar a nadie.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Empresas</h1>
+          <p className="mt-1 text-muted-foreground">
+            Empresas que se han inscrito en el sistema. La columna Membresía
+            muestra si se vincularon a un miembro conocido del listado (revisa
+            nombres repetidos ahí) o si pidieron ser miembros. Confírmalo en tu
+            propio registro de membresía antes de aceptar a nadie.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<a href="/admin/empresas/export" />}
+          >
+            Descargar CSV
+          </Button>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<a href="/admin/empresas/export?format=xlsx" />}
+          >
+            Descargar Excel
+          </Button>
+        </div>
       </div>
 
       {companies.length === 0 ? (
@@ -45,7 +64,7 @@ export default async function AdminEmpresasPage() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Contacto</TableHead>
                 <TableHead>Correo / Teléfono</TableHead>
-                <TableHead>Afiliación</TableHead>
+                <TableHead>Membresía</TableHead>
                 <TableHead>Inscripciones</TableHead>
                 <TableHead>Desde</TableHead>
               </TableRow>
@@ -72,15 +91,15 @@ export default async function AdminEmpresasPage() {
                   <TableCell>
                     {c.affiliate ? (
                       <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
-                        Socio: {c.affiliate.name}
+                        Membresía activa: {c.affiliate.name}
                       </Badge>
                     ) : c.wantsToAffiliate ? (
                       <Badge className="bg-amber-100 text-amber-800 border-amber-200">
-                        Quiere afiliarse
+                        Quiere ser miembro
                       </Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground">
-                        No afiliada
+                        Sin membresía ADECLA
                       </span>
                     )}
                   </TableCell>

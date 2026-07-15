@@ -25,6 +25,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://adecla-rsvp.vercel.app"),
   title: {
     default: "ADECLA | Inscripciones a eventos deportivos",
     template: "%s",

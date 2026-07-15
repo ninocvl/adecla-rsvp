@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { participantSchema } from "@/lib/validations/registration.schema";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -20,11 +20,10 @@ interface StepValues {
   participants: { fullName: string; email: string; phone: string }[];
 }
 
-// Valida solo los jugadores activos: con "solo un jugador" el bloque 2 se ignora.
-function makeStepSchema(soloPlayer: boolean) {
+// Valida solo los jugadores activos: con 1 participante el bloque 2 se ignora.
+function makeStepSchema(count: number) {
   return z.object({
     participants: z.array(z.record(z.string(), z.unknown())).superRefine((arr, ctx) => {
-      const count = soloPlayer ? 1 : 2;
       for (let i = 0; i < count; i++) {
         const result = participantSchema.safeParse(arr[i]);
         if (!result.success) {
@@ -48,8 +47,10 @@ export function ParticipantForm({
   onBack,
   onNext,
 }: ParticipantFormProps) {
-  const [soloPlayer, setSoloPlayer] = useState(defaultValues.length === 1);
-  const schema = useMemo(() => makeStepSchema(soloPlayer), [soloPlayer]);
+  const [count, setCount] = useState<1 | 2 | undefined>(
+    defaultValues.length === 2 ? 2 : defaultValues.length === 1 ? 1 : undefined
+  );
+  const schema = useMemo(() => makeStepSchema(count ?? 1), [count]);
 
   const {
     register,
@@ -67,9 +68,7 @@ export function ParticipantForm({
   });
 
   function onSubmit(values: StepValues) {
-    const active = soloPlayer
-      ? [values.participants[0]]
-      : values.participants.slice(0, 2);
+    const active = values.participants.slice(0, count ?? 1);
     onNext(
       active.map((p) => ({
         fullName: p.fullName.trim(),
@@ -79,7 +78,49 @@ export function ParticipantForm({
     );
   }
 
-  const participantBlocks = soloPlayer ? [0] : [0, 1];
+  if (count === undefined) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label>¿Cuántos participantes vas a inscribir?</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setCount(1)}
+              className={cn(
+                "rounded-lg border p-3 text-left text-sm transition-colors",
+                "hover:border-primary/40"
+              )}
+            >
+              1 participante
+            </button>
+            <button
+              type="button"
+              onClick={() => setCount(2)}
+              className={cn(
+                "rounded-lg border p-3 text-left text-sm transition-colors",
+                "hover:border-primary/40"
+              )}
+            >
+              2 participantes
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            El torneo se juega por parejas; si todavía no tienes compañero,
+            puedes inscribir un solo jugador y completar tu pareja más
+            adelante.
+          </p>
+        </div>
+        <div className="flex justify-between">
+          <Button type="button" variant="outline" onClick={onBack}>
+            Atrás
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const participantBlocks = count === 1 ? [0] : [0, 1];
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -134,22 +175,13 @@ export function ParticipantForm({
         </fieldset>
       ))}
 
-      <label className="flex items-start gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
-        <Checkbox
-          checked={soloPlayer}
-          onCheckedChange={(checked) => setSoloPlayer(checked === true)}
-          className="mt-0.5"
-        />
-        <span>
-          <span className="font-medium">
-            Por ahora inscribo un solo jugador.
-          </span>{" "}
-          <span className="text-muted-foreground">
-            El torneo se juega por parejas; podrás completar la tuya más
-            adelante.
-          </span>
-        </span>
-      </label>
+      <button
+        type="button"
+        onClick={() => setCount(undefined)}
+        className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+      >
+        Cambiar número de participantes
+      </button>
 
       <div className="flex justify-between">
         <Button type="button" variant="outline" onClick={onBack}>

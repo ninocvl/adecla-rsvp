@@ -24,9 +24,7 @@ function fmtEventDate(iso: string) {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
-  })
-    .format(new Date(iso))
-    .toUpperCase();
+  }).format(new Date(iso));
 }
 
 function fmtShortDate(iso: string) {
@@ -148,12 +146,7 @@ interface ProformaDocumentProps {
 }
 
 export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
-  const description = [
-    `INSCRIPCIÓN ${data.event.name.toUpperCase()}`,
-    `${data.affiliationLabel.toUpperCase()} — ${data.quantity} PARTICIPANTE${
-      data.quantity === 1 ? "" : "S"
-    }`,
-  ];
+  const eventTitleLine = `INSCRIPCIÓN - ${data.event.name.toUpperCase()}`;
 
   return (
     <Document
@@ -222,23 +215,27 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
           <View style={styles.tableBody}>
             <Text style={styles.colCant}>{data.quantity}</Text>
             <View style={styles.colDesc}>
-              {description.map((line) => (
-                <Text key={line} style={styles.descEvent}>
-                  {line}
+              <Text style={styles.descEvent}>{eventTitleLine}</Text>
+              <Text style={styles.descMuted}>
+                Categoría: {data.affiliationLabel}
+              </Text>
+              <Text style={styles.descMuted}>
+                {data.quantity} participante{data.quantity === 1 ? "" : "s"}
+              </Text>
+              <Text style={styles.descDate}>
+                Fecha del evento: {fmtEventDate(data.event.dateISO)}
+              </Text>
+              <Text style={styles.descMuted}>
+                {data.event.dateLabel} - {data.event.venue}
+              </Text>
+              <Text style={[styles.descMuted, { marginTop: 6 }]}>
+                Participantes:
+              </Text>
+              {data.participants.map((p) => (
+                <Text key={p.position} style={styles.descMuted}>
+                  {p.position}. {p.fullName}
                 </Text>
               ))}
-              <Text style={styles.descDate}>
-                FECHA DEL EVENTO: {fmtEventDate(data.event.dateISO)}
-              </Text>
-              <Text style={styles.descMuted}>
-                {data.event.dateLabel} · {data.event.venue}
-              </Text>
-              <Text style={styles.descMuted}>
-                Participantes:{" "}
-                {data.participants
-                  .map((p) => `${p.position}. ${p.fullName}`)
-                  .join("   ")}
-              </Text>
             </View>
             <Text style={styles.colPU}>{fmt(data.unitPriceUsd)}</Text>
             <Text style={styles.colSub}>{fmt(data.totalUsd)}</Text>

@@ -137,6 +137,10 @@ export function CompanyStep({
     }
   }
 
+  // Para un miembro conocido, la categoría ya está fijada en el registro de
+  // socios: no tiene sentido ofrecerla como elección editable.
+  const affiliationTypeLocked = !!selectedAffiliate?.affiliationType;
+
   function renderField(field: FieldProps, disabled = false) {
     return (
       <div key={field.id} className="space-y-2">
@@ -161,7 +165,7 @@ export function CompanyStep({
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-6">
       <div className="space-y-2">
-        <Label>¿Tu empresa ya es socia de ADECLA?</Label>
+        <Label>¿Tu empresa ya es miembro de ADECLA?</Label>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -173,7 +177,7 @@ export function CompanyStep({
                 : "hover:border-primary/40"
             )}
           >
-            Sí, ya soy socio
+            Sí, mi empresa es miembro de ADECLA
           </button>
           <button
             type="button"
@@ -185,12 +189,12 @@ export function CompanyStep({
                 : "hover:border-primary/40"
             )}
           >
-            No, todavía no
+            No, aún no es miembro
           </button>
         </div>
         {errors.isAffiliated && (
           <p className="text-sm text-destructive">
-            Indica si tu empresa ya está afiliada.
+            Indica si tu empresa ya es miembro de ADECLA.
           </p>
         )}
       </div>
@@ -215,8 +219,8 @@ export function CompanyStep({
               <div className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover shadow-md">
                 {filteredAffiliates.length === 0 ? (
                   <p className="px-3 py-3 text-sm text-muted-foreground">
-                    No encontramos esa empresa en nuestro registro de socios.
-                    Verifica el nombre o escríbenos.
+                    No encontramos esa empresa en nuestro registro de
+                    miembros. Verifica el nombre o escríbenos.
                   </p>
                 ) : (
                   filteredAffiliates.map((a) => (
@@ -258,9 +262,9 @@ export function CompanyStep({
             className="mt-0.5"
           />
           <span>
-            <span className="font-medium">Quiero afiliarme a ADECLA.</span>{" "}
+            <span className="font-medium">Quiero ser miembro de ADECLA.</span>{" "}
             <span className="text-muted-foreground">
-              La administración te contactará para el proceso de afiliación.
+              La administración te contactará para el proceso de membresía.
             </span>
           </span>
         </label>
@@ -276,7 +280,11 @@ export function CompanyStep({
               name="affiliationType"
               control={control}
               render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                  disabled={affiliationTypeLocked}
+                >
                   <SelectTrigger id="affiliationType" className="w-full">
                     <SelectValue placeholder="Selecciona el tipo de empresa">
                       {(value: string | null) =>
@@ -300,7 +308,9 @@ export function CompanyStep({
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              Define la tarifa de inscripción a los torneos.
+              {affiliationTypeLocked
+                ? "Ya está fijado según tu registro de membresía."
+                : "Define la tarifa de inscripción a los torneos."}
             </p>
           </div>
 

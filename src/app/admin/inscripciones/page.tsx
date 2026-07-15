@@ -7,6 +7,7 @@ import {
 import type { RegistrationStatus } from "@/generated/prisma/enums";
 import { STATUS_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { RegistrationTable } from "@/components/admin/registration-table";
 
 export const metadata: Metadata = {
@@ -40,14 +41,40 @@ export default async function AdminInscripcionesPage({
     return `/admin/inscripciones${qs ? `?${qs}` : ""}`;
   }
 
+  const exportBaseHref = filterHref({}).replace(
+    "/admin/inscripciones",
+    "/admin/inscripciones/export"
+  );
+  const exportSeparator = exportBaseHref.includes("?") ? "&" : "?";
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Inscripciones</h1>
-        <p className="mt-1 text-muted-foreground">
-          {registrations.length} resultado
-          {registrations.length === 1 ? "" : "s"}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Inscripciones</h1>
+          <p className="mt-1 text-muted-foreground">
+            {registrations.length} resultado
+            {registrations.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<a href={exportBaseHref} />}
+          >
+            Descargar CSV
+          </Button>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={
+              <a href={`${exportBaseHref}${exportSeparator}format=xlsx`} />
+            }
+          >
+            Descargar Excel
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

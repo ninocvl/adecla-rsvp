@@ -12,7 +12,7 @@ import { AFFILIATION_LABELS } from "@/lib/constants";
 import { formatDop, formatEventDate, formatUsd } from "@/lib/format";
 
 export type CreateRegistrationResult =
-  | { ok: true; registrationId: string; code: string }
+  | { ok: true; registrations: { registrationId: string; code: string }[] }
   | { ok: false; error: string };
 
 class CapacityError extends Error {}
@@ -45,9 +45,9 @@ export async function createRegistrationAction(
   }
   const affiliationType = affiliate?.affiliationType ?? data.affiliationType;
 
-  const [event, eventDate, price, rateSetting] = await Promise.all([
+  const [event, eventDates, price, rateSetting] = await Promise.all([
     prisma.event.findUnique({ where: { id: data.eventId } }),
-    prisma.eventDate.findUnique({ where: { id: data.eventDateId } }),
+    prisma.eventDate.findMany({ where: { id: { in: data.eventDateIds } } }),
     prisma.eventPrice.findUnique({
       where: {
         eventId_affiliation: { eventId: data.eventId, affiliation: affiliationType },
@@ -59,8 +59,11 @@ export async function createRegistrationAction(
   if (!event || event.status !== "PUBLISHED") {
     return { ok: false, error: "Este evento no está disponible." };
   }
-  if (!eventDate || eventDate.eventId !== event.id || !eventDate.isActive) {
-    return { ok: false, error: "Esa fecha no está disponible." };
+  if (
+    eventDates.length !== data.eventDateIds.length ||
+    eventDates.some((d) => d.eventId !== event.id || !d.isActive)
+  ) {
+    return { ok: false, error: "Alguna de esas fechas no está disponible." };
   }
   if (!price || !price.isEnabled || price.amountUsd === null) {
     return {
@@ -109,91 +112,98 @@ export async function createRegistrationAction(
         },
       });
 
-      // Toma de cupos atómica: una sola sentencia condicional, sin carreras.
-      const updated = await tx.$executeRaw`
-        UPDATE "EventDate"
-        SET "reservedCount" = "reservedCount" + ${quantity}
-        WHERE "id" = ${eventDate.id}
-          AND "isActive" = true
-          AND "reservedCount" + ${quantity} <= "capacity"
-      `;
-      if (updated === 0) {
-        throw new CapacityError();
-      }
+      // Los mismos participantes se inscriben en cada fecha elegida: una
+      // registración independiente por fecha, todas o ninguna en esta misma
+      // transacción, para no dejar cupos tomados a medias.
+      const registrations: { registrationId: string; code: string }[] = [];
+      for (const eventDate of eventDates) {
+        const updated = await tx.$executeRaw`
+          UPDATE "EventDate"
+          SET "reservedCount" = "reservedCount" + ${quantity}
+          WHERE "id" = ${eventDate.id}
+            AND "isActive" = true
+            AND "reservedCount" + ${quantity} <= "capacity"
+        `;
+        if (updated === 0) {
+          throw new CapacityError();
+        }
 
-      const { codeSeq, codePrefix } = await tx.event.update({
-        where: { id: event.id },
-        data: { codeSeq: { increment: 1 } },
-        select: { codeSeq: true, codePrefix: true },
-      });
-      const year = new Date().getFullYear();
-      const code = `${codePrefix}-${year}-${String(codeSeq).padStart(4, "0")}`;
+        const { codeSeq, codePrefix } = await tx.event.update({
+          where: { id: event.id },
+          data: { codeSeq: { increment: 1 } },
+          select: { codeSeq: true, codePrefix: true },
+        });
+        const year = new Date().getFullYear();
+        const code = `${codePrefix}-${year}-${String(codeSeq).padStart(4, "0")}`;
 
-      const registration = await tx.registration.create({
-        data: {
-          code,
-          companyId: company.id,
-          eventId: event.id,
-          eventDateId: eventDate.id,
-          affiliation: affiliationType,
-          status: "PROFORMA_GENERADA",
-          quantity,
-          unitPriceUsd: unitPriceUsd.toFixed(2),
-          totalUsd: totalUsd.toFixed(2),
-          exchangeRate: exchangeRate.toFixed(2),
-          totalDopRef: totalDopRef.toFixed(2),
-          participants: {
-            create: data.participants.map((p, index) => ({
-              fullName: p.fullName,
-              email: p.email,
-              phone: p.phone,
-              position: index + 1,
-            })),
-          },
-          history: {
-            create: { fromStatus: null, toStatus: "PROFORMA_GENERADA" },
-          },
-        },
-      });
-
-      // Snapshot autocontenido: la proforma imprime siempre estos datos,
-      // aunque después cambien precios, tasa o datos de la empresa.
-      await tx.proforma.create({
-        data: {
-          registrationId: registration.id,
-          number: code,
-          snapshot: {
+        const registration = await tx.registration.create({
+          data: {
             code,
-            issuedAt: new Date().toISOString(),
-            company: {
-              legalName: company.legalName,
-              rnc: company.rnc,
-              contactName: company.contactName,
-              email: company.email,
-              phone: company.phone,
-            },
-            event: {
-              name: event.name,
-              dateISO: eventDate.date.toISOString(),
-              dateLabel: eventDate.label,
-              venue: eventDate.venue,
-            },
+            companyId: company.id,
+            eventId: event.id,
+            eventDateId: eventDate.id,
             affiliation: affiliationType,
-            affiliationLabel: AFFILIATION_LABELS[affiliationType],
+            status: "PROFORMA_GENERADA",
             quantity,
             unitPriceUsd: unitPriceUsd.toFixed(2),
             totalUsd: totalUsd.toFixed(2),
             exchangeRate: exchangeRate.toFixed(2),
             totalDopRef: totalDopRef.toFixed(2),
-            participants: data.participants.map((p, index) => ({
-              fullName: p.fullName,
-              position: index + 1,
-            })),
+            participants: {
+              create: data.participants.map((p, index) => ({
+                fullName: p.fullName,
+                email: p.email,
+                phone: p.phone,
+                position: index + 1,
+              })),
+            },
+            history: {
+              create: { fromStatus: null, toStatus: "PROFORMA_GENERADA" },
+            },
           },
-        },
-      });
+        });
 
-      return { registration, company };
+        // Snapshot autocontenido: la proforma imprime siempre estos datos,
+        // aunque después cambien precios, tasa o datos de la empresa.
+        await tx.proforma.create({
+          data: {
+            registrationId: registration.id,
+            number: code,
+            snapshot: {
+              code,
+              issuedAt: new Date().toISOString(),
+              company: {
+                legalName: company.legalName,
+                rnc: company.rnc,
+                contactName: company.contactName,
+                email: company.email,
+                phone: company.phone,
+              },
+              event: {
+                name: event.name,
+                dateISO: eventDate.date.toISOString(),
+                dateLabel: eventDate.label,
+                venue: eventDate.venue,
+              },
+              affiliation: affiliationType,
+              affiliationLabel: AFFILIATION_LABELS[affiliationType],
+              quantity,
+              unitPriceUsd: unitPriceUsd.toFixed(2),
+              totalUsd: totalUsd.toFixed(2),
+              exchangeRate: exchangeRate.toFixed(2),
+              totalDopRef: totalDopRef.toFixed(2),
+              participants: data.participants.map((p, index) => ({
+                fullName: p.fullName,
+                position: index + 1,
+              })),
+            },
+          },
+        });
+
+        registrations.push({ registrationId: registration.id, code });
+      }
+
+      return { registrations, company };
     });
 
     // El correo nunca bloquea la inscripción.
@@ -202,27 +212,23 @@ export async function createRegistrationAction(
         to: result.company.email,
         companyName: result.company.legalName,
         contactName: result.company.contactName,
-        registrationCode: result.registration.code,
+        registrationCode: result.registrations.map((r) => r.code).join(", "),
         eventName: event.name,
-        eventDate: formatEventDate(eventDate.date),
-        totalUsd: formatUsd(totalUsd),
-        totalDopRef: formatDop(totalDopRef),
+        eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
+        totalUsd: formatUsd(totalUsd * eventDates.length),
+        totalDopRef: formatDop(totalDopRef * eventDates.length),
       })
       .catch((e) => console.error("Error enviando correo de proforma:", e));
 
     revalidatePath("/");
 
-    return {
-      ok: true,
-      registrationId: result.registration.id,
-      code: result.registration.code,
-    };
+    return { ok: true, registrations: result.registrations };
   } catch (error) {
     if (error instanceof CapacityError) {
       return {
         ok: false,
         error:
-          "No quedan cupos suficientes para esa fecha. Elige otra fecha o intenta con menos participantes.",
+          "No quedan cupos suficientes para una de esas fechas. Elige otra fecha o intenta con menos participantes.",
       };
     }
     console.error("Error creando inscripción:", error);

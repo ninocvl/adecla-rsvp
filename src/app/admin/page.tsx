@@ -49,12 +49,12 @@ export default async function AdminPage() {
         <MetricCard
           label="Empresas inscritas"
           value={metrics.companies}
-          hint="Confirma la afiliación en tu registro de socios"
+          hint="Confirma la membresía en tu registro"
         />
         <MetricCard
-          label="Piden afiliarse"
+          label="Piden ser miembros"
           value={metrics.affiliationRequests}
-          hint="Contáctalas para el proceso de afiliación"
+          hint="Contáctalas para el proceso de membresía"
         />
         <MetricCard
           label="Total inscritos"
