@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Mono, Public_Sans } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Sora } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SplashScreen } from "@/components/shared/splash-screen";
 import "./globals.css";
 
-const publicSans = Public_Sans({
+// Prueba "ADECLA Modular Experience": Sora para titulares/números/botones,
+// Inter para cuerpo/formularios. Reemplaza Fraunces + Public Sans solo en
+// esta rama de exploración (design/modular-experience).
+const inter = Inter({
   variable: "--font-public-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
-const fraunces = Fraunces({
+const sora = Sora({
   variable: "--font-fraunces",
   subsets: ["latin"],
-  axes: ["opsz", "SOFT"],
   display: "swap",
 });
 
@@ -42,7 +44,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${publicSans.variable} ${fraunces.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${sora.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SplashScreen />

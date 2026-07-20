@@ -47,6 +47,8 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --color-brand-teal: var(--brand-teal);
+  --color-carbon: var(--carbon);
+  --color-blue-secondary: var(--blue-secondary);
 }
 
 :root {
@@ -70,6 +72,8 @@
   --input: oklch(0.934 0 89.9);
   --ring: oklch(0.661 0.116 185.9); /* teal oficial #00a99d */
   --brand-teal: oklch(0.661 0.116 185.9);
+  --carbon: oklch(0.24 0.004 197); /* carbón #212322, del brand book */
+  --blue-secondary: oklch(0.68 0.097 212.1); /* azul secundario #42a8bb */
   --chart-1: oklch(0.661 0.116 185.9);
   --chart-2: oklch(0.68 0.097 212.1);
   --chart-3: oklch(0.55 0.16 33);
@@ -106,6 +110,8 @@
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.661 0.116 185.9);
   --brand-teal: oklch(0.661 0.116 185.9);
+  --carbon: oklch(0.24 0.004 197);
+  --blue-secondary: oklch(0.68 0.097 212.1);
   --chart-1: oklch(0.661 0.116 185.9);
   --chart-2: oklch(0.68 0.097 212.1);
   --chart-3: oklch(0.65 0.18 33);
@@ -136,9 +142,10 @@
   h3 {
     /* --font-heading es un alias @theme inline: solo se resuelve dentro de
        utilidades Tailwind (ej. className="font-heading"), no como var() suelta
-       en CSS a mano. Aquí se referencia la variable real de next/font. */
-    font-family: var(--font-fraunces), Georgia, serif;
-    letter-spacing: -0.02em;
+       en CSS a mano. Aquí se referencia la variable real de next/font
+       (Sora en esta rama de exploración "ADECLA Modular Experience"). */
+    font-family: var(--font-fraunces), "Segoe UI", system-ui, sans-serif;
+    letter-spacing: -0.01em;
     text-wrap: balance;
   }
   p {
@@ -265,5 +272,80 @@
 @media (prefers-reduced-motion: reduce) {
   .step-fade-in {
     animation: none;
+  }
+}
+
+/* ============================================================
+   "ADECLA Modular Experience" — exploración de dirección visual
+   basada en la geometría modular del isotipo. Vive solo en la
+   rama design/modular-experience.
+   ============================================================ */
+
+/* Retícula geométrica muy sutil, para el nivel "fondo" del sistema
+   de profundidad de 3 capas. Nunca compite con el contenido. */
+.geo-grid-bg {
+  background-image:
+    linear-gradient(to right, oklch(0.32 0.025 200 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.32 0.025 200 / 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.geo-grid-bg--on-carbon {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Módulos translúcidos inspirados en la versión 3D del isotipo: vidrio
+   controlado, no glassmorphism decorativo genérico. */
+.module-glass {
+  background: oklch(1 0 0 / 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 0.16);
+}
+.module-glass-teal {
+  background: oklch(0.661 0.116 185.9 / 0.14);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.661 0.116 185.9 / 0.3);
+}
+.module-glass-blue {
+  background: oklch(0.68 0.097 212.1 / 0.14);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.68 0.097 212.1 / 0.3);
+}
+
+/* Sombra amplia, suave y de baja opacidad — nunca un halo oscuro y
+   pegado al borde. Se usa en los módulos que "flotan" sobre el resto. */
+.module-shadow {
+  box-shadow: 0 24px 48px -20px oklch(0.24 0.004 197 / 0.22);
+}
+
+/* Elevación sutil + zoom mínimo en imágenes al pasar el mouse (2-3%),
+   consistente con "microinteracciones sofisticadas y discretas". */
+.module-hover {
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.module-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 32px 56px -24px oklch(0.24 0.004 197 / 0.28);
+}
+.module-hover-img {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.module-hover:hover .module-hover-img {
+  transform: scale(1.025);
+}
+@media (prefers-reduced-motion: reduce) {
+  .module-hover,
+  .module-hover-img {
+    transition: none;
+  }
+  .module-hover:hover {
+    transform: none;
+  }
+  .module-hover:hover .module-hover-img {
+    transform: none;
   }
 }
