@@ -51,10 +51,16 @@ export function RegistrationWizard({
     initialEventDateId ? [initialEventDateId] : []
   );
   const [samePlayersConfirmed, setSamePlayersConfirmed] = useState(false);
+  const [participantCount, setParticipantCount] = useState<1 | 2 | undefined>(
+    undefined
+  );
   const [participants, setParticipants] = useState<ParticipantValue[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [result, setResult] =
     useState<{ registrationId: string; code: string }[]>();
+  // Fechas ya inscritas en esta sesión (posiblemente en envíos encadenados),
+  // para poder ofrecer solo las que faltan al terminar cada envío.
+  const [registeredDateIds, setRegisteredDateIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const affiliation = company?.affiliationType;
@@ -67,10 +73,29 @@ export function RegistrationWizard({
     () => event?.dates.filter((d) => eventDateIds.includes(d.id)) ?? [],
     [event, eventDateIds]
   );
+  const remainingDates = useMemo(
+    () =>
+      event?.dates.filter(
+        (d) => !registeredDateIds.includes(d.id) && d.available > 0
+      ) ?? [],
+    [event, registeredDateIds]
+  );
   const price = event?.prices.find((p) => p.affiliation === affiliation);
   const unitPriceUsd =
     price?.isEnabled && price.amountUsd !== null ? price.amountUsd : null;
   const priceUnavailable = !!event && !!affiliation && unitPriceUsd === null;
+
+  // Empresa y evento ya quedaron fijos en el primer envío: esto salta
+  // directo al paso de Participantes para inscribir la siguiente fecha con
+  // otros jugadores, sin repetir el formulario completo.
+  function startChainedRegistration(dateId: string) {
+    setEventDateIds([dateId]);
+    setSamePlayersConfirmed(false);
+    setParticipantCount(undefined);
+    setParticipants([]);
+    setServerError(null);
+    setStep(2);
+  }
 
   function toggleDate(dateId: string) {
     setEventDateIds((prev) =>
@@ -98,7 +123,11 @@ export function RegistrationWizard({
         participants,
       });
       if (response.ok) {
-        setResult(response.registrations);
+        setResult((prev) => [...(prev ?? []), ...response.registrations]);
+        setRegisteredDateIds((prev) => [
+          ...prev,
+          ...selectedDates.map((d) => d.id),
+        ]);
         setStep(4);
       } else {
         setServerError(response.error);
@@ -286,6 +315,8 @@ export function RegistrationWizard({
             <div key="step-2" className="step-fade-in">
               <ParticipantForm
                 defaultValues={participants}
+                count={participantCount}
+                onCountChange={setParticipantCount}
                 onBack={() => setStep(1)}
                 onNext={(p) => {
                   setParticipants(p);
@@ -434,6 +465,30 @@ export function RegistrationWizard({
                   </Button>
                 ))}
               </div>
+
+              {remainingDates.length > 0 && (
+                <div className="rounded-lg border bg-muted/40 p-4 text-left">
+                  <p className="text-sm font-medium">
+                    ¿Van a jugar personas distintas en otra fecha?
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ya tenemos los datos de {company?.legalName}: solo falta
+                    llenar los participantes de la otra parada.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {remainingDates.map((d) => (
+                      <Button
+                        key={d.id}
+                        type="button"
+                        variant="outline"
+                        onClick={() => startChainedRegistration(d.id)}
+                      >
+                        Inscribir también en {d.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
           )}
         </div>
@@ -447,7 +502,7 @@ export function RegistrationWizard({
             }))}
             affiliationLabel={affiliation ? AFFILIATION_LABELS[affiliation] : undefined}
             unitPriceUsd={unitPriceUsd}
-            quantity={Math.max(1, participants.length)}
+            quantity={Math.max(1, participantCount ?? participants.length)}
             rate={rate}
           />
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,18 +38,19 @@ function makeStepSchema(count: number) {
 
 interface ParticipantFormProps {
   defaultValues: ParticipantValue[];
+  count: 1 | 2 | undefined;
+  onCountChange: (count: 1 | 2 | undefined) => void;
   onBack: () => void;
   onNext: (participants: ParticipantValue[]) => void;
 }
 
 export function ParticipantForm({
   defaultValues,
+  count,
+  onCountChange,
   onBack,
   onNext,
 }: ParticipantFormProps) {
-  const [count, setCount] = useState<1 | 2 | undefined>(
-    defaultValues.length === 2 ? 2 : defaultValues.length === 1 ? 1 : undefined
-  );
   const schema = useMemo(() => makeStepSchema(count ?? 1), [count]);
 
   const {
@@ -86,7 +87,7 @@ export function ParticipantForm({
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setCount(1)}
+              onClick={() => onCountChange(1)}
               className={cn(
                 "rounded-lg border p-3 text-left text-sm transition-colors",
                 "hover:border-primary/40"
@@ -96,7 +97,7 @@ export function ParticipantForm({
             </button>
             <button
               type="button"
-              onClick={() => setCount(2)}
+              onClick={() => onCountChange(2)}
               className={cn(
                 "rounded-lg border p-3 text-left text-sm transition-colors",
                 "hover:border-primary/40"
@@ -177,7 +178,7 @@ export function ParticipantForm({
 
       <button
         type="button"
-        onClick={() => setCount(undefined)}
+        onClick={() => onCountChange(undefined)}
         className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
       >
         Cambiar número de participantes

@@ -48,19 +48,30 @@ export default async function HomePage() {
             <div className="px-4 lg:pr-12 lg:pl-[max(1rem,calc((100vw-72rem)/2+1rem))]">
               <span className="section-rule" aria-hidden />
               <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-                Campos de clase mundial
+                Golf en escenarios de clase mundial
               </h2>
               <p className="mt-4 max-w-md text-muted-foreground">
-                El circuito se juega en Punta Espada Golf Club y La Cana Golf
-                Club: 27 hoyos diseñados por P.B. Dye con vistas al mar Caribe.
-                Cada parada reúne a constructores, proveedores y desarrolladores
-                de La Altagracia en una jornada de competencia y networking.
+                El circuito ADECLA Golf Tour 2026 se jugará en Punta Espada
+                Golf Club y La Cana Golf Club, dos de los campos más
+                prestigiosos del Caribe, reconocidos por su diseño, nivel
+                competitivo y espectaculares vistas.
               </p>
               <p className="mt-4 max-w-md text-muted-foreground">
-                El torneo se juega por parejas. Si todavía no tienes compañero,
-                puedes inscribir un solo jugador y completar tu pareja más
-                adelante.
+                Cada parada reunirá a constructores, desarrolladores,
+                proveedores y aliados estratégicos del sector construcción en
+                una jornada que combina competencia deportiva,
+                relacionamiento empresarial y networking.
               </p>
+              <p className="mt-6 max-w-md text-sm font-semibold text-foreground">
+                Modalidad de juego
+              </p>
+              <ul className="mt-2 max-w-md list-disc space-y-1 pl-5 text-muted-foreground">
+                <li>Se juega en parejas.</li>
+                <li>
+                  Si aún no tienes compañero, puedes inscribirte de manera
+                  individual y completar tu pareja posteriormente.
+                </li>
+              </ul>
             </div>
             <Reveal className="relative order-first mx-4 mb-8 h-[320px] sm:h-[420px] lg:order-none lg:mx-0 lg:mb-0 lg:h-[480px]">
               <Image
