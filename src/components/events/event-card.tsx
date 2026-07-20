@@ -54,11 +54,9 @@ export function EventCard({ card }: { card: LandingCard }) {
           </div>
         )}
         {!isDate && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[2px]">
-            <Badge className="bg-muted px-3 py-1 text-sm text-foreground">
-              Próximamente
-            </Badge>
-          </div>
+          <Badge className="absolute right-3 top-3 bg-white/90 px-3 py-1 text-sm text-foreground shadow-sm backdrop-blur-sm">
+            Próximamente
+          </Badge>
         )}
       </div>
 
