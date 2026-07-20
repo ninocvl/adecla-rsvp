@@ -73,15 +73,17 @@ export default async function HomePage() {
                 </li>
               </ul>
             </div>
-            <Reveal className="relative order-first mx-4 mb-8 h-[320px] sm:h-[420px] lg:order-none lg:mx-0 lg:mb-0 lg:h-[480px]">
-              <Image
-                src="/images/campo-informacion.jpg"
-                alt="Flyer: un campo de clase mundial, 27 hoyos diseñados por P.B. Dye con vistas al mar Caribe"
-                fill
-                sizes="(max-width: 1024px) 100vw, 55vw"
-                className="rounded-xl object-cover lg:rounded-l-none lg:rounded-r-xl"
-              />
-              <div className="absolute -bottom-8 left-4 w-[55%] overflow-hidden rounded-xl border-4 border-white sm:left-8">
+            <Reveal className="order-first flex items-center justify-center gap-4 px-4 py-6 lg:order-none lg:justify-start lg:pl-8">
+              <div className="shadow-teal-hover w-[45%] max-w-[220px] -rotate-3 overflow-hidden rounded-xl border-4 border-white sm:max-w-[260px]">
+                <Image
+                  src="/images/campo-informacion.jpg"
+                  alt="Flyer: un campo de clase mundial, 27 hoyos diseñados por P.B. Dye con vistas al mar Caribe"
+                  width={400}
+                  height={500}
+                  className="h-auto w-full"
+                />
+              </div>
+              <div className="shadow-teal-hover mt-10 w-[45%] max-w-[220px] rotate-2 overflow-hidden rounded-xl border-4 border-white sm:max-w-[260px]">
                 <Image
                   src="/images/adecla-informacion.jpg"
                   alt="Flyer informativo del circuito de golf de ADECLA en La Cana Golf Club"
