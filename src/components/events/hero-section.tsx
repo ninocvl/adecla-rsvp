@@ -81,32 +81,32 @@ export function HeroSection() {
           </Reveal>
         </div>
 
-        <div className="relative mx-auto hidden h-[420px] w-full max-w-md lg:block">
-          <div className="shadow-teal-hover absolute left-1/2 top-20 z-0 w-[210px] -translate-x-1/2 -rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
-            <Image
-              src="/images/padel-establos.jpeg"
-              alt="Flyer: Segunda parada, Torneo de Pádel ADECLA, Los Establos Sports Complex"
-              width={210}
-              height={263}
-              className="h-auto w-full"
-            />
-          </div>
-          <div className="shadow-teal-hover absolute left-0 top-6 z-10 w-[240px] -rotate-6 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
+        <div className="mx-auto hidden w-full max-w-lg items-end justify-center gap-4 lg:flex">
+          <div className="shadow-teal-hover w-[160px] -rotate-6 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
             <Image
               src="/images/golf-25-julio.jpg"
               alt="Flyer: Primera parada del torneo de golf, Punta Espada Golf Club, 25 de julio"
-              width={240}
-              height={300}
+              width={200}
+              height={250}
               className="h-auto w-full"
               priority
             />
           </div>
-          <div className="shadow-teal-hover absolute right-0 top-0 z-10 w-[240px] rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
+          <div className="shadow-teal-hover mb-10 w-[160px] rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
+            <Image
+              src="/images/padel-establos.jpeg"
+              alt="Flyer: Segunda parada, Torneo de Pádel ADECLA, Los Establos Sports Complex"
+              width={200}
+              height={250}
+              className="h-auto w-full"
+            />
+          </div>
+          <div className="shadow-teal-hover w-[160px] rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
             <Image
               src="/images/golf-05-septiembre.jpg"
               alt="Flyer: Tercera parada del torneo de golf, La Cana Golf Club, 5 de septiembre"
-              width={240}
-              height={300}
+              width={200}
+              height={250}
               className="h-auto w-full"
               priority
             />
