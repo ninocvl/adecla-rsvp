@@ -47,22 +47,34 @@ export function HeroSection() {
             </Button>
           </div>
 
-          <Reveal delayMs={150} className="mt-10 flex justify-center gap-4 lg:hidden">
-            <div className="shadow-teal-hover w-[130px] -rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[150px]">
+          <Reveal
+            delayMs={150}
+            className="mt-10 flex items-end justify-center gap-2 lg:hidden"
+          >
+            <div className="shadow-teal-hover w-[100px] -rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
               <Image
                 src="/images/golf-25-julio.jpg"
                 alt="Flyer: Primera parada del torneo de golf, Punta Espada Golf Club, 25 de julio"
-                width={150}
-                height={188}
+                width={120}
+                height={150}
                 className="h-auto w-full"
               />
             </div>
-            <div className="shadow-teal-hover mt-6 w-[130px] rotate-2 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[150px]">
+            <div className="shadow-teal-hover mb-3 w-[100px] rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
+              <Image
+                src="/images/padel-establos.jpeg"
+                alt="Flyer: Segunda parada, Torneo de Pádel ADECLA, Los Establos Sports Complex"
+                width={120}
+                height={150}
+                className="h-auto w-full"
+              />
+            </div>
+            <div className="shadow-teal-hover w-[100px] rotate-2 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
               <Image
                 src="/images/golf-05-septiembre.jpg"
                 alt="Flyer: Tercera parada del torneo de golf, La Cana Golf Club, 5 de septiembre"
-                width={150}
-                height={188}
+                width={120}
+                height={150}
                 className="h-auto w-full"
               />
             </div>
@@ -70,7 +82,16 @@ export function HeroSection() {
         </div>
 
         <div className="relative mx-auto hidden h-[420px] w-full max-w-md lg:block">
-          <div className="shadow-teal-hover absolute left-0 top-6 w-[240px] -rotate-6 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
+          <div className="shadow-teal-hover absolute left-1/2 top-20 z-0 w-[210px] -translate-x-1/2 -rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
+            <Image
+              src="/images/padel-establos.jpeg"
+              alt="Flyer: Segunda parada, Torneo de Pádel ADECLA, Los Establos Sports Complex"
+              width={210}
+              height={263}
+              className="h-auto w-full"
+            />
+          </div>
+          <div className="shadow-teal-hover absolute left-0 top-6 z-10 w-[240px] -rotate-6 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
             <Image
               src="/images/golf-25-julio.jpg"
               alt="Flyer: Primera parada del torneo de golf, Punta Espada Golf Club, 25 de julio"
@@ -80,7 +101,7 @@ export function HeroSection() {
               priority
             />
           </div>
-          <div className="shadow-teal-hover absolute right-0 top-0 w-[240px] rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
+          <div className="shadow-teal-hover absolute right-0 top-0 z-10 w-[240px] rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
             <Image
               src="/images/golf-05-septiembre.jpg"
               alt="Flyer: Tercera parada del torneo de golf, La Cana Golf Club, 5 de septiembre"
