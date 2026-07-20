@@ -84,6 +84,16 @@ export async function getLandingCards(): Promise<LandingCard[]> {
       });
     }
   }
+
+  // Pádel (comingSoon) va en segundo lugar en la landing, no al final: se
+  // saca de donde cayó por orden natural (evento en borrador, va último) y
+  // se reinserta en la posición 1.
+  const comingSoonIndex = cards.findIndex((c) => c.kind === "comingSoon");
+  if (comingSoonIndex > 1) {
+    const [comingSoonCard] = cards.splice(comingSoonIndex, 1);
+    cards.splice(1, 0, comingSoonCard);
+  }
+
   return cards;
 }
 
