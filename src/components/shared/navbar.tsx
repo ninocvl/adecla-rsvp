@@ -12,7 +12,7 @@ export async function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <Logo width={120} height={40} />
+        <Logo width={60} height={40} className="lg:h-14" />
         <nav className="flex items-center gap-2 sm:gap-3">
           {isAdmin ? (
             <>

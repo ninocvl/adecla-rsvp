@@ -50,7 +50,11 @@ export function RegistrationWizard({
   const [eventDateIds, setEventDateIds] = useState<string[]>(
     initialEventDateId ? [initialEventDateId] : []
   );
-  const [samePlayersConfirmed, setSamePlayersConfirmed] = useState(false);
+  // Por defecto la selección de fecha es única (como un radio): así nunca
+  // hay un estado bloqueado a medio camino. Activar este modo es lo que
+  // habilita elegir varias fechas a la vez, y ya funciona como la
+  // confirmación de "los mismos participantes en todas".
+  const [multiDateMode, setMultiDateMode] = useState(false);
   const [participantCount, setParticipantCount] = useState<1 | 2 | undefined>(
     undefined
   );
@@ -90,7 +94,7 @@ export function RegistrationWizard({
   // otros jugadores, sin repetir el formulario completo.
   function startChainedRegistration(dateId: string) {
     setEventDateIds([dateId]);
-    setSamePlayersConfirmed(false);
+    setMultiDateMode(false);
     setParticipantCount(undefined);
     setParticipants([]);
     setServerError(null);
@@ -103,14 +107,24 @@ export function RegistrationWizard({
         ? prev.filter((id) => id !== dateId)
         : [...prev, dateId]
     );
-    setSamePlayersConfirmed(false);
+  }
+
+  function selectSingleDate(dateId: string) {
+    setEventDateIds((prev) => (prev[0] === dateId && prev.length === 1 ? [] : [dateId]));
+  }
+
+  function handleMultiDateModeChange(checked: boolean) {
+    setMultiDateMode(checked);
+    if (!checked) {
+      // Al desactivar, la selección vuelve a comportarse como radio: se
+      // queda solo con la primera fecha marcada para no dejar un estado
+      // de "2 fechas elegidas" en un modo que ya no lo permite.
+      setEventDateIds((prev) => prev.slice(0, 1));
+    }
   }
 
   const step1Ready =
-    !!event &&
-    selectedDates.length > 0 &&
-    unitPriceUsd !== null &&
-    (selectedDates.length === 1 || samePlayersConfirmed);
+    !!event && selectedDates.length > 0 && unitPriceUsd !== null;
 
   function submit() {
     if (!company || !event || selectedDates.length === 0) return;
@@ -177,7 +191,7 @@ export function RegistrationWizard({
                       onClick={() => {
                         setEventId(e.id);
                         setEventDateIds([]);
-                        setSamePlayersConfirmed(false);
+                        setMultiDateMode(false);
                       }}
                       className={cn(
                         "rounded-lg border p-4 text-left transition-all",
@@ -199,16 +213,35 @@ export function RegistrationWizard({
               {event && (
                 <div className="space-y-3">
                   <SectionLabel>
-                    Fecha{event.dates.length > 1 ? "s" : ""}
+                    Fecha{multiDateMode ? "s" : ""}
                   </SectionLabel>
+
                   {event.dates.length > 1 && (
-                    <p className="text-xs text-muted-foreground">
-                      Puedes elegir más de una fecha si vas a inscribir a los
-                      mismos participantes en cada parada.
-                    </p>
+                    <label className="flex items-start gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
+                      <Checkbox
+                        checked={multiDateMode}
+                        onCheckedChange={(checked) =>
+                          handleMultiDateModeChange(checked === true)
+                        }
+                        className="mt-0.5"
+                      />
+                      <span>
+                        <span className="font-medium">
+                          Inscribir en más de una fecha con los mismos
+                          participantes.
+                        </span>{" "}
+                        <span className="text-muted-foreground">
+                          Si van a jugar personas distintas en cada fecha, no
+                          actives esto: elige una fecha ahora y agrega la otra
+                          con otros jugadores justo después de confirmar esta
+                          inscripción.
+                        </span>
+                      </span>
+                    </label>
                   )}
+
                   <div
-                    role="group"
+                    role={multiDateMode ? "group" : "radiogroup"}
                     aria-label="Fecha"
                     className="grid gap-3"
                   >
@@ -219,10 +252,14 @@ export function RegistrationWizard({
                         <button
                           key={d.id}
                           type="button"
-                          role="checkbox"
+                          role={multiDateMode ? "checkbox" : "radio"}
                           aria-checked={checked}
                           disabled={full}
-                          onClick={() => toggleDate(d.id)}
+                          onClick={() =>
+                            multiDateMode
+                              ? toggleDate(d.id)
+                              : selectSingleDate(d.id)
+                          }
                           className={cn(
                             "flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition-all",
                             checked
@@ -247,28 +284,6 @@ export function RegistrationWizard({
                     })}
                   </div>
                 </div>
-              )}
-
-              {event && selectedDates.length > 1 && (
-                <label className="flex items-start gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
-                  <Checkbox
-                    checked={samePlayersConfirmed}
-                    onCheckedChange={(checked) =>
-                      setSamePlayersConfirmed(checked === true)
-                    }
-                    className="mt-0.5"
-                  />
-                  <span>
-                    <span className="font-medium">
-                      Los mismos participantes juegan en todas las fechas
-                      elegidas.
-                    </span>{" "}
-                    <span className="text-muted-foreground">
-                      Si van a jugar personas distintas en cada fecha, elige
-                      solo una fecha aquí e inscribe la otra por separado.
-                    </span>
-                  </span>
-                </label>
               )}
 
               {event && (

@@ -98,6 +98,7 @@ async function main() {
       name: "Torneo de Pádel ADECLA",
       description:
         "El circuito de pádel de ADECLA está en preparación. Pronto anunciaremos fechas, categorías y tarifas.",
+      imageUrl: "/images/padel-establos.jpeg",
       codePrefix: "PADEL",
       status: "DRAFT",
       playersPerTeam: 2,

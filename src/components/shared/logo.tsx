@@ -9,7 +9,10 @@ interface LogoProps {
   height?: number;
 }
 
-export function Logo({ className, href = "/", width = 140, height = 48 }: LogoProps) {
+// El archivo fuente es 2250x1500px (proporción 1.5:1); estos valores por
+// defecto respetan esa proporción real para que next/image no distorsione
+// el logo ni dispare el warning de "width/height modified, but not the other".
+export function Logo({ className, href = "/", width = 72, height = 48 }: LogoProps) {
   const img = (
     <Image
       src="/images/logo-adecla.jpg"
@@ -17,7 +20,6 @@ export function Logo({ className, href = "/", width = 140, height = 48 }: LogoPr
       width={width}
       height={height}
       className={cn("h-auto w-auto object-contain", className)}
-      style={{ maxWidth: width, maxHeight: height }}
       priority
     />
   );
