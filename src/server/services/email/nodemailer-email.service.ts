@@ -4,6 +4,10 @@ import type {
   ProformaEmailData,
   StatusChangeEmailData,
 } from "./email.service";
+import {
+  renderProformaCreatedEmail,
+  renderStatusChangedEmail,
+} from "./templates";
 
 // Implementación real por SMTP. Se activa con EMAIL_ENABLED=true
 // y las variables SMTP_* en .env.
@@ -25,38 +29,25 @@ export class NodemailerEmailService implements EmailService {
   }
 
   async sendProformaCreated(data: ProformaEmailData): Promise<void> {
+    const { html, text } = renderProformaCreatedEmail(data);
     await this.transporter.sendMail({
       from: this.from,
       to: data.to,
       subject: `Proforma ${data.registrationCode} — ${data.eventName}`,
-      text: [
-        `Hola ${data.contactName},`,
-        "",
-        `Recibimos la inscripción de ${data.companyName} para ${data.eventName} (${data.eventDate}).`,
-        `Código de inscripción: ${data.registrationCode}`,
-        `Total: ${data.totalUsd} (referencia ${data.totalDopRef})`,
-        "",
-        "Los pagos se realizan en pesos dominicanos utilizando la tasa del día.",
-        "Adjuntamos la proforma oficial; también puedes descargarla desde tu panel.",
-        "",
-        "ADECLA",
-      ].join("\n"),
+      text,
+      html,
       attachments: data.attachments,
     });
   }
 
   async sendStatusChanged(data: StatusChangeEmailData): Promise<void> {
+    const { html, text } = renderStatusChangedEmail(data);
     await this.transporter.sendMail({
       from: this.from,
       to: data.to,
       subject: `Tu inscripción ${data.registrationCode} cambió de estado`,
-      text: [
-        `Hola,`,
-        "",
-        `La inscripción ${data.registrationCode} de ${data.companyName} ahora está: ${data.newStatusLabel}.`,
-        "",
-        "Puedes ver el detalle en tu panel de ADECLA.",
-      ].join("\n"),
+      text,
+      html,
     });
   }
 }
