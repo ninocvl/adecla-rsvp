@@ -20,6 +20,11 @@ export const ADECLA = {
 export const NOTA_PAGO =
   "*Los pagos se realizan en pesos dominicanos utilizando la tasa del día.";
 
+// ITBIS (impuesto sobre transferencia de bienes y servicios) vigente en RD.
+// Se aplica sobre el subtotal de cada inscripción para llegar al total real
+// a pagar — ver DESIGN.md / factura proforma.
+export const ITBIS_RATE = 0.18;
+
 export const AFFILIATION_LABELS: Record<string, string> = {
   CONSTRUCTOR: "Constructor",
   PROVEEDOR: "Proveedor",

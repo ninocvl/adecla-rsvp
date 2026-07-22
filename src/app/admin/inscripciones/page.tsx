@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   getAdminRegistrations,
-  getEventsForFilter,
+  getEventDatesForFilter,
 } from "@/server/queries/admin.queries";
 import type { RegistrationStatus } from "@/generated/prisma/enums";
 import { STATUS_LABELS } from "@/lib/constants";
@@ -26,9 +26,9 @@ export default async function AdminInscripcionesPage({
     ? (estado as RegistrationStatus)
     : undefined;
 
-  const [registrations, events] = await Promise.all([
-    getAdminRegistrations({ status, eventId: evento }),
-    getEventsForFilter(),
+  const [registrations, eventDates] = await Promise.all([
+    getAdminRegistrations({ status, eventDateId: evento }),
+    getEventDatesForFilter(),
   ]);
 
   function filterHref(params: { estado?: string; evento?: string }) {
@@ -93,19 +93,19 @@ export default async function AdminInscripcionesPage({
         ))}
       </div>
 
-      {events.length > 1 && (
+      {eventDates.length > 1 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Evento:</span>
+          <span className="text-sm text-muted-foreground">Fecha:</span>
           <FilterChip href={filterHref({ evento: undefined })} active={!evento}>
             Todos
           </FilterChip>
-          {events.map((e) => (
+          {eventDates.map((d) => (
             <FilterChip
-              key={e.id}
-              href={filterHref({ evento: e.id })}
-              active={evento === e.id}
+              key={d.id}
+              href={filterHref({ evento: d.id })}
+              active={evento === d.id}
             >
-              {e.name}
+              {d.label}
             </FilterChip>
           ))}
         </div>

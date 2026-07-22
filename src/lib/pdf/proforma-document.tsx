@@ -147,6 +147,11 @@ interface ProformaDocumentProps {
 
 export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
   const eventTitleLine = `INSCRIPCIÓN - ${data.event.name.toUpperCase()}`;
+  // Compatibilidad con proformas emitidas antes de agregar el ITBIS: esos
+  // snapshots no tienen subtotalUsd/itbisUsd, así que se muestran igual que
+  // siempre (sin desglose) en vez de "NaN".
+  const subtotalUsd = data.subtotalUsd ?? data.totalUsd;
+  const itbisDisplay = data.itbisUsd !== undefined ? fmt(data.itbisUsd) : "-";
 
   return (
     <Document
@@ -238,21 +243,21 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
               ))}
             </View>
             <Text style={styles.colPU}>{fmt(data.unitPriceUsd)}</Text>
-            <Text style={styles.colSub}>{fmt(data.totalUsd)}</Text>
+            <Text style={styles.colSub}>{fmt(subtotalUsd)}</Text>
           </View>
           <View style={styles.totals}>
             <View style={styles.totalsLabels}>
               <Text style={[styles.totalsLine, styles.totalsBold]}>
                 Sub-total General US$
               </Text>
-              <Text style={styles.totalsLine}>Itbis</Text>
+              <Text style={styles.totalsLine}>Itbis (18%)</Text>
               <Text style={styles.totalsBold}>TOTAL ORDEN RD$</Text>
             </View>
             <View style={styles.totalsValues}>
               <Text style={[styles.totalsLine, styles.totalsBold]}>
-                {fmt(data.totalUsd)}
+                {fmt(subtotalUsd)}
               </Text>
-              <Text style={styles.totalsLine}>-</Text>
+              <Text style={styles.totalsLine}>{itbisDisplay}</Text>
               <Text style={styles.totalsBold}>{fmt(data.totalDopRef)}</Text>
             </View>
           </View>

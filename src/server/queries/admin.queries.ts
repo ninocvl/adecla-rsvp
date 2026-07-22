@@ -56,7 +56,7 @@ export async function getAdminMetrics() {
 
 export interface AdminRegistrationFilters {
   status?: RegistrationStatus;
-  eventId?: string;
+  eventDateId?: string;
 }
 
 export async function getAdminRegistrations(
@@ -65,7 +65,7 @@ export async function getAdminRegistrations(
   return prisma.registration.findMany({
     where: {
       ...(filters.status ? { status: filters.status } : {}),
-      ...(filters.eventId ? { eventId: filters.eventId } : {}),
+      ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
     },
     include: {
       company: { select: { legalName: true, rnc: true, email: true } },
@@ -81,11 +81,19 @@ export type AdminRegistration = Awaited<
   ReturnType<typeof getAdminRegistrations>
 >[number];
 
-export async function getEventsForFilter() {
-  return prisma.event.findMany({
-    select: { id: true, name: true },
-    orderBy: { createdAt: "asc" },
+// Filtro por fecha (parada) específica, no solo por evento: un evento como
+// "Torneo de Golf ADECLA 2026" puede tener varias paradas, y el admin
+// necesita distinguir entre ellas, no solo entre golf/pádel.
+export async function getEventDatesForFilter() {
+  const dates = await prisma.eventDate.findMany({
+    where: { isActive: true },
+    include: { event: { select: { name: true } } },
+    orderBy: [{ event: { createdAt: "asc" } }, { date: "asc" }],
   });
+  return dates.map((d) => ({
+    id: d.id,
+    label: `${d.event.name} · ${d.label}`,
+  }));
 }
 
 // Lista de empresas registradas para que el admin vea quién quiere afiliarse

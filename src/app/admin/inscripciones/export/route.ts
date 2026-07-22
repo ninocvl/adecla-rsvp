@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   if (estado && estado in STATUS_LABELS) {
     filters.status = estado as RegistrationStatus;
   }
-  if (evento) filters.eventId = evento;
+  if (evento) filters.eventDateId = evento;
 
   const registrations = await getAdminRegistrations(filters);
   const rows = registrations.map((r) => [

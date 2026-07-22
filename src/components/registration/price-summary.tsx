@@ -1,4 +1,4 @@
-import { NOTA_PAGO } from "@/lib/constants";
+import { ITBIS_RATE, NOTA_PAGO } from "@/lib/constants";
 import { formatDop, formatUsd } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -25,8 +25,10 @@ export function PriceSummary({
   quantity,
   rate,
 }: PriceSummaryProps) {
-  const totalUsd =
+  const subtotalUsd =
     unitPriceUsd !== null ? unitPriceUsd * quantity * Math.max(1, dates.length) : null;
+  const itbisUsd = subtotalUsd !== null ? subtotalUsd * ITBIS_RATE : null;
+  const totalUsd = subtotalUsd !== null ? subtotalUsd + (itbisUsd as number) : null;
 
   return (
     <Card className="h-fit border-t-2 border-t-primary">
@@ -70,6 +72,21 @@ export function PriceSummary({
             </dd>
           </div>
         </dl>
+        <Separator />
+        <div className="space-y-1.5 text-sm">
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="font-medium tabular-nums">
+              {subtotalUsd !== null ? formatUsd(subtotalUsd) : "—"}
+            </span>
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">ITBIS (18%)</span>
+            <span className="font-medium tabular-nums">
+              {itbisUsd !== null ? formatUsd(itbisUsd) : "—"}
+            </span>
+          </div>
+        </div>
         <Separator />
         <div className="flex items-baseline justify-between gap-2">
           <span className="font-medium">Total</span>

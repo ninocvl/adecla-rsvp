@@ -11,7 +11,7 @@ import {
   normalizeRnc,
   type CreateRegistrationInput,
 } from "@/lib/validations/registration.schema";
-import { AFFILIATION_LABELS } from "@/lib/constants";
+import { AFFILIATION_LABELS, ITBIS_RATE } from "@/lib/constants";
 import { formatDop, formatEventDate, formatUsd } from "@/lib/format";
 
 export type CreateRegistrationResult =
@@ -84,7 +84,10 @@ export async function createRegistrationAction(
 
   const unitPriceUsd = Number(price.amountUsd);
   const exchangeRate = Number(rateSetting?.value ?? "60");
-  const totalUsd = unitPriceUsd * quantity;
+  // Subtotal (precio de tarifa) + 18% de ITBIS = total real a pagar.
+  const subtotalUsd = unitPriceUsd * quantity;
+  const itbisUsd = subtotalUsd * ITBIS_RATE;
+  const totalUsd = subtotalUsd + itbisUsd;
   const totalDopRef = totalUsd * exchangeRate;
 
   try {
@@ -192,6 +195,8 @@ export async function createRegistrationAction(
           affiliationLabel: AFFILIATION_LABELS[affiliationType],
           quantity,
           unitPriceUsd: unitPriceUsd.toFixed(2),
+          subtotalUsd: subtotalUsd.toFixed(2),
+          itbisUsd: itbisUsd.toFixed(2),
           totalUsd: totalUsd.toFixed(2),
           exchangeRate: exchangeRate.toFixed(2),
           totalDopRef: totalDopRef.toFixed(2),
