@@ -291,7 +291,7 @@ export function RegistrationWizard({
                   <SectionLabel>Tu tarifa</SectionLabel>
                   {priceUnavailable ? (
                     <p className="mt-1 text-sm text-destructive">
-                      Tu categoría de afiliación (
+                      Tu categoría de membresía (
                       {AFFILIATION_LABELS[company.affiliationType]}) todavía no tiene
                       tarifa para este evento. Escríbenos si crees que esto es
                       un error.

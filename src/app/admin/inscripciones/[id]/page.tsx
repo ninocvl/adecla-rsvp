@@ -128,7 +128,7 @@ export default async function AdminInscripcionDetallePage({
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Afiliación</span>
+            <span className="text-muted-foreground">Membresía</span>
             <span className="font-medium">
               {AFFILIATION_LABELS[registration.affiliation]}
             </span>

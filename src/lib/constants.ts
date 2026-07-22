@@ -27,7 +27,7 @@ export const ITBIS_RATE = 0.18;
 
 export const AFFILIATION_LABELS: Record<string, string> = {
   CONSTRUCTOR: "Constructor",
-  PROVEEDOR: "Proveedor",
+  PROVEEDOR: "Proveedor / Entidades de apoyo",
   DESARROLLADOR: "Desarrollador",
 };
 

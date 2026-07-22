@@ -72,7 +72,7 @@ export async function createRegistrationAction(
     return {
       ok: false,
       error:
-        "Tu categoría de afiliación todavía no tiene tarifa para este evento.",
+        "Tu categoría de membresía todavía no tiene tarifa para este evento.",
     };
   }
   if (quantity > event.playersPerTeam) {

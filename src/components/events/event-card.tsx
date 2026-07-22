@@ -92,7 +92,7 @@ export function EventCard({ card }: { card: LandingCard }) {
           <div className="space-y-3 border-t pt-3">
             <div className="flex items-start justify-between gap-2">
               <p className="text-xs text-muted-foreground">
-                Tarifa por participante, según tu categoría de afiliación
+                Tarifa por participante, según tu categoría de membresía
               </p>
               <Badge
                 variant={full ? "outline" : "secondary"}

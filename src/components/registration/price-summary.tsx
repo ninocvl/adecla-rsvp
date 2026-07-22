@@ -58,7 +58,7 @@ export function PriceSummary({
             </dd>
           </div>
           <div className="flex justify-between gap-2">
-            <dt className="text-muted-foreground">Afiliación</dt>
+            <dt className="text-muted-foreground">Membresía</dt>
             <dd className="text-right font-medium">{affiliationLabel ?? "—"}</dd>
           </div>
           <div className="flex justify-between gap-2">
