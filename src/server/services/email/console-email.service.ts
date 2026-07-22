@@ -9,7 +9,7 @@ import type {
 export class ConsoleEmailService implements EmailService {
   async sendProformaCreated(data: ProformaEmailData): Promise<void> {
     console.log(
-      `[EMAIL STUB] Proforma ${data.registrationCode} para ${data.companyName} <${data.to}> — ${data.eventName} (${data.eventDate}), total ${data.totalUsd} (~${data.totalDopRef})`
+      `[EMAIL STUB] Proforma ${data.registrationCode} para ${data.companyName} <${data.to}> — ${data.eventName} (${data.eventDate}), total ${data.totalUsd} (~${data.totalDopRef}), adjuntos: ${data.attachments.map((a) => a.filename).join(", ")}`
     );
   }
 

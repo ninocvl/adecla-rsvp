@@ -1,3 +1,8 @@
+export interface ProformaEmailAttachment {
+  filename: string;
+  content: Buffer;
+}
+
 export interface ProformaEmailData {
   to: string;
   companyName: string;
@@ -7,6 +12,7 @@ export interface ProformaEmailData {
   eventDate: string;
   totalUsd: string;
   totalDopRef: string;
+  attachments: ProformaEmailAttachment[];
 }
 
 export interface StatusChangeEmailData {

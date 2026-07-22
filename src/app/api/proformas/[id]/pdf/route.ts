@@ -1,9 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import { createElement, type ReactElement } from "react";
-import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
-import { ProformaDocument } from "@/lib/pdf/proforma-document";
+import { renderProformaPdf } from "@/lib/pdf/render-proforma-pdf";
 import type { ProformaSnapshot } from "@/lib/pdf/proforma-types";
 
 export const runtime = "nodejs";
@@ -29,20 +25,7 @@ export async function GET(
   }
 
   const snapshot = registration.proforma.snapshot as unknown as ProformaSnapshot;
-  const logoPath = path.join(
-    process.cwd(),
-    "public",
-    "images",
-    "logo-adecla.jpg"
-  );
-  const logoSrc = `data:image/jpeg;base64,${fs.readFileSync(logoPath).toString("base64")}`;
-
-  const pdf = await renderToBuffer(
-    createElement(ProformaDocument, {
-      data: snapshot,
-      logoSrc,
-    }) as ReactElement<DocumentProps>
-  );
+  const pdf = await renderProformaPdf(snapshot);
 
   return new Response(new Uint8Array(pdf), {
     headers: {

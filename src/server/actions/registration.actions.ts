@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { emailService } from "@/server/services/email";
+import { renderProformaPdf } from "@/lib/pdf/render-proforma-pdf";
+import type { ProformaSnapshot } from "@/lib/pdf/proforma-types";
 import {
   createRegistrationSchema,
   normalizeRnc,
@@ -115,7 +118,11 @@ export async function createRegistrationAction(
       // Los mismos participantes se inscriben en cada fecha elegida: una
       // registración independiente por fecha, todas o ninguna en esta misma
       // transacción, para no dejar cupos tomados a medias.
-      const registrations: { registrationId: string; code: string }[] = [];
+      const registrations: {
+        registrationId: string;
+        code: string;
+        snapshot: ProformaSnapshot;
+      }[] = [];
       for (const eventDate of eventDates) {
         const updated = await tx.$executeRaw`
           UPDATE "EventDate"
@@ -165,64 +172,81 @@ export async function createRegistrationAction(
 
         // Snapshot autocontenido: la proforma imprime siempre estos datos,
         // aunque después cambien precios, tasa o datos de la empresa.
+        const snapshot: ProformaSnapshot = {
+          code,
+          issuedAt: new Date().toISOString(),
+          company: {
+            legalName: company.legalName,
+            rnc: company.rnc,
+            contactName: company.contactName,
+            email: company.email,
+            phone: company.phone,
+          },
+          event: {
+            name: event.name,
+            dateISO: eventDate.date.toISOString(),
+            dateLabel: eventDate.label,
+            venue: eventDate.venue,
+          },
+          affiliation: affiliationType,
+          affiliationLabel: AFFILIATION_LABELS[affiliationType],
+          quantity,
+          unitPriceUsd: unitPriceUsd.toFixed(2),
+          totalUsd: totalUsd.toFixed(2),
+          exchangeRate: exchangeRate.toFixed(2),
+          totalDopRef: totalDopRef.toFixed(2),
+          participants: data.participants.map((p, index) => ({
+            fullName: p.fullName,
+            position: index + 1,
+          })),
+        };
+
         await tx.proforma.create({
           data: {
             registrationId: registration.id,
             number: code,
-            snapshot: {
-              code,
-              issuedAt: new Date().toISOString(),
-              company: {
-                legalName: company.legalName,
-                rnc: company.rnc,
-                contactName: company.contactName,
-                email: company.email,
-                phone: company.phone,
-              },
-              event: {
-                name: event.name,
-                dateISO: eventDate.date.toISOString(),
-                dateLabel: eventDate.label,
-                venue: eventDate.venue,
-              },
-              affiliation: affiliationType,
-              affiliationLabel: AFFILIATION_LABELS[affiliationType],
-              quantity,
-              unitPriceUsd: unitPriceUsd.toFixed(2),
-              totalUsd: totalUsd.toFixed(2),
-              exchangeRate: exchangeRate.toFixed(2),
-              totalDopRef: totalDopRef.toFixed(2),
-              participants: data.participants.map((p, index) => ({
-                fullName: p.fullName,
-                position: index + 1,
-              })),
-            },
+            snapshot: snapshot as unknown as Prisma.InputJsonValue,
           },
         });
 
-        registrations.push({ registrationId: registration.id, code });
+        registrations.push({ registrationId: registration.id, code, snapshot });
       }
 
       return { registrations, company };
     });
 
-    // El correo nunca bloquea la inscripción.
-    emailService
-      .sendProformaCreated({
-        to: result.company.email,
-        companyName: result.company.legalName,
-        contactName: result.company.contactName,
-        registrationCode: result.registrations.map((r) => r.code).join(", "),
-        eventName: event.name,
-        eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
-        totalUsd: formatUsd(totalUsd * eventDates.length),
-        totalDopRef: formatDop(totalDopRef * eventDates.length),
-      })
+    // El correo (con el PDF de cada proforma adjunto) nunca bloquea la
+    // inscripción: se genera y se envía sin esperar su resultado.
+    Promise.all(
+      result.registrations.map(async (r) => ({
+        filename: `proforma-${r.code}.pdf`,
+        content: await renderProformaPdf(r.snapshot),
+      }))
+    )
+      .then((attachments) =>
+        emailService.sendProformaCreated({
+          to: result.company.email,
+          companyName: result.company.legalName,
+          contactName: result.company.contactName,
+          registrationCode: result.registrations.map((r) => r.code).join(", "),
+          eventName: event.name,
+          eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
+          totalUsd: formatUsd(totalUsd * eventDates.length),
+          totalDopRef: formatDop(totalDopRef * eventDates.length),
+          attachments,
+        })
+      )
       .catch((e) => console.error("Error enviando correo de proforma:", e));
 
     revalidatePath("/");
 
-    return { ok: true, registrations: result.registrations };
+    return {
+      ok: true,
+      registrations: result.registrations.map((r) => ({
+        registrationId: r.registrationId,
+        code: r.code,
+      })),
+    };
   } catch (error) {
     if (error instanceof CapacityError) {
       return {

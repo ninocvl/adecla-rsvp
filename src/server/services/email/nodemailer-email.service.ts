@@ -21,7 +21,7 @@ export class NodemailerEmailService implements EmailService {
         pass: process.env.SMTP_PASSWORD,
       },
     });
-    this.from = process.env.EMAIL_FROM ?? "ADECLA <no-reply@adecla.com>";
+    this.from = process.env.EMAIL_FROM ?? "ADECLA <no-reply@adecla.do>";
   }
 
   async sendProformaCreated(data: ProformaEmailData): Promise<void> {
@@ -37,10 +37,11 @@ export class NodemailerEmailService implements EmailService {
         `Total: ${data.totalUsd} (referencia ${data.totalDopRef})`,
         "",
         "Los pagos se realizan en pesos dominicanos utilizando la tasa del día.",
-        "Adjuntaremos la proforma oficial; también puedes descargarla desde tu panel.",
+        "Adjuntamos la proforma oficial; también puedes descargarla desde tu panel.",
         "",
         "ADECLA",
       ].join("\n"),
+      attachments: data.attachments,
     });
   }
 

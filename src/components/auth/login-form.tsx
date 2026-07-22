@@ -66,7 +66,7 @@ export function LoginForm() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="admin@adecla.com"
+              placeholder="admin@adecla.do"
               {...register("email")}
             />
             {errors.email && (
