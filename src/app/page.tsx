@@ -19,28 +19,24 @@ export default async function HomePage() {
         <HeroSection />
 
         <section id="eventos" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:py-24">
-          <div className="grid gap-10 lg:grid-cols-[280px_1fr] lg:gap-14">
-            <div className="lg:sticky lg:top-24 lg:self-start">
-              <span className="section-rule" aria-hidden />
-              <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-                Eventos
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Elige tu torneo, inscribe uno o dos jugadores y descarga tu
-                proforma.
-              </p>
-            </div>
-            <div>
-              <div className="grid gap-6 sm:grid-cols-2">
-                {cards.map((card, i) => (
-                  <Reveal key={card.id} delayMs={i * 70}>
-                    <EventCard card={card} />
-                  </Reveal>
-                ))}
-              </div>
-              <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>
-            </div>
+          <div className="max-w-2xl">
+            <span className="section-rule" aria-hidden />
+            <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
+              Eventos
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Elige tu torneo, inscribe uno o dos jugadores y descarga tu
+              proforma.
+            </p>
           </div>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {cards.map((card, i) => (
+              <Reveal key={card.id} delayMs={i * 70}>
+                <EventCard card={card} />
+              </Reveal>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>
         </section>
 
         <section className="relative bg-white py-20 sm:py-24">

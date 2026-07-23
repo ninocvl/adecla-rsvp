@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/shared/reveal";
 
@@ -10,12 +9,6 @@ export function HeroSection() {
       <div className="grain-overlay" aria-hidden />
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 lg:grid-cols-2 lg:py-24">
         <div className="max-w-xl">
-          <Badge
-            variant="outline"
-            className="mb-4 border-white/25 bg-white/15 px-3 py-1 text-xs text-white backdrop-blur-sm"
-          >
-            Punta Espada · La Cana
-          </Badge>
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
             Inscríbete en los torneos
           </h1>
