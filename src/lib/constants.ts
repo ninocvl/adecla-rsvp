@@ -8,6 +8,12 @@ export const ADECLA = {
     "Edificio Cedro, Suite 1002P",
     "Punta Cana Village, Punta Cana, Rep. Dom.",
   ],
+  contacto: {
+    telefono: "+1 (829) 488-8662",
+    // Solo dígitos con código de país, formato que requiere el link wa.me.
+    whatsapp: "18294888662",
+    email: "adecla.adm@gmail.com",
+  },
   banco: {
     nombre: "Banco Popular",
     tipoCuenta: "Cuenta corriente",

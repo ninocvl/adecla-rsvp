@@ -9,13 +9,13 @@ interface LogoProps {
   height?: number;
 }
 
-// El archivo fuente es 2250x1500px (proporción 1.5:1); estos valores por
+// El archivo fuente es 4625x1492px (proporción ~3.1:1); estos valores por
 // defecto respetan esa proporción real para que next/image no distorsione
 // el logo ni dispare el warning de "width/height modified, but not the other".
-export function Logo({ className, href = "/", width = 72, height = 48 }: LogoProps) {
+export function Logo({ className, href = "/", width = 186, height = 60 }: LogoProps) {
   const img = (
     <Image
-      src="/images/logo-adecla.jpg"
+      src="/images/Adecla-Logo 2.png"
       alt="ADECLA — Asociación de Desarrolladores y Constructores Provincia La Altagracia"
       width={width}
       height={height}

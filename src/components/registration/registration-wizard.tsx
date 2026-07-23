@@ -5,7 +5,7 @@ import { createRegistrationAction } from "@/server/actions/registration.actions"
 import type { CompanyStepInput } from "@/lib/validations/registration.schema";
 import type { WizardEvent } from "@/server/queries/events.queries";
 import type { ActiveAffiliate } from "@/server/queries/affiliates.queries";
-import { AFFILIATION_LABELS } from "@/lib/constants";
+import { ADECLA, AFFILIATION_LABELS } from "@/lib/constants";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
@@ -479,6 +479,42 @@ export function RegistrationWizard({
                       : "Descargar proforma"}
                   </Button>
                 ))}
+              </div>
+
+              <div className="rounded-lg border bg-muted/40 p-4 text-left">
+                <p className="text-sm font-medium">Próximos pasos</p>
+                <ol className="mt-2 space-y-1 text-sm text-muted-foreground">
+                  <li>1. Revisa la proforma descargada.</li>
+                  <li>2. Realiza el pago con los datos bancarios que indica.</li>
+                  <li>3. Envíanos el comprobante para confirmar tu cupo.</li>
+                </ol>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Button
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={`https://wa.me/${ADECLA.contacto.whatsapp}?text=${encodeURIComponent(
+                          `Hola, les envío el comprobante de pago de mi inscripción ADECLA (código ${result
+                            .map((r) => r.code)
+                            .join(", ")}).`
+                        )}`}
+                        target="_blank"
+                        rel="noopener"
+                      />
+                    }
+                  >
+                    Enviar comprobante por WhatsApp
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    o al correo{" "}
+                    <a
+                      href={`mailto:${ADECLA.contacto.email}`}
+                      className="font-medium text-foreground underline underline-offset-2"
+                    >
+                      {ADECLA.contacto.email}
+                    </a>
+                  </p>
+                </div>
               </div>
 
               {remainingDates.length > 0 && (
