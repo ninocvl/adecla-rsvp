@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getRecapPhotos } from "@/lib/recap-photos";
+import { getEventCover, getRecapPhotos } from "@/lib/event-media";
 
 export interface LandingEventDate {
   id: string;
@@ -67,7 +67,9 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           eventSlug: event.slug,
           eventName: event.name,
           description: event.description,
-          imageUrl: d.imageUrl ?? event.imageUrl,
+          // event-media.ts manda; los valores de la base quedan solo como
+          // respaldo para datos sembrados antes de mover esto a código.
+          imageUrl: getEventCover(event.slug, d.date) ?? d.imageUrl ?? event.imageUrl,
           minPriceUsd,
           priceTiers,
           date: d.date,
@@ -86,7 +88,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
         eventSlug: event.slug,
         eventName: event.name,
         description: event.description,
-        imageUrl: event.imageUrl,
+        imageUrl: getEventCover(event.slug) ?? event.imageUrl,
         minPriceUsd,
         priceTiers,
       });

@@ -91,6 +91,30 @@ export default async function HomePage() {
             </Reveal>
           </div>
         </section>
+
+        <section className="border-t bg-secondary/40 py-20 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 text-center">
+            <span className="section-rule mx-auto" aria-hidden />
+            <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
+              Patrocinadores
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+              Empresas que hacen posible el ADECLA Golf Tour &amp; Pádel
+              Tournament 2026.
+            </p>
+            <Reveal className="mx-auto mt-10 max-w-sm">
+              <div className="shadow-teal-hover overflow-hidden rounded-xl border-4 border-white">
+                <Image
+                  src="/images/patrocinadores.jpg"
+                  alt="Logos de los patrocinadores del ADECLA Golf Tour & Pádel Tournament 2026"
+                  width={1280}
+                  height={1600}
+                  className="h-auto w-full"
+                />
+              </div>
+            </Reveal>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>

@@ -34,6 +34,11 @@ async function main() {
   console.log("✔ Setting usd_to_dop_rate = 60.00");
 
   // 3. Torneo de Golf (publicado, 2 fechas, precios por afiliación)
+  //
+  // Los imageUrl de aquí abajo son solo un respaldo histórico: la imagen que
+  // se muestra en la landing se define en src/lib/event-media.ts, que tiene
+  // prioridad. Cambiar una foto aquí NO la cambia en producción (haría falta
+  // volver a sembrar la base de Neon); hazlo en event-media.ts.
   const golf = await prisma.event.upsert({
     where: { slug: "golf" },
     update: {},
@@ -92,7 +97,7 @@ async function main() {
   // 4. Torneo de Pádel (borrador: sin fechas ni precios todavía)
   await prisma.event.upsert({
     where: { slug: "padel" },
-    update: { imageUrl: "/images/padel-proximamente.jpg" },
+    update: {},
     create: {
       slug: "padel",
       name: "Torneo de Pádel ADECLA",
@@ -102,7 +107,6 @@ async function main() {
       status: "DRAFT",
       playersPerTeam: 2,
       minPlayers: 1,
-      imageUrl: "/images/padel-proximamente.jpg",
     },
   });
   console.log("✔ Torneo de Pádel (borrador)");
