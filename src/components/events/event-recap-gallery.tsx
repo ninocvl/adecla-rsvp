@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 
 const ROTATIONS = ["rotate-[-8deg]", "rotate-[5deg]", "rotate-[-4deg]", "rotate-[7deg]"];
@@ -73,9 +74,10 @@ export function EventRecapGallery({ photos }: { photos: string[] }) {
         </div>
       </div>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#233738]/95 p-4"
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#233738]/95 p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Galería del torneo"
@@ -139,8 +141,9 @@ export function EventRecapGallery({ photos }: { photos: string[] }) {
               <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
