@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getRecapPhotos } from "@/lib/recap-photos";
 
 export interface LandingEventDate {
   id: string;
@@ -33,6 +34,10 @@ export interface LandingCard {
   venue?: string;
   available?: number;
   capacity?: number;
+  // Solo aplica a kind "date": la parada ya se jugó, así que la tarjeta
+  // deja de vender cupos y pasa a mostrar el recap con fotos (si hay).
+  isPast?: boolean;
+  recapPhotos?: string[];
 }
 
 export async function getLandingCards(): Promise<LandingCard[]> {
@@ -55,6 +60,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
 
     if (event.status === "PUBLISHED" && event.dates.length > 0) {
       for (const d of event.dates) {
+        const isPast = d.date.getTime() < Date.now();
         cards.push({
           kind: "date",
           id: d.id,
@@ -69,6 +75,8 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           venue: d.venue,
           available: Math.max(0, d.capacity - d.reservedCount),
           capacity: d.capacity,
+          isPast,
+          recapPhotos: isPast ? getRecapPhotos(event.slug, d.date) : [],
         });
       }
     } else {

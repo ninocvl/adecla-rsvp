@@ -11,6 +11,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { EventRecapGallery } from "./event-recap-gallery";
 
 // Agrupa las categorías que comparten el mismo precio (ej. Constructor y
 // Desarrollador a USD 250) para no repetir el monto — nunca un precio único.
@@ -30,6 +31,8 @@ export function EventCard({ card }: { card: LandingCard }) {
   const isDate = card.kind === "date";
   const full = isDate && (card.available ?? 0) <= 0;
   const priceGroups = groupPriceTiers(card.priceTiers);
+  const recapPhotos = card.recapPhotos ?? [];
+  const isRecap = isDate && card.isPast;
 
   return (
     <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
@@ -56,6 +59,11 @@ export function EventCard({ card }: { card: LandingCard }) {
         {!isDate && (
           <Badge className="absolute right-3 top-3 bg-white/90 px-3 py-1 text-sm text-foreground shadow-sm backdrop-blur-sm">
             Próximamente
+          </Badge>
+        )}
+        {isRecap && (
+          <Badge className="absolute right-3 top-3 bg-white/90 px-3 py-1 text-sm text-foreground shadow-sm backdrop-blur-sm">
+            Así se vivió
           </Badge>
         )}
       </div>
@@ -88,7 +96,15 @@ export function EventCard({ card }: { card: LandingCard }) {
       </CardHeader>
 
       <CardContent className="flex-1 space-y-3">
-        {isDate ? (
+        {isRecap ? (
+          recapPhotos.length > 0 ? (
+            <EventRecapGallery photos={recapPhotos} />
+          ) : (
+            <p className="border-t pt-3 text-sm text-muted-foreground">
+              Este torneo ya se jugó. Pronto compartimos cómo fue.
+            </p>
+          )
+        ) : isDate ? (
           <div className="space-y-3 border-t pt-3">
             <div className="flex items-start justify-between gap-2">
               <p className="text-xs text-muted-foreground">
@@ -130,26 +146,28 @@ export function EventCard({ card }: { card: LandingCard }) {
         )}
       </CardContent>
 
-      <CardFooter>
-        {isDate ? (
-          <Button
-            className="w-full"
-            disabled={full}
-            nativeButton={false}
-            render={
-              <Link
-                href={`/inscripciones/nueva?evento=${card.eventSlug}&fecha=${card.id}`}
-              />
-            }
-          >
-            {full ? "Sin cupos disponibles" : "Inscribirme"}
-          </Button>
-        ) : (
-          <Button className="w-full" variant="secondary" disabled>
-            Aún sin fechas
-          </Button>
-        )}
-      </CardFooter>
+      {!isRecap && (
+        <CardFooter>
+          {isDate ? (
+            <Button
+              className="w-full"
+              disabled={full}
+              nativeButton={false}
+              render={
+                <Link
+                  href={`/inscripciones/nueva?evento=${card.eventSlug}&fecha=${card.id}`}
+                />
+              }
+            >
+              {full ? "Sin cupos disponibles" : "Inscribirme"}
+            </Button>
+          ) : (
+            <Button className="w-full" variant="secondary" disabled>
+              Aún sin fechas
+            </Button>
+          )}
+        </CardFooter>
+      )}
     </Card>
   );
 }

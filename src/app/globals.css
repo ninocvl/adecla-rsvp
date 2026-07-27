@@ -267,3 +267,22 @@
     animation: none;
   }
 }
+
+/* Dirección F: crossfade suave al pasar de una foto a otra en el visor de
+   la galería "Así se vivió", en vez de un corte seco entre imágenes. */
+@keyframes recap-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.recap-fade {
+  animation: recap-fade 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .recap-fade {
+    animation: none;
+  }
+}

@@ -92,7 +92,7 @@ async function main() {
   // 4. Torneo de Pádel (borrador: sin fechas ni precios todavía)
   await prisma.event.upsert({
     where: { slug: "padel" },
-    update: {},
+    update: { imageUrl: "/images/padel-proximamente.jpg" },
     create: {
       slug: "padel",
       name: "Torneo de Pádel ADECLA",
@@ -102,6 +102,7 @@ async function main() {
       status: "DRAFT",
       playersPerTeam: 2,
       minPlayers: 1,
+      imageUrl: "/images/padel-proximamente.jpg",
     },
   });
   console.log("✔ Torneo de Pádel (borrador)");
