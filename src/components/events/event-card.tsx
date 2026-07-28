@@ -47,7 +47,8 @@ export function EventCard({ card }: { card: LandingCard }) {
             }
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover object-top"
+            className="object-cover"
+            style={{ objectPosition: card.imagePosition }}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

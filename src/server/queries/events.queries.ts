@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { getEventCover, getRecapPhotos } from "@/lib/event-media";
+import {
+  getEventCover,
+  getEventCoverPosition,
+  getRecapPhotos,
+} from "@/lib/event-media";
 
 export interface LandingEventDate {
   id: string;
@@ -25,6 +29,8 @@ export interface LandingCard {
   eventName: string;
   description: string | null;
   imageUrl: string | null;
+  // Encuadre del recorte apaisado; ver coverPosition en event-media.ts.
+  imagePosition: string;
   minPriceUsd: number | null;
   // Desglose completo por categoría: el precio depende de si eres
   // Constructor, Proveedor o Desarrollador — nunca un monto único.
@@ -70,6 +76,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           // event-media.ts manda; los valores de la base quedan solo como
           // respaldo para datos sembrados antes de mover esto a código.
           imageUrl: getEventCover(event.slug, d.date) ?? d.imageUrl ?? event.imageUrl,
+          imagePosition: getEventCoverPosition(event.slug, d.date),
           minPriceUsd,
           priceTiers,
           date: d.date,
@@ -89,6 +96,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
         eventName: event.name,
         description: event.description,
         imageUrl: getEventCover(event.slug) ?? event.imageUrl,
+        imagePosition: getEventCoverPosition(event.slug),
         minPriceUsd,
         priceTiers,
       });

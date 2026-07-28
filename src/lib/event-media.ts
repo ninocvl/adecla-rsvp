@@ -16,6 +16,13 @@
 interface EventMedia {
   /** Flyer de portada de la tarjeta en la landing. */
   cover: string;
+  /**
+   * Encuadre al recortar la portada al formato apaisado de la tarjeta
+   * (`object-position`). Por defecto "top", que es lo que necesitan los
+   * flyers: llevan el logo y el título arriba. Una foto normal necesita su
+   * propio valor según dónde esté el sujeto.
+   */
+  coverPosition?: string;
   /** Fotos del torneo ya jugado. Ausente mientras no se haya jugado. */
   recap?: string[];
 }
@@ -39,6 +46,10 @@ const MEDIA: Record<string, EventMedia> = {
   },
   padel: {
     cover: "/images/padel-proximamente.jpg",
+    // Foto vertical, no flyer: la raqueta está en el tercio inferior, así que
+    // el recorte apaisado se baja para dejarla centrada en vez de mostrar
+    // solo cancha vacía.
+    coverPosition: "center 75%",
   },
 };
 
@@ -48,6 +59,10 @@ function keyFor(eventSlug: string, date?: Date) {
 
 export function getEventCover(eventSlug: string, date?: Date): string | null {
   return MEDIA[keyFor(eventSlug, date)]?.cover ?? null;
+}
+
+export function getEventCoverPosition(eventSlug: string, date?: Date): string {
+  return MEDIA[keyFor(eventSlug, date)]?.coverPosition ?? "top";
 }
 
 export function getRecapPhotos(eventSlug: string, date: Date): string[] {
