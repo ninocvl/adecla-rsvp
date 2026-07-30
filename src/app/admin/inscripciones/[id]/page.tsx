@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRegistrationDetail } from "@/server/queries/registrations.queries";
-import { AFFILIATION_LABELS, STATUS_LABELS } from "@/lib/constants";
+import { STATUS_LABELS, getCategoryLabel } from "@/lib/constants";
 import {
   formatDop,
   formatEventDate,
@@ -122,30 +122,75 @@ export default async function AdminInscripcionDetallePage({
         </CardContent>
       </Card>
 
+      {registration.isSponsorGuest && (
+        <Card
+          className={
+            registration.sponsorRncVerified
+              ? "border-primary/40"
+              : "border-destructive/50"
+          }
+        >
+          <CardHeader>
+            <CardTitle className="text-base">Invitado de patrocinador</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Patrocinador</span>
+              <span className="font-medium">
+                {registration.sponsorName ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">RNC declarado</span>
+              <span className="font-medium">{registration.sponsorRnc ?? "—"}</span>
+            </div>
+            {registration.sponsorRncVerified ? (
+              <p className="text-primary">
+                Coincide con un patrocinador de la lista.
+              </p>
+            ) : (
+              <p className="font-medium text-destructive">
+                No coincidió con ningún patrocinador de la lista. Revisa
+                antes de confirmar.
+              </p>
+            )}
+            <p className="text-muted-foreground">
+              Sin costo: no se generó proforma para esta inscripción.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Pago</CardTitle>
+          <CardTitle className="text-base">
+            {registration.isSponsorGuest ? "Categoría" : "Pago"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Membresía</span>
+            <span className="text-muted-foreground">Categoría</span>
             <span className="font-medium">
-              {AFFILIATION_LABELS[registration.affiliation]}
+              {getCategoryLabel(registration.affiliation, registration.padelCategory)}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {registration.quantity} ×{" "}
-              {formatUsd(registration.unitPriceUsd.toString())}
-            </span>
-            <span className="text-lg font-semibold">
-              {formatUsd(registration.totalUsd.toString())}
-            </span>
-          </div>
-          <p className="text-right text-muted-foreground">
-            ≈ {formatDop(registration.totalDopRef.toString())} (1 USD = RD$
-            {Number(registration.exchangeRate).toFixed(0)})
-          </p>
+          {!registration.isSponsorGuest && (
+            <>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  {registration.quantity} ×{" "}
+                  {formatUsd(registration.unitPriceUsd.toString())}
+                </span>
+                <span className="text-lg font-semibold">
+                  {formatUsd(registration.totalUsd.toString())}
+                </span>
+              </div>
+              <p className="text-right text-muted-foreground">
+                ≈ {formatDop(registration.totalDopRef.toString())} (1 USD = RD$
+                {Number(registration.exchangeRate).toFixed(0)})
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -181,18 +226,20 @@ export default async function AdminInscripcionDetallePage({
       </Card>
 
       <div className="flex justify-end">
-        <Button
-          nativeButton={false}
-          render={
-            <a
-              href={`/api/proformas/${registration.id}/pdf`}
-              target="_blank"
-              rel="noopener"
-            />
-          }
-        >
-          Descargar proforma
-        </Button>
+        {!registration.isSponsorGuest && (
+          <Button
+            nativeButton={false}
+            render={
+              <a
+                href={`/api/proformas/${registration.id}/pdf`}
+                target="_blank"
+                rel="noopener"
+              />
+            }
+          >
+            Descargar proforma
+          </Button>
+        )}
       </div>
     </div>
   );

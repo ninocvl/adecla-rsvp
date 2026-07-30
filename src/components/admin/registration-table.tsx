@@ -48,6 +48,14 @@ export function RegistrationTable({
               <TableCell className="font-mono text-xs">{r.code}</TableCell>
               <TableCell className="max-w-[180px] truncate font-medium">
                 {r.company.legalName}
+                {r.isSponsorGuest && !r.sponsorRncVerified && (
+                  <span
+                    className="ml-1.5 inline-block rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold text-destructive"
+                    title={`RNC de patrocinador no coincide (${r.sponsorName ?? "sin nombre"})`}
+                  >
+                    RNC no coincide
+                  </span>
+                )}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {r.company.rnc}

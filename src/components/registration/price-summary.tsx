@@ -11,8 +11,9 @@ interface SelectedDate {
 interface PriceSummaryProps {
   eventName?: string;
   dates: SelectedDate[];
-  affiliationLabel?: string;
+  categoryLabel?: string;
   unitPriceUsd: number | null;
+  isSponsorGuest?: boolean;
   quantity: number;
   rate: number;
 }
@@ -20,8 +21,9 @@ interface PriceSummaryProps {
 export function PriceSummary({
   eventName,
   dates,
-  affiliationLabel,
+  categoryLabel,
   unitPriceUsd,
+  isSponsorGuest,
   quantity,
   rate,
 }: PriceSummaryProps) {
@@ -58,49 +60,59 @@ export function PriceSummary({
             </dd>
           </div>
           <div className="flex justify-between gap-2">
-            <dt className="text-muted-foreground">Membresía</dt>
-            <dd className="text-right font-medium">{affiliationLabel ?? "—"}</dd>
+            <dt className="text-muted-foreground">Categoría</dt>
+            <dd className="text-right font-medium">{categoryLabel ?? "—"}</dd>
           </div>
           <div className="flex justify-between gap-2">
             <dt className="text-muted-foreground">Participantes</dt>
             <dd className="text-right font-medium">{quantity}</dd>
           </div>
-          <div className="flex justify-between gap-2">
-            <dt className="text-muted-foreground">Precio unitario</dt>
-            <dd className="text-right font-medium tabular-nums">
-              {unitPriceUsd !== null ? formatUsd(unitPriceUsd) : "—"}
-            </dd>
-          </div>
+          {!isSponsorGuest && (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">Precio unitario</dt>
+              <dd className="text-right font-medium tabular-nums">
+                {unitPriceUsd !== null ? formatUsd(unitPriceUsd) : "—"}
+              </dd>
+            </div>
+          )}
         </dl>
         <Separator />
-        <div className="space-y-1.5 text-sm">
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium tabular-nums">
-              {subtotalUsd !== null ? formatUsd(subtotalUsd) : "—"}
-            </span>
-          </div>
-          <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">ITBIS (18%)</span>
-            <span className="font-medium tabular-nums">
-              {itbisUsd !== null ? formatUsd(itbisUsd) : "—"}
-            </span>
-          </div>
-        </div>
-        <Separator />
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="font-medium">Total</span>
-          <span className="text-xl font-semibold tabular-nums">
-            {totalUsd !== null ? formatUsd(totalUsd) : "—"}
-          </span>
-        </div>
-        {totalUsd !== null && (
-          <p className="text-right text-muted-foreground tabular-nums">
-            ≈ {formatDop(totalUsd * rate)}{" "}
-            <span className="text-xs">(1 USD = RD${rate.toFixed(0)})</span>
+        {isSponsorGuest ? (
+          <p className="text-sm font-medium text-primary">
+            Invitado de patrocinador, sin costo.
           </p>
+        ) : (
+          <>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium tabular-nums">
+                  {subtotalUsd !== null ? formatUsd(subtotalUsd) : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">ITBIS (18%)</span>
+                <span className="font-medium tabular-nums">
+                  {itbisUsd !== null ? formatUsd(itbisUsd) : "—"}
+                </span>
+              </div>
+            </div>
+            <Separator />
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-medium">Total</span>
+              <span className="text-xl font-semibold tabular-nums">
+                {totalUsd !== null ? formatUsd(totalUsd) : "—"}
+              </span>
+            </div>
+            {totalUsd !== null && (
+              <p className="text-right text-muted-foreground tabular-nums">
+                ≈ {formatDop(totalUsd * rate)}{" "}
+                <span className="text-xs">(1 USD = RD${rate.toFixed(0)})</span>
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">{NOTA_PAGO}</p>
+          </>
         )}
-        <p className="text-xs text-muted-foreground">{NOTA_PAGO}</p>
       </CardContent>
     </Card>
   );

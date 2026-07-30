@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { LandingCard } from "@/server/queries/events.queries";
-import { AFFILIATION_LABELS } from "@/lib/constants";
+import { AFFILIATION_LABELS, PADEL_PRICE_USD } from "@/lib/constants";
+import { PADEL_CATEGORIES_POSTER } from "@/lib/event-media";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function EventCard({ card }: { card: LandingCard }) {
   const priceGroups = groupPriceTiers(card.priceTiers);
   const recapPhotos = card.recapPhotos ?? [];
   const isRecap = isDate && card.isPast;
+  const isPadel = card.eventSlug === "padel";
 
   return (
     <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
@@ -105,6 +107,35 @@ export function EventCard({ card }: { card: LandingCard }) {
               Este torneo ya se jugó. Pronto compartimos cómo fue.
             </p>
           )
+        ) : isDate && isPadel ? (
+          <div className="space-y-3 border-t pt-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                Abierto al público. Los invitados de un patrocinador no
+                pagan.
+              </p>
+              <Badge
+                variant={full ? "outline" : "secondary"}
+                className="shrink-0"
+              >
+                {full ? "Sin cupos" : `${card.available} cupos`}
+              </Badge>
+            </div>
+            <div className="flex items-baseline justify-between text-sm">
+              <dt className="text-muted-foreground">Por participante</dt>
+              <dd className="font-semibold tabular-nums">
+                {formatUsd(PADEL_PRICE_USD)}
+              </dd>
+            </div>
+            <a
+              href={PADEL_CATEGORIES_POSTER}
+              target="_blank"
+              rel="noopener"
+              className="inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Ver categorías
+            </a>
+          </div>
         ) : isDate ? (
           <div className="space-y-3 border-t pt-3">
             <div className="flex items-start justify-between gap-2">

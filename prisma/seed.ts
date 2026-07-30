@@ -94,22 +94,44 @@ async function main() {
   }
   console.log("✔ Torneo de Golf: 2 fechas (cap. 150) + precios");
 
-  // 4. Torneo de Pádel (borrador: sin fechas ni precios todavía)
-  await prisma.event.upsert({
+  // 4. Torneo de Pádel (publicado, abierto al público — sin EventPrice: la
+  // tarifa plana de USD 50 y las categorías por género/nivel se manejan en
+  // código, no en la base — ver PADEL_PRICE_USD y PadelCategory).
+  const padel = await prisma.event.upsert({
     where: { slug: "padel" },
-    update: {},
+    update: { status: "PUBLISHED" },
     create: {
       slug: "padel",
       name: "Torneo de Pádel ADECLA",
       description:
-        "El circuito de pádel de ADECLA está en preparación. Pronto anunciaremos fechas, categorías y tarifas.",
+        "Torneo de pádel abierto al público en Los Establos Sports Complex, Cap Cana. Se juega en parejas del mismo género y categoría (Femenina B/C/D, Masculino B/C).",
       codePrefix: "PADEL",
-      status: "DRAFT",
+      status: "PUBLISHED",
       playersPerTeam: 2,
       minPlayers: 1,
     },
   });
-  console.log("✔ Torneo de Pádel (borrador)");
+
+  await prisma.eventDate.upsert({
+    where: {
+      eventId_date: {
+        eventId: padel.id,
+        date: new Date("2026-08-14T12:00:00Z"),
+      },
+    },
+    update: {
+      label: "Segunda Parada",
+      venue: "Los Establos Sports Complex, Cap Cana",
+    },
+    create: {
+      eventId: padel.id,
+      date: new Date("2026-08-14T12:00:00Z"),
+      label: "Segunda Parada",
+      venue: "Los Establos Sports Complex, Cap Cana",
+      capacity: 64,
+    },
+  });
+  console.log("✔ Torneo de Pádel: Segunda Parada, 14-15 agosto (cap. 64)");
 }
 
 main()

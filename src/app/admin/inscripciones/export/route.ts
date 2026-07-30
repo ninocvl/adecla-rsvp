@@ -2,7 +2,7 @@ import {
   getAdminRegistrations,
   type AdminRegistrationFilters,
 } from "@/server/queries/admin.queries";
-import { AFFILIATION_LABELS, STATUS_LABELS } from "@/lib/constants";
+import { STATUS_LABELS, getCategoryLabel } from "@/lib/constants";
 import { formatEventDate } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
 import { toXlsxBuffer } from "@/lib/xlsx";
@@ -18,6 +18,8 @@ const HEADERS = [
   "Participantes",
   "Total USD",
   "Estado",
+  "Invitado de patrocinador",
+  "RNC patrocinador coincide",
   "Creada",
 ];
 
@@ -40,10 +42,12 @@ export async function GET(request: Request) {
     r.company.rnc,
     r.event.name,
     formatEventDate(r.eventDate.date),
-    AFFILIATION_LABELS[r.affiliation],
+    getCategoryLabel(r.affiliation, r.padelCategory),
     r.participants.map((p) => p.fullName).join(" / "),
     r.totalUsd.toString(),
     STATUS_LABELS[r.status],
+    r.isSponsorGuest ? `Sí (${r.sponsorName ?? "—"})` : "No",
+    r.isSponsorGuest ? (r.sponsorRncVerified ? "Sí" : "No") : "",
     r.createdAt.toISOString().slice(0, 10),
   ]);
 

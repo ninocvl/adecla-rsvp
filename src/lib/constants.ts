@@ -37,6 +37,39 @@ export const AFFILIATION_LABELS: Record<string, string> = {
   DESARROLLADOR: "Desarrollador",
 };
 
+// Pádel es abierto al público: no cobra por tipo de empresa como golf, sino
+// una tarifa plana por participante — salvo invitados de patrocinador, que
+// no pagan (ver isSponsorGuest en Registration).
+export const PADEL_PRICE_USD = 50;
+
+export const PADEL_CATEGORIES = [
+  "FEMENINO_B",
+  "FEMENINO_C",
+  "FEMENINO_D",
+  "MASCULINO_B",
+  "MASCULINO_C",
+] as const;
+
+export const PADEL_CATEGORY_LABELS: Record<string, string> = {
+  FEMENINO_B: "Femenina B",
+  FEMENINO_C: "Femenina C",
+  FEMENINO_D: "Femenina D",
+  MASCULINO_B: "Masculino B",
+  MASCULINO_C: "Masculino C",
+};
+
+// Etiqueta de categoría sin importar el evento: golf usa affiliation
+// (Constructor/Proveedor/Desarrollador), pádel usa padelCategory
+// (género + nivel). Nunca hay los dos a la vez en una misma inscripción.
+export function getCategoryLabel(
+  affiliation?: string | null,
+  padelCategory?: string | null
+): string {
+  if (padelCategory) return PADEL_CATEGORY_LABELS[padelCategory] ?? padelCategory;
+  if (affiliation) return AFFILIATION_LABELS[affiliation] ?? affiliation;
+  return "—";
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   PROFORMA_GENERADA: "Proforma generada",
   PENDIENTE_PAGO: "Pendiente de pago",

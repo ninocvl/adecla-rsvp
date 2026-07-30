@@ -11,7 +11,13 @@ import {
   normalizeRnc,
   type CreateRegistrationInput,
 } from "@/lib/validations/registration.schema";
-import { AFFILIATION_LABELS, ITBIS_RATE } from "@/lib/constants";
+import { findMatchingSponsor } from "@/lib/sponsors";
+import type { PadelCategory } from "@/generated/prisma/enums";
+import {
+  getCategoryLabel,
+  ITBIS_RATE,
+  PADEL_PRICE_USD,
+} from "@/lib/constants";
 import { formatDop, formatEventDate, formatUsd } from "@/lib/format";
 
 export type CreateRegistrationResult =
@@ -35,45 +41,25 @@ export async function createRegistrationAction(
   const rnc = normalizeRnc(data.rnc);
   const email = data.email.toLowerCase();
 
-  // Nunca se confía en el nombre/tipo que mande el cliente para el vínculo de
-  // afiliado: se relee el registro real del listado de socios. Para una
-  // empresa afiliada conocida, su tipo de afiliación real (no el que mandó el
-  // formulario) es el que fija la tarifa.
-  const affiliate =
-    data.isAffiliated && data.affiliateId
-      ? await prisma.affiliate.findUnique({ where: { id: data.affiliateId } })
-      : null;
-  if (data.isAffiliated && !affiliate) {
-    return { ok: false, error: "Selecciona tu empresa de la lista." };
-  }
-  const affiliationType = affiliate?.affiliationType ?? data.affiliationType;
-
-  const [event, eventDates, price, rateSetting] = await Promise.all([
+  const [event, eventDates, rateSetting] = await Promise.all([
     prisma.event.findUnique({ where: { id: data.eventId } }),
     prisma.eventDate.findMany({ where: { id: { in: data.eventDateIds } } }),
-    prisma.eventPrice.findUnique({
-      where: {
-        eventId_affiliation: { eventId: data.eventId, affiliation: affiliationType },
-      },
-    }),
     prisma.setting.findUnique({ where: { key: "usd_to_dop_rate" } }),
   ]);
 
   if (!event || event.status !== "PUBLISHED") {
     return { ok: false, error: "Este evento no está disponible." };
   }
+  // El eventSlug del cliente solo decide qué preguntas mostrar en el
+  // formulario; la ramificación real (precio, proforma, patrocinador) usa
+  // siempre event.slug recién leído de la base, nunca lo que mandó el cliente.
+  const isPadel = event.slug === "padel";
+
   if (
     eventDates.length !== data.eventDateIds.length ||
     eventDates.some((d) => d.eventId !== event.id || !d.isActive)
   ) {
     return { ok: false, error: "Alguna de esas fechas no está disponible." };
-  }
-  if (!price || !price.isEnabled || price.amountUsd === null) {
-    return {
-      ok: false,
-      error:
-        "Tu categoría de membresía todavía no tiene tarifa para este evento.",
-    };
   }
   if (quantity > event.playersPerTeam) {
     return {
@@ -82,13 +68,86 @@ export async function createRegistrationAction(
     };
   }
 
-  const unitPriceUsd = Number(price.amountUsd);
+  // --- Pádel: categoría + invitado de patrocinador (sin EventPrice: tarifa
+  // plana en código) ---
+  let padelCategory: PadelCategory | undefined;
+  let isSponsorGuest = false;
+  let sponsorName: string | undefined;
+  let sponsorRnc: string | undefined;
+  let sponsorRncVerified = false;
+
+  // --- Golf: afiliación + tarifa por EventPrice ---
+  let affiliationType: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR" | undefined;
+  let affiliateId: string | undefined;
+
+  let unitPriceUsd: number;
+
+  if (isPadel) {
+    if (!data.padelCategory) {
+      return { ok: false, error: "Selecciona tu categoría." };
+    }
+    padelCategory = data.padelCategory;
+    isSponsorGuest = data.isSponsorGuest === true;
+    if (isSponsorGuest) {
+      if (!data.sponsorName || !data.sponsorRnc) {
+        return {
+          ok: false,
+          error: "Indica el nombre y el RNC del patrocinador.",
+        };
+      }
+      sponsorName = data.sponsorName;
+      sponsorRnc = normalizeRnc(data.sponsorRnc);
+      sponsorRncVerified = !!findMatchingSponsor(data.sponsorRnc);
+      unitPriceUsd = 0;
+    } else {
+      unitPriceUsd = PADEL_PRICE_USD;
+    }
+  } else {
+    // Nunca se confía en el nombre/tipo que mande el cliente para el vínculo
+    // de afiliado: se relee el registro real del listado de socios. Para una
+    // empresa afiliada conocida, su tipo de afiliación real (no el que mandó
+    // el formulario) es el que fija la tarifa.
+    const affiliate =
+      data.isAffiliated && data.affiliateId
+        ? await prisma.affiliate.findUnique({ where: { id: data.affiliateId } })
+        : null;
+    if (data.isAffiliated && !affiliate) {
+      return { ok: false, error: "Selecciona tu empresa de la lista." };
+    }
+    affiliationType = affiliate?.affiliationType ?? data.affiliationType;
+    affiliateId = affiliate?.id;
+    if (!affiliationType) {
+      return { ok: false, error: "Selecciona el tipo de empresa." };
+    }
+    const price = await prisma.eventPrice.findUnique({
+      where: {
+        eventId_affiliation: { eventId: event.id, affiliation: affiliationType },
+      },
+    });
+    if (!price || !price.isEnabled || price.amountUsd === null) {
+      return {
+        ok: false,
+        error:
+          "Tu categoría de membresía todavía no tiene tarifa para este evento.",
+      };
+    }
+    unitPriceUsd = Number(price.amountUsd);
+  }
+
   const exchangeRate = Number(rateSetting?.value ?? "60");
-  // Subtotal (precio de tarifa) + 18% de ITBIS = total real a pagar.
+  // Subtotal (precio de tarifa) + 18% de ITBIS = total real a pagar. Un
+  // invitado de patrocinador paga 0, así que todo esto también da 0 — no se
+  // le genera proforma más abajo.
   const subtotalUsd = unitPriceUsd * quantity;
   const itbisUsd = subtotalUsd * ITBIS_RATE;
   const totalUsd = subtotalUsd + itbisUsd;
   const totalDopRef = totalUsd * exchangeRate;
+  const categoryLabel = getCategoryLabel(affiliationType, padelCategory);
+  const registrationStatus = isSponsorGuest
+    ? sponsorRncVerified
+      ? "CONFIRMADA"
+      : "EN_REVISION"
+    : "PROFORMA_GENERADA";
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -104,17 +163,17 @@ export async function createRegistrationAction(
           email,
           phone: data.phone,
           affiliationType,
-          affiliateId: affiliate?.id,
-          wantsToAffiliate: !data.isAffiliated && data.wantsToAffiliate,
+          affiliateId,
+          wantsToAffiliate: !isPadel && !data.isAffiliated && !!data.wantsToAffiliate,
         },
         update: {
           legalName: data.legalName,
           contactName: data.contactName,
           email,
           phone: data.phone,
-          affiliationType,
-          affiliateId: affiliate?.id,
-          wantsToAffiliate: !data.isAffiliated && data.wantsToAffiliate,
+          ...(affiliationType ? { affiliationType } : {}),
+          ...(affiliateId ? { affiliateId } : {}),
+          wantsToAffiliate: !isPadel && !data.isAffiliated && !!data.wantsToAffiliate,
         },
       });
 
@@ -153,7 +212,12 @@ export async function createRegistrationAction(
             eventId: event.id,
             eventDateId: eventDate.id,
             affiliation: affiliationType,
-            status: "PROFORMA_GENERADA",
+            padelCategory,
+            isSponsorGuest,
+            sponsorName,
+            sponsorRnc,
+            sponsorRncVerified,
+            status: registrationStatus,
             quantity,
             unitPriceUsd: unitPriceUsd.toFixed(2),
             totalUsd: totalUsd.toFixed(2),
@@ -168,13 +232,15 @@ export async function createRegistrationAction(
               })),
             },
             history: {
-              create: { fromStatus: null, toStatus: "PROFORMA_GENERADA" },
+              create: { fromStatus: null, toStatus: registrationStatus },
             },
           },
         });
 
         // Snapshot autocontenido: la proforma imprime siempre estos datos,
-        // aunque después cambien precios, tasa o datos de la empresa.
+        // aunque después cambien precios, tasa o datos de la empresa. Un
+        // invitado de patrocinador no llega aquí con proforma real (ver más
+        // abajo), pero igual arma el snapshot por si se necesita después.
         const snapshot: ProformaSnapshot = {
           code,
           issuedAt: new Date().toISOString(),
@@ -191,8 +257,8 @@ export async function createRegistrationAction(
             dateLabel: eventDate.label,
             venue: eventDate.venue,
           },
-          affiliation: affiliationType,
-          affiliationLabel: AFFILIATION_LABELS[affiliationType],
+          affiliation: affiliationType ?? padelCategory ?? "",
+          affiliationLabel: categoryLabel,
           quantity,
           unitPriceUsd: unitPriceUsd.toFixed(2),
           subtotalUsd: subtotalUsd.toFixed(2),
@@ -206,13 +272,17 @@ export async function createRegistrationAction(
           })),
         };
 
-        await tx.proforma.create({
-          data: {
-            registrationId: registration.id,
-            number: code,
-            snapshot: snapshot as unknown as Prisma.InputJsonValue,
-          },
-        });
+        // Un invitado de patrocinador no paga: no se le genera proforma ni
+        // se le envía correo de cobro, tal como pidió ADECLA.
+        if (!isSponsorGuest) {
+          await tx.proforma.create({
+            data: {
+              registrationId: registration.id,
+              number: code,
+              snapshot: snapshot as unknown as Prisma.InputJsonValue,
+            },
+          });
+        }
 
         registrations.push({ registrationId: registration.id, code, snapshot });
       }
@@ -221,27 +291,30 @@ export async function createRegistrationAction(
     });
 
     // El correo (con el PDF de cada proforma adjunto) nunca bloquea la
-    // inscripción: se genera y se envía sin esperar su resultado.
-    Promise.all(
-      result.registrations.map(async (r) => ({
-        filename: `proforma-${r.code}.pdf`,
-        content: await renderProformaPdf(r.snapshot),
-      }))
-    )
-      .then((attachments) =>
-        emailService.sendProformaCreated({
-          to: result.company.email,
-          companyName: result.company.legalName,
-          contactName: result.company.contactName,
-          registrationCode: result.registrations.map((r) => r.code).join(", "),
-          eventName: event.name,
-          eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
-          totalUsd: formatUsd(totalUsd * eventDates.length),
-          totalDopRef: formatDop(totalDopRef * eventDates.length),
-          attachments,
-        })
+    // inscripción: se genera y se envía sin esperar su resultado. No aplica
+    // para invitados de patrocinador, que no tienen proforma que cobrar.
+    if (!isSponsorGuest) {
+      Promise.all(
+        result.registrations.map(async (r) => ({
+          filename: `proforma-${r.code}.pdf`,
+          content: await renderProformaPdf(r.snapshot),
+        }))
       )
-      .catch((e) => console.error("Error enviando correo de proforma:", e));
+        .then((attachments) =>
+          emailService.sendProformaCreated({
+            to: result.company.email,
+            companyName: result.company.legalName,
+            contactName: result.company.contactName,
+            registrationCode: result.registrations.map((r) => r.code).join(", "),
+            eventName: event.name,
+            eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
+            totalUsd: formatUsd(totalUsd * eventDates.length),
+            totalDopRef: formatDop(totalDopRef * eventDates.length),
+            attachments,
+          })
+        )
+        .catch((e) => console.error("Error enviando correo de proforma:", e));
+    }
 
     revalidatePath("/");
 

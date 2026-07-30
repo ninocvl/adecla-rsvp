@@ -24,6 +24,16 @@ enum AffiliationType {
   DESARROLLADOR
 }
 
+// Categoría de pádel: no es un tipo de empresa como en golf, es la división
+// por género y nivel en la que juega la pareja.
+enum PadelCategory {
+  FEMENINO_B
+  FEMENINO_C
+  FEMENINO_D
+  MASCULINO_B
+  MASCULINO_C
+}
+
 enum RegistrationStatus {
   PROFORMA_GENERADA
   PENDIENTE_PAGO
@@ -56,7 +66,10 @@ model Company {
   contactName      String
   email            String
   phone            String
-  affiliationType  AffiliationType
+  // Opcional: solo aplica a golf (Constructor/Proveedor/Desarrollador). El
+  // pádel es abierto al público y usa PadelCategory en la inscripción, no
+  // esto.
+  affiliationType  AffiliationType?
   // Si se registró seleccionando su empresa del listado de socios de ADECLA,
   // queda vinculada aquí — así el admin ve de un vistazo si es la misma
   // empresa que ya conocía o una nueva que se está registrando por primera vez.
@@ -141,7 +154,19 @@ model Registration {
   event        Event              @relation(fields: [eventId], references: [id])
   eventDateId  String
   eventDate    EventDate          @relation(fields: [eventDateId], references: [id])
-  affiliation  AffiliationType
+  // Solo uno de estos dos aplica según el evento: affiliation para golf,
+  // padelCategory para pádel.
+  affiliation  AffiliationType?
+  padelCategory PadelCategory?
+  // Pádel es abierto al público: quien juega invitado por un patrocinador no
+  // paga y no se le genera proforma. sponsorRncVerified queda en false
+  // cuando el RNC que dio no coincidió con ninguno de la lista real de
+  // patrocinadores — no bloquea la inscripción, solo la deja marcada para
+  // que el admin la revise a mano.
+  isSponsorGuest      Boolean            @default(false)
+  sponsorName         String?
+  sponsorRnc          String?
+  sponsorRncVerified  Boolean            @default(false)
   status       RegistrationStatus @default(PROFORMA_GENERADA)
   quantity     Int
   unitPriceUsd Decimal            @db.Decimal(10, 2)

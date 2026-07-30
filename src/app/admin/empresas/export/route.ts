@@ -1,5 +1,5 @@
 import { getAdminCompanies } from "@/server/queries/admin.queries";
-import { AFFILIATION_LABELS } from "@/lib/constants";
+import { getCategoryLabel } from "@/lib/constants";
 import { toCsv } from "@/lib/csv";
 import { toXlsxBuffer } from "@/lib/xlsx";
 
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const rows = companies.map((c) => [
     c.legalName,
     c.rnc,
-    AFFILIATION_LABELS[c.affiliationType],
+    getCategoryLabel(c.affiliationType),
     c.contactName,
     c.email,
     c.phone,

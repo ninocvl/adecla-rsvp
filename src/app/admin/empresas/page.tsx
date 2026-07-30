@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getAdminCompanies } from "@/server/queries/admin.queries";
-import { AFFILIATION_LABELS } from "@/lib/constants";
+import { getCategoryLabel } from "@/lib/constants";
 import { formatShortDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,9 +79,13 @@ export default async function AdminEmpresasPage() {
                     {c.rnc}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">
-                      {AFFILIATION_LABELS[c.affiliationType]}
-                    </Badge>
+                    {c.affiliationType ? (
+                      <Badge variant="secondary">
+                        {getCategoryLabel(c.affiliationType)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>{c.contactName}</TableCell>
                   <TableCell className="text-muted-foreground">

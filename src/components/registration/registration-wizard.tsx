@@ -5,7 +5,12 @@ import { createRegistrationAction } from "@/server/actions/registration.actions"
 import type { CompanyStepInput } from "@/lib/validations/registration.schema";
 import type { WizardEvent } from "@/server/queries/events.queries";
 import type { ActiveAffiliate } from "@/server/queries/affiliates.queries";
-import { ADECLA, AFFILIATION_LABELS } from "@/lib/constants";
+import {
+  ADECLA,
+  AFFILIATION_LABELS,
+  PADEL_CATEGORY_LABELS,
+  PADEL_PRICE_USD,
+} from "@/lib/constants";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
@@ -67,12 +72,22 @@ export function RegistrationWizard({
   const [registeredDateIds, setRegisteredDateIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
-  const affiliation = company?.affiliationType;
-
   const event = useMemo(
     () => events.find((e) => e.id === eventId),
     [events, eventId]
   );
+  const isPadelEvent = event?.slug === "padel";
+  const affiliation = company?.affiliationType;
+  const padelCategory = company?.padelCategory;
+  const isSponsorGuest = isPadelEvent && company?.isSponsorGuest === true;
+  const categoryLabel = isPadelEvent
+    ? padelCategory
+      ? PADEL_CATEGORY_LABELS[padelCategory]
+      : undefined
+    : affiliation
+      ? AFFILIATION_LABELS[affiliation]
+      : undefined;
+
   const selectedDates = useMemo(
     () => event?.dates.filter((d) => eventDateIds.includes(d.id)) ?? [],
     [event, eventDateIds]
@@ -84,10 +99,16 @@ export function RegistrationWizard({
       ) ?? [],
     [event, registeredDateIds]
   );
-  const price = event?.prices.find((p) => p.affiliation === affiliation);
-  const unitPriceUsd =
-    price?.isEnabled && price.amountUsd !== null ? price.amountUsd : null;
-  const priceUnavailable = !!event && !!affiliation && unitPriceUsd === null;
+  const golfPrice = event?.prices.find((p) => p.affiliation === affiliation);
+  const unitPriceUsd = isPadelEvent
+    ? isSponsorGuest
+      ? 0
+      : PADEL_PRICE_USD
+    : golfPrice?.isEnabled && golfPrice.amountUsd !== null
+      ? golfPrice.amountUsd
+      : null;
+  const priceUnavailable =
+    !isPadelEvent && !!event && !!affiliation && unitPriceUsd === null;
 
   // Empresa y evento ya quedaron fijos en el primer envío: esto salta
   // directo al paso de Participantes para inscribir la siguiente fecha con
@@ -123,8 +144,10 @@ export function RegistrationWizard({
     }
   }
 
-  const step1Ready =
-    !!event && selectedDates.length > 0 && unitPriceUsd !== null;
+  // La tarifa de golf depende de la afiliación, que todavía no se conoce en
+  // este paso (Empresa va después de Evento) — solo hace falta evento+fecha
+  // aquí. Pádel sí resuelve su precio de una vez (plano o $0 de invitado).
+  const step0Ready = !!event && selectedDates.length > 0;
 
   function submit() {
     if (!company || !event || selectedDates.length === 0) return;
@@ -161,20 +184,7 @@ export function RegistrationWizard({
       >
         <div className="space-y-6">
           {step === 0 && (
-            <div key="step-0" className="step-fade-in">
-              <CompanyStep
-                affiliates={affiliates}
-                defaultValues={company}
-                onNext={(data) => {
-                  setCompany(data);
-                  setStep(1);
-                }}
-              />
-            </div>
-          )}
-
-          {step === 1 && company && (
-            <section key="step-1" className="step-fade-in space-y-6">
+            <section key="step-0" className="step-fade-in space-y-6">
               <div className="space-y-3">
                 <SectionLabel>Evento</SectionLabel>
                 <div
@@ -192,6 +202,11 @@ export function RegistrationWizard({
                         setEventId(e.id);
                         setEventDateIds([]);
                         setMultiDateMode(false);
+                        // Empresa/pádel comparten formulario, pero las
+                        // preguntas cambian según el evento: si ya se había
+                        // llenado ese paso para otro evento, se descarta
+                        // para no arrastrar respuestas que ya no aplican.
+                        setCompany(undefined);
                       }}
                       className={cn(
                         "rounded-lg border p-4 text-left transition-all",
@@ -286,44 +301,67 @@ export function RegistrationWizard({
                 </div>
               )}
 
-              {event && (
+              {event && isPadelEvent && (
                 <div className="rounded-lg border bg-muted/40 p-4">
-                  <SectionLabel>Tu tarifa</SectionLabel>
-                  {priceUnavailable ? (
-                    <p className="mt-1 text-sm text-destructive">
-                      Tu categoría de membresía (
-                      {AFFILIATION_LABELS[company.affiliationType]}) todavía no tiene
-                      tarifa para este evento. Escríbenos si crees que esto es
-                      un error.
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-sm">
-                      Como empresa{" "}
-                      <span className="font-medium">
-                        {AFFILIATION_LABELS[company.affiliationType]}
-                      </span>
-                      , tu tarifa es{" "}
-                      <span className="font-medium">
-                        {formatUsd(unitPriceUsd as number)}
-                      </span>{" "}
-                      por participante
-                      {selectedDates.length > 1
-                        ? `, por cada una de las ${selectedDates.length} fechas elegidas.`
-                        : "."}
-                    </p>
-                  )}
+                  <SectionLabel>Tarifa</SectionLabel>
+                  <p className="mt-1 text-sm">
+                    Inscripción abierta al público:{" "}
+                    <span className="font-medium">
+                      {formatUsd(PADEL_PRICE_USD)}
+                    </span>{" "}
+                    por participante. Si te invita un patrocinador, no pagas
+                    nada: lo confirmas en el siguiente paso.
+                  </p>
                 </div>
               )}
 
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(0)}>
-                  Atrás
-                </Button>
-                <Button disabled={!step1Ready} onClick={() => setStep(2)}>
+              <div className="flex justify-end">
+                <Button
+                  disabled={!step0Ready}
+                  onClick={() => setStep(1)}
+                >
                   Continuar
                 </Button>
               </div>
             </section>
+          )}
+
+          {step === 1 && event && (
+            <div key="step-1" className="step-fade-in">
+              <CompanyStep
+                eventSlug={event.slug}
+                affiliates={affiliates}
+                defaultValues={company}
+                onNext={(data) => {
+                  setCompany(data);
+                  // La tarifa de golf depende de la afiliación que se acaba
+                  // de elegir: si esa combinación no tiene precio
+                  // configurado, no avanza — se queda aquí con el aviso de
+                  // abajo en vez de dejar seguir hacia un cobro imposible.
+                  const priceOk =
+                    isPadelEvent ||
+                    event.prices.some(
+                      (p) =>
+                        p.affiliation === data.affiliationType &&
+                        p.isEnabled &&
+                        p.amountUsd !== null
+                    );
+                  if (priceOk) setStep(2);
+                }}
+              />
+              {company && priceUnavailable && (
+                <Alert variant="destructive" role="alert" className="mt-4">
+                  Tu categoría de membresía ({categoryLabel}) todavía no
+                  tiene tarifa para este evento. Escríbenos si crees que esto
+                  es un error.
+                </Alert>
+              )}
+              <div className="mt-4">
+                <Button variant="outline" onClick={() => setStep(0)}>
+                  Atrás
+                </Button>
+              </div>
+            </div>
           )}
 
           {step === 2 && (
@@ -351,12 +389,19 @@ export function RegistrationWizard({
               <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div>
-                    <p className="text-sm text-muted-foreground">Empresa</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isPadelEvent ? "Jugador" : "Empresa"}
+                    </p>
                     <p className="font-medium">{company.legalName}</p>
                     <p className="text-sm text-muted-foreground">
-                      RNC {company.rnc} ·{" "}
-                      {AFFILIATION_LABELS[company.affiliationType]}
+                      RNC {company.rnc}
+                      {categoryLabel ? ` · ${categoryLabel}` : ""}
                     </p>
+                    {isSponsorGuest && (
+                      <p className="text-sm text-primary">
+                        Invitado de {company.sponsorName}, sin costo.
+                      </p>
+                    )}
                   </div>
                   <Separator />
                   <div>
@@ -397,9 +442,11 @@ export function RegistrationWizard({
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {selectedDates.length > 1
-                      ? "Se generará una proforma por cada fecha, con estos mismos datos, y se enviarán al correo de la empresa."
-                      : "La proforma se emitirá con estos datos y se enviará al correo de la empresa."}
+                    {isSponsorGuest
+                      ? "No se genera proforma: tu inscripción queda pendiente de confirmación del patrocinador."
+                      : selectedDates.length > 1
+                        ? "Se generará una proforma por cada fecha, con estos mismos datos, y se enviarán al correo de la empresa."
+                        : "La proforma se emitirá con estos datos y se enviará al correo de la empresa."}
                   </p>
                 </CardContent>
               </Card>
@@ -435,7 +482,16 @@ export function RegistrationWizard({
                     : "Inscripción generada"}
                 </h2>
                 <p className="mt-2 text-muted-foreground">
-                  {result.length > 1 ? (
+                  {isSponsorGuest ? (
+                    <>
+                      Tu código de inscripción es{" "}
+                      <span className="font-mono font-semibold tabular-nums text-foreground">
+                        {result[0].code}
+                      </span>
+                      . Quedaste registrado como invitado de{" "}
+                      {company?.sponsorName}. Nos vemos en la cancha.
+                    </>
+                  ) : result.length > 1 ? (
                     <>
                       Tus códigos de inscripción son{" "}
                       {result.map((r, i) => (
@@ -461,61 +517,66 @@ export function RegistrationWizard({
                   )}
                 </p>
               </div>
-              <div className="flex flex-wrap justify-center gap-3">
-                {result.map((r) => (
-                  <Button
-                    key={r.registrationId}
-                    nativeButton={false}
-                    render={
-                      <a
-                        href={`/api/proformas/${r.registrationId}/pdf`}
-                        target="_blank"
-                        rel="noopener"
-                      />
-                    }
-                  >
-                    {result.length > 1
-                      ? `Descargar proforma ${r.code}`
-                      : "Descargar proforma"}
-                  </Button>
-                ))}
-              </div>
 
-              <div className="rounded-lg border bg-muted/40 p-4 text-left">
-                <p className="text-sm font-medium">Próximos pasos</p>
-                <ol className="mt-2 space-y-1 text-sm text-muted-foreground">
-                  <li>1. Revisa la proforma descargada.</li>
-                  <li>2. Realiza el pago con los datos bancarios que indica.</li>
-                  <li>3. Envíanos el comprobante para confirmar tu cupo.</li>
-                </ol>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <Button
-                    nativeButton={false}
-                    render={
-                      <a
-                        href={`https://wa.me/${ADECLA.contacto.whatsapp}?text=${encodeURIComponent(
-                          `Hola, les envío el comprobante de pago de mi inscripción ADECLA (código ${result
-                            .map((r) => r.code)
-                            .join(", ")}).`
-                        )}`}
-                        target="_blank"
-                        rel="noopener"
-                      />
-                    }
-                  >
-                    Enviar comprobante por WhatsApp
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    o al correo{" "}
-                    <a
-                      href={`mailto:${ADECLA.contacto.email}`}
-                      className="font-medium text-foreground underline underline-offset-2"
-                    >
-                      {ADECLA.contacto.email}
-                    </a>
-                  </p>
-                </div>
-              </div>
+              {!isSponsorGuest && (
+                <>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {result.map((r) => (
+                      <Button
+                        key={r.registrationId}
+                        nativeButton={false}
+                        render={
+                          <a
+                            href={`/api/proformas/${r.registrationId}/pdf`}
+                            target="_blank"
+                            rel="noopener"
+                          />
+                        }
+                      >
+                        {result.length > 1
+                          ? `Descargar proforma ${r.code}`
+                          : "Descargar proforma"}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/40 p-4 text-left">
+                    <p className="text-sm font-medium">Próximos pasos</p>
+                    <ol className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      <li>1. Revisa la proforma descargada.</li>
+                      <li>2. Realiza el pago con los datos bancarios que indica.</li>
+                      <li>3. Envíanos el comprobante para confirmar tu cupo.</li>
+                    </ol>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <Button
+                        nativeButton={false}
+                        render={
+                          <a
+                            href={`https://wa.me/${ADECLA.contacto.whatsapp}?text=${encodeURIComponent(
+                              `Hola, les envío el comprobante de pago de mi inscripción ADECLA (código ${result
+                                .map((r) => r.code)
+                                .join(", ")}).`
+                            )}`}
+                            target="_blank"
+                            rel="noopener"
+                          />
+                        }
+                      >
+                        Enviar comprobante por WhatsApp
+                      </Button>
+                      <p className="text-sm text-muted-foreground">
+                        o al correo{" "}
+                        <a
+                          href={`mailto:${ADECLA.contacto.email}`}
+                          className="font-medium text-foreground underline underline-offset-2"
+                        >
+                          {ADECLA.contacto.email}
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {remainingDates.length > 0 && (
                 <div className="rounded-lg border bg-muted/40 p-4 text-left">
@@ -551,8 +612,9 @@ export function RegistrationWizard({
               text: formatEventDate(d.date),
               venue: d.venue,
             }))}
-            affiliationLabel={affiliation ? AFFILIATION_LABELS[affiliation] : undefined}
+            categoryLabel={categoryLabel}
             unitPriceUsd={unitPriceUsd}
+            isSponsorGuest={isSponsorGuest}
             quantity={Math.max(1, participantCount ?? participants.length)}
             rate={rate}
           />

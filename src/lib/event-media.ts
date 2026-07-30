@@ -44,6 +44,10 @@ const MEDIA: Record<string, EventMedia> = {
   "golf|2026-09-05": {
     cover: "/images/golf-05-septiembre.jpg",
   },
+  "padel|2026-08-14": {
+    cover: "/images/padel-establos.jpeg",
+  },
+  // Placeholder mientras el evento no tenga fecha publicada.
   padel: {
     cover: "/images/padel-proximamente.jpg",
     // Foto vertical, no flyer: la raqueta está en el tercio inferior, así que
@@ -52,6 +56,9 @@ const MEDIA: Record<string, EventMedia> = {
     coverPosition: "center 75%",
   },
 };
+
+/** Póster de categorías de pádel (género × nivel), enlazado desde la tarjeta. */
+export const PADEL_CATEGORIES_POSTER = "/images/padel-categorias.jpg";
 
 function keyFor(eventSlug: string, date?: Date) {
   return date ? `${eventSlug}|${date.toISOString().slice(0, 10)}` : eventSlug;
