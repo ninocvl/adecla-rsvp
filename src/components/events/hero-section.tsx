@@ -2,6 +2,73 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/shared/reveal";
+import { cn } from "@/lib/utils";
+
+// Mezcla de flyers y fotos reales del torneo para que el banner del hero se
+// sienta vivo, no como una portada fija. Se recorre una vez y se repite el
+// mismo listado para el loop continuo (ver marquee-track en globals.css).
+const MARQUEE_PHOTOS = [
+  {
+    src: "/images/golf-25-julio.jpg",
+    alt: "Flyer: Primera Parada, Punta Espada Golf Club, 25 de julio",
+  },
+  {
+    src: "/images/recap-golf-25jul-02.jpg",
+    alt: "Foto del torneo de golf, Primera Parada",
+  },
+  {
+    src: "/images/padel-establos.jpeg",
+    alt: "Flyer: Segunda Parada, Torneo de Pádel, Los Establos Sports Complex",
+  },
+  {
+    src: "/images/recap-golf-25jul-05.jpg",
+    alt: "Foto del torneo de golf, Primera Parada",
+  },
+  {
+    src: "/images/recap-golf-25jul-09.jpg",
+    alt: "Foto del torneo de golf, Primera Parada",
+  },
+  {
+    src: "/images/golf-05-septiembre.jpg",
+    alt: "Flyer: Tercera Parada, La Cana Golf Club, 5 de septiembre",
+  },
+  {
+    src: "/images/recap-golf-25jul-12.jpg",
+    alt: "Foto del torneo de golf, Primera Parada",
+  },
+  {
+    src: "/images/recap-golf-25jul-15.jpg",
+    alt: "Foto del torneo de golf, Primera Parada",
+  },
+];
+
+function HeroMarquee() {
+  const photos = [...MARQUEE_PHOTOS, ...MARQUEE_PHOTOS];
+  return (
+    <div className="w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+      <div className="marquee-track flex w-max gap-4">
+        {photos.map((photo, i) => (
+          <div
+            key={`${photo.src}-${i}`}
+            className={cn(
+              "shadow-teal-hover w-[110px] shrink-0 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl sm:w-[130px] lg:w-[160px]",
+              i % 2 === 0 ? "-rotate-2" : "rotate-2"
+            )}
+          >
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              width={160}
+              height={210}
+              className="h-auto w-full"
+              priority={i < 3}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function HeroSection() {
   return (
@@ -40,71 +107,14 @@ export function HeroSection() {
             </Button>
           </div>
 
-          <Reveal
-            delayMs={150}
-            className="mt-10 flex items-end justify-center gap-2 lg:hidden"
-          >
-            <div className="shadow-teal-hover w-[100px] -rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
-              <Image
-                src="/images/golf-25-julio.jpg"
-                alt="Flyer: Primera parada del torneo de golf, Punta Espada Golf Club, 25 de julio"
-                width={120}
-                height={150}
-                className="h-auto w-full"
-              />
-            </div>
-            <div className="shadow-teal-hover mb-3 w-[100px] rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
-              <Image
-                src="/images/padel-establos.jpeg"
-                alt="Flyer: Segunda parada, Torneo de Pádel, Los Establos Sports Complex"
-                width={120}
-                height={150}
-                className="h-auto w-full"
-              />
-            </div>
-            <div className="shadow-teal-hover w-[100px] rotate-2 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
-              <Image
-                src="/images/golf-05-septiembre.jpg"
-                alt="Flyer: Tercera parada del torneo de golf, La Cana Golf Club, 5 de septiembre"
-                width={120}
-                height={150}
-                className="h-auto w-full"
-              />
-            </div>
+          <Reveal delayMs={150} className="mt-10 lg:hidden">
+            <HeroMarquee />
           </Reveal>
         </div>
 
-        <div className="mx-auto hidden w-full max-w-lg items-end justify-center gap-4 lg:flex">
-          <div className="shadow-teal-hover w-[160px] -rotate-6 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
-            <Image
-              src="/images/golf-25-julio.jpg"
-              alt="Flyer: Primera parada del torneo de golf, Punta Espada Golf Club, 25 de julio"
-              width={200}
-              height={250}
-              className="h-auto w-full"
-              priority
-            />
-          </div>
-          <div className="shadow-teal-hover mb-10 w-[160px] rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
-            <Image
-              src="/images/padel-establos.jpeg"
-              alt="Flyer: Segunda parada, Torneo de Pádel, Los Establos Sports Complex"
-              width={200}
-              height={250}
-              className="h-auto w-full"
-            />
-          </div>
-          <div className="shadow-teal-hover w-[160px] rotate-3 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
-            <Image
-              src="/images/golf-05-septiembre.jpg"
-              alt="Flyer: Tercera parada del torneo de golf, La Cana Golf Club, 5 de septiembre"
-              width={200}
-              height={250}
-              className="h-auto w-full"
-              priority
-            />
-          </div>
-        </div>
+        <Reveal delayMs={150} className="hidden lg:block">
+          <HeroMarquee />
+        </Reveal>
       </div>
     </section>
   );

@@ -286,3 +286,27 @@
     animation: none;
   }
 }
+
+/* Dirección G: banner de fotos deslizándose sin parar junto al CTA del
+   hero, para que la portada se sienta viva en vez de una tarjeta estática.
+   El track duplica sus fotos una vez; al recorrer -50% vuelve exactamente
+   a donde empezó, así el loop no se nota. */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee-scroll 32s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
