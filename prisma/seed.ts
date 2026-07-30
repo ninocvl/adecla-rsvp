@@ -99,10 +99,10 @@ async function main() {
   // código, no en la base — ver PADEL_PRICE_USD y PadelCategory).
   const padel = await prisma.event.upsert({
     where: { slug: "padel" },
-    update: { status: "PUBLISHED" },
+    update: { status: "PUBLISHED", name: "Torneo de Pádel" },
     create: {
       slug: "padel",
-      name: "Torneo de Pádel ADECLA",
+      name: "Torneo de Pádel",
       description:
         "Torneo de pádel abierto al público en Los Establos Sports Complex, Cap Cana. Se juega en parejas del mismo género y categoría (Femenina B/C/D, Masculino B/C).",
       codePrefix: "PADEL",

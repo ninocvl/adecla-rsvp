@@ -18,7 +18,7 @@ export function HeroSection() {
             pocos minutos y recibe tu proforma de manera inmediata.
           </p>
           <p className="mt-2 text-sm font-medium text-white">
-            Las inscripciones para Pádel estarán disponibles próximamente.
+            Pádel ya abrió inscripciones: 14 y 15 de agosto en Los Establos.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button
@@ -56,7 +56,7 @@ export function HeroSection() {
             <div className="shadow-teal-hover mb-3 w-[100px] rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg sm:w-[120px]">
               <Image
                 src="/images/padel-establos.jpeg"
-                alt="Flyer: Segunda parada, Torneo de Pádel ADECLA, Los Establos Sports Complex"
+                alt="Flyer: Segunda parada, Torneo de Pádel, Los Establos Sports Complex"
                 width={120}
                 height={150}
                 className="h-auto w-full"
@@ -88,7 +88,7 @@ export function HeroSection() {
           <div className="shadow-teal-hover mb-10 w-[160px] rotate-1 overflow-hidden rounded-xl border border-white/20 bg-white shadow-2xl">
             <Image
               src="/images/padel-establos.jpeg"
-              alt="Flyer: Segunda parada, Torneo de Pádel ADECLA, Los Establos Sports Complex"
+              alt="Flyer: Segunda parada, Torneo de Pádel, Los Establos Sports Complex"
               width={200}
               height={250}
               className="h-auto w-full"
