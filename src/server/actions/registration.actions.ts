@@ -15,6 +15,7 @@ import { findMatchingSponsor } from "@/lib/sponsors";
 import type { PadelCategory } from "@/generated/prisma/enums";
 import {
   getCategoryLabel,
+  isItbisExempt,
   ITBIS_RATE,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
@@ -135,13 +136,13 @@ export async function createRegistrationAction(
   }
 
   const exchangeRate = Number(rateSetting?.value ?? "60");
-  // Subtotal (precio de tarifa) + 18% de ITBIS = total real a pagar. Un
-  // invitado de patrocinador paga 0, así que todo esto también da 0 — no se
-  // le genera proforma más abajo.
+  // Subtotal (precio de tarifa) + ITBIS = total real a pagar. El ITBIS
+  // depende de la fecha exacta (isItbisExempt), así que se calcula dentro
+  // del bucle por fecha, no aquí una sola vez: una inscripción con varias
+  // fechas de golf podría mezclar una exenta con una que no lo es. Un
+  // invitado de patrocinador paga 0 de cualquier forma, ITBIS incluido —
+  // no se le genera proforma más abajo.
   const subtotalUsd = unitPriceUsd * quantity;
-  const itbisUsd = subtotalUsd * ITBIS_RATE;
-  const totalUsd = subtotalUsd + itbisUsd;
-  const totalDopRef = totalUsd * exchangeRate;
   const categoryLabel = getCategoryLabel(affiliationType, padelCategory);
   const registrationStatus = isSponsorGuest
     ? sponsorRncVerified
@@ -186,6 +187,12 @@ export async function createRegistrationAction(
         snapshot: ProformaSnapshot;
       }[] = [];
       for (const eventDate of eventDates) {
+        const itbisUsd = isItbisExempt(event.slug, eventDate.date)
+          ? 0
+          : subtotalUsd * ITBIS_RATE;
+        const totalUsd = subtotalUsd + itbisUsd;
+        const totalDopRef = totalUsd * exchangeRate;
+
         const updated = await tx.$executeRaw`
           UPDATE "EventDate"
           SET "reservedCount" = "reservedCount" + ${quantity}
@@ -294,6 +301,18 @@ export async function createRegistrationAction(
     // inscripción: se genera y se envía sin esperar su resultado. No aplica
     // para invitados de patrocinador, que no tienen proforma que cobrar.
     if (!isSponsorGuest) {
+      // Cada fecha puede tener su propio total (una está exenta de ITBIS y
+      // otra no), así que el total del correo se suma desde los snapshots
+      // reales en vez de asumir el mismo monto multiplicado por la cantidad
+      // de fechas.
+      const emailTotalUsd = result.registrations.reduce(
+        (sum, r) => sum + Number(r.snapshot.totalUsd),
+        0
+      );
+      const emailTotalDopRef = result.registrations.reduce(
+        (sum, r) => sum + Number(r.snapshot.totalDopRef),
+        0
+      );
       Promise.all(
         result.registrations.map(async (r) => ({
           filename: `proforma-${r.code}.pdf`,
@@ -308,8 +327,8 @@ export async function createRegistrationAction(
             registrationCode: result.registrations.map((r) => r.code).join(", "),
             eventName: event.name,
             eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
-            totalUsd: formatUsd(totalUsd * eventDates.length),
-            totalDopRef: formatDop(totalDopRef * eventDates.length),
+            totalUsd: formatUsd(emailTotalUsd),
+            totalDopRef: formatDop(emailTotalDopRef),
             attachments,
           })
         )

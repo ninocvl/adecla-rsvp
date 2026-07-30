@@ -14,6 +14,7 @@ interface PriceSummaryProps {
   categoryLabel?: string;
   unitPriceUsd: number | null;
   isSponsorGuest?: boolean;
+  itbisExempt?: boolean;
   quantity: number;
   rate: number;
 }
@@ -24,12 +25,14 @@ export function PriceSummary({
   categoryLabel,
   unitPriceUsd,
   isSponsorGuest,
+  itbisExempt,
   quantity,
   rate,
 }: PriceSummaryProps) {
   const subtotalUsd =
     unitPriceUsd !== null ? unitPriceUsd * quantity * Math.max(1, dates.length) : null;
-  const itbisUsd = subtotalUsd !== null ? subtotalUsd * ITBIS_RATE : null;
+  const itbisUsd =
+    subtotalUsd !== null ? (itbisExempt ? 0 : subtotalUsd * ITBIS_RATE) : null;
   const totalUsd = subtotalUsd !== null ? subtotalUsd + (itbisUsd as number) : null;
 
   return (
@@ -91,7 +94,9 @@ export function PriceSummary({
                 </span>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">ITBIS (18%)</span>
+                <span className="text-muted-foreground">
+                  {itbisExempt ? "ITBIS (exento)" : "ITBIS (18%)"}
+                </span>
                 <span className="font-medium tabular-nums">
                   {itbisUsd !== null ? formatUsd(itbisUsd) : "—"}
                 </span>

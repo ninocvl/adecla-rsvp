@@ -31,6 +31,17 @@ export const NOTA_PAGO =
 // a pagar — ver DESIGN.md / factura proforma.
 export const ITBIS_RATE = 0.18;
 
+// Fechas puntuales donde ADECLA decidió no cobrar ITBIS en la proforma.
+// Clave "slug|YYYY-MM-DD", igual convención que event-media.ts. Una fecha
+// que no aparezca aquí cobra ITBIS por defecto, que es la regla general.
+const ITBIS_EXEMPT_DATE_KEYS = ["padel|2026-08-14", "golf|2026-09-05"];
+
+export function isItbisExempt(eventSlug: string, date: Date): boolean {
+  return ITBIS_EXEMPT_DATE_KEYS.includes(
+    `${eventSlug}|${date.toISOString().slice(0, 10)}`
+  );
+}
+
 export const AFFILIATION_LABELS: Record<string, string> = {
   CONSTRUCTOR: "Constructor",
   PROVEEDOR: "Proveedor / Entidades de apoyo",

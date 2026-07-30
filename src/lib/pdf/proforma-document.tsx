@@ -152,6 +152,9 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
   // siempre (sin desglose) en vez de "NaN".
   const subtotalUsd = data.subtotalUsd ?? data.totalUsd;
   const itbisDisplay = data.itbisUsd !== undefined ? fmt(data.itbisUsd) : "-";
+  // itbisUsd solo llega en 0 exacto cuando la fecha está exenta (ver
+  // isItbisExempt): un invitado de patrocinador no llega a tener proforma.
+  const itbisExempt = data.itbisUsd !== undefined && Number(data.itbisUsd) === 0;
 
   return (
     <Document
@@ -250,7 +253,9 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
               <Text style={[styles.totalsLine, styles.totalsBold]}>
                 Sub-total General US$
               </Text>
-              <Text style={styles.totalsLine}>Itbis (18%)</Text>
+              <Text style={styles.totalsLine}>
+                {itbisExempt ? "Itbis (exento)" : "Itbis (18%)"}
+              </Text>
               <Text style={styles.totalsBold}>TOTAL ORDEN RD$</Text>
             </View>
             <View style={styles.totalsValues}>

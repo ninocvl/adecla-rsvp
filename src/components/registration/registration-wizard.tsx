@@ -8,6 +8,7 @@ import type { ActiveAffiliate } from "@/server/queries/affiliates.queries";
 import {
   ADECLA,
   AFFILIATION_LABELS,
+  isItbisExempt,
   PADEL_CATEGORY_LABELS,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
@@ -109,6 +110,13 @@ export function RegistrationWizard({
       : null;
   const priceUnavailable =
     !isPadelEvent && !!event && !!affiliation && unitPriceUsd === null;
+  // Si se eligieron varias fechas y no todas tienen el mismo estatus de
+  // ITBIS, se cobra por seguridad (el servidor sí calcula cada fecha por
+  // separado y es la fuente real de verdad en la proforma).
+  const itbisExempt =
+    !!event &&
+    selectedDates.length > 0 &&
+    selectedDates.every((d) => isItbisExempt(event.slug, d.date));
 
   // Empresa y evento ya quedaron fijos en el primer envío: esto salta
   // directo al paso de Participantes para inscribir la siguiente fecha con
@@ -615,6 +623,7 @@ export function RegistrationWizard({
             categoryLabel={categoryLabel}
             unitPriceUsd={unitPriceUsd}
             isSponsorGuest={isSponsorGuest}
+            itbisExempt={itbisExempt}
             quantity={Math.max(1, participantCount ?? participants.length)}
             rate={rate}
           />
