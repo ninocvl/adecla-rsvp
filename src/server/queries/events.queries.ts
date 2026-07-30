@@ -103,16 +103,23 @@ export async function getLandingCards(): Promise<LandingCard[]> {
     }
   }
 
-  // Pádel (comingSoon) va en segundo lugar en la landing, no al final: se
-  // saca de donde cayó por orden natural (evento en borrador, va último) y
-  // se reinserta en la posición 1.
-  const comingSoonIndex = cards.findIndex((c) => c.kind === "comingSoon");
-  if (comingSoonIndex > 1) {
-    const [comingSoonCard] = cards.splice(comingSoonIndex, 1);
-    cards.splice(1, 0, comingSoonCard);
+  // Las tarjetas con fecha van en orden cronológico real, sin importar de
+  // qué evento sean — así "Primera/Segunda/Tercera Parada" cae en el orden
+  // que dice su nombre, aunque golf y pádel se consulten por separado.
+  // Un evento sin fecha todavía (comingSoon) no tiene por dónde ordenarse
+  // cronológicamente, así que se inserta cerca del principio en vez de
+  // caer al final por orden de creación.
+  const dateCards = cards
+    .filter((c) => c.kind === "date")
+    .sort((a, b) => (a.date as Date).getTime() - (b.date as Date).getTime());
+  const comingSoonCards = cards.filter((c) => c.kind === "comingSoon");
+
+  const ordered = [...dateCards];
+  for (const card of comingSoonCards) {
+    ordered.splice(Math.min(1, ordered.length), 0, card);
   }
 
-  return cards;
+  return ordered;
 }
 
 export interface WizardPrice {

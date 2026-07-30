@@ -122,16 +122,17 @@ async function main() {
     update: {
       label: "Segunda Parada",
       venue: "Los Establos Sports Complex, Cap Cana",
+      capacity: 144,
     },
     create: {
       eventId: padel.id,
       date: new Date("2026-08-14T12:00:00Z"),
       label: "Segunda Parada",
       venue: "Los Establos Sports Complex, Cap Cana",
-      capacity: 64,
+      capacity: 144,
     },
   });
-  console.log("✔ Torneo de Pádel: Segunda Parada, 14-15 agosto (cap. 64)");
+  console.log("✔ Torneo de Pádel: Segunda Parada, 14-15 agosto (cap. 144)");
 }
 
 main()
