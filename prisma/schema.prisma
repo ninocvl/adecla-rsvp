@@ -34,6 +34,12 @@ enum PadelCategory {
   MASCULINO_C
 }
 
+// Clubes de pádel con descuento propio (ver PADEL_CLUB_DISCOUNT_RATE).
+enum PadelClub {
+  LA_PENA
+  VIEJEVOS
+}
+
 enum RegistrationStatus {
   PROFORMA_GENERADA
   PENDIENTE_PAGO
@@ -167,6 +173,10 @@ model Registration {
   sponsorName         String?
   sponsorRnc          String?
   sponsorRncVerified  Boolean            @default(false)
+  // Miembro de un club de pádel con convenio: 20% de descuento sobre la
+  // tarifa (ver PADEL_CLUB_DISCOUNT_RATE). No es lo mismo que isSponsorGuest:
+  // aquí sí se cobra y sí se genera proforma, solo que con descuento.
+  padelClub           PadelClub?
   status       RegistrationStatus @default(PROFORMA_GENERADA)
   quantity     Int
   unitPriceUsd Decimal            @db.Decimal(10, 2)

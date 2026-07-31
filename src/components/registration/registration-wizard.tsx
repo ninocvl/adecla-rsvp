@@ -10,6 +10,8 @@ import {
   AFFILIATION_LABELS,
   isItbisExempt,
   PADEL_CATEGORY_LABELS,
+  PADEL_CLUB_DISCOUNT_RATE,
+  PADEL_CLUB_LABELS,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
 import { formatEventDate, formatUsd } from "@/lib/format";
@@ -81,6 +83,7 @@ export function RegistrationWizard({
   const affiliation = company?.affiliationType;
   const padelCategory = company?.padelCategory;
   const isSponsorGuest = isPadelEvent && company?.isSponsorGuest === true;
+  const padelClub = isPadelEvent ? company?.padelClub : undefined;
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
@@ -104,7 +107,9 @@ export function RegistrationWizard({
   const unitPriceUsd = isPadelEvent
     ? isSponsorGuest
       ? 0
-      : PADEL_PRICE_USD
+      : padelClub
+        ? PADEL_PRICE_USD * (1 - PADEL_CLUB_DISCOUNT_RATE)
+        : PADEL_PRICE_USD
     : golfPrice?.isEnabled && golfPrice.amountUsd !== null
       ? golfPrice.amountUsd
       : null;
@@ -318,7 +323,9 @@ export function RegistrationWizard({
                       {formatUsd(PADEL_PRICE_USD)}
                     </span>{" "}
                     por participante. Si te invita un patrocinador, no pagas
-                    nada: lo confirmas en el siguiente paso.
+                    nada. Si juegas en un club con convenio, tienes{" "}
+                    {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento. Lo
+                    confirmas en el siguiente paso.
                   </p>
                 </div>
               )}
@@ -408,6 +415,12 @@ export function RegistrationWizard({
                     {isSponsorGuest && (
                       <p className="text-sm text-primary">
                         Invitado de {company.sponsorName}, sin costo.
+                      </p>
+                    )}
+                    {padelClub && (
+                      <p className="text-sm text-primary">
+                        Club {PADEL_CLUB_LABELS[padelClub]},{" "}
+                        {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento.
                       </p>
                     )}
                   </div>

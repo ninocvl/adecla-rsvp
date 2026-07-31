@@ -171,7 +171,11 @@ export default async function AdminInscripcionDetallePage({
           <div className="flex justify-between">
             <span className="text-muted-foreground">Categoría</span>
             <span className="font-medium">
-              {getCategoryLabel(registration.affiliation, registration.padelCategory)}
+              {getCategoryLabel(
+                registration.affiliation,
+                registration.padelCategory,
+                registration.padelClub
+              )}
             </span>
           </div>
           {!registration.isSponsorGuest && (

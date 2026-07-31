@@ -12,11 +12,12 @@ import {
   type CreateRegistrationInput,
 } from "@/lib/validations/registration.schema";
 import { findMatchingSponsor } from "@/lib/sponsors";
-import type { PadelCategory } from "@/generated/prisma/enums";
+import type { PadelCategory, PadelClub } from "@/generated/prisma/enums";
 import {
   getCategoryLabel,
   isItbisExempt,
   ITBIS_RATE,
+  PADEL_CLUB_DISCOUNT_RATE,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
 import { formatDop, formatEventDate, formatUsd } from "@/lib/format";
@@ -69,13 +70,22 @@ export async function createRegistrationAction(
     };
   }
 
-  // --- Pádel: categoría + invitado de patrocinador (sin EventPrice: tarifa
-  // plana en código) ---
+  // --- Pádel: categoría + situación (afiliado / patrocinador / club /
+  // público). Sin EventPrice: tarifas planas o con descuento en código. ---
   let padelCategory: PadelCategory | undefined;
+  let padelClub: PadelClub | undefined;
   let isSponsorGuest = false;
   let sponsorName: string | undefined;
   let sponsorRnc: string | undefined;
   let sponsorRncVerified = false;
+  // Vínculo a un afiliado real conocido, solo para Company (nunca se guarda
+  // en Registration.affiliation — eso es exclusivo de golf).
+  let companyAffiliateId: string | undefined;
+  let companyAffiliationType:
+    | "CONSTRUCTOR"
+    | "PROVEEDOR"
+    | "DESARROLLADOR"
+    | undefined;
 
   // --- Golf: afiliación + tarifa por EventPrice ---
   let affiliationType: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR" | undefined;
@@ -88,19 +98,44 @@ export async function createRegistrationAction(
       return { ok: false, error: "Selecciona tu categoría." };
     }
     padelCategory = data.padelCategory;
-    isSponsorGuest = data.isSponsorGuest === true;
-    if (isSponsorGuest) {
+
+    const participantType = data.padelParticipantType;
+    if (!participantType) {
+      return { ok: false, error: "Indica tu situación para la inscripción." };
+    }
+
+    if (participantType === "PATROCINADOR") {
       if (!data.sponsorName || !data.sponsorRnc) {
         return {
           ok: false,
           error: "Indica el nombre y el RNC del patrocinador.",
         };
       }
+      isSponsorGuest = true;
       sponsorName = data.sponsorName;
       sponsorRnc = normalizeRnc(data.sponsorRnc);
       sponsorRncVerified = !!findMatchingSponsor(data.sponsorRnc);
       unitPriceUsd = 0;
+    } else if (participantType === "CLUB") {
+      if (!data.padelClub) {
+        return { ok: false, error: "Selecciona tu club." };
+      }
+      padelClub = data.padelClub;
+      unitPriceUsd = PADEL_PRICE_USD * (1 - PADEL_CLUB_DISCOUNT_RATE);
+    } else if (participantType === "AFILIADO") {
+      // Igual que en golf: nunca se confía en lo que mande el cliente para
+      // el vínculo de afiliado, se relee el registro real del listado.
+      const affiliate = data.affiliateId
+        ? await prisma.affiliate.findUnique({ where: { id: data.affiliateId } })
+        : null;
+      if (!affiliate) {
+        return { ok: false, error: "Selecciona tu empresa de la lista." };
+      }
+      companyAffiliateId = affiliate.id;
+      companyAffiliationType = affiliate.affiliationType ?? undefined;
+      unitPriceUsd = PADEL_PRICE_USD;
     } else {
+      // PUBLICO: abierto a cualquiera, tarifa plana sin descuentos.
       unitPriceUsd = PADEL_PRICE_USD;
     }
   } else {
@@ -143,12 +178,18 @@ export async function createRegistrationAction(
   // invitado de patrocinador paga 0 de cualquier forma, ITBIS incluido —
   // no se le genera proforma más abajo.
   const subtotalUsd = unitPriceUsd * quantity;
-  const categoryLabel = getCategoryLabel(affiliationType, padelCategory);
+  const categoryLabel = getCategoryLabel(affiliationType, padelCategory, padelClub);
   const registrationStatus = isSponsorGuest
     ? sponsorRncVerified
       ? "CONFIRMADA"
       : "EN_REVISION"
     : "PROFORMA_GENERADA";
+
+  // El vínculo de afiliado en Company puede venir del flujo de golf o del
+  // flujo de pádel "Soy afiliado de ADECLA" — cualquiera de los dos alimenta
+  // el mismo campo, nunca los dos a la vez porque el evento es uno solo.
+  const finalAffiliateId = affiliateId ?? companyAffiliateId;
+  const finalCompanyAffiliationType = affiliationType ?? companyAffiliationType;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -163,8 +204,8 @@ export async function createRegistrationAction(
           contactName: data.contactName,
           email,
           phone: data.phone,
-          affiliationType,
-          affiliateId,
+          affiliationType: finalCompanyAffiliationType,
+          affiliateId: finalAffiliateId,
           wantsToAffiliate: !isPadel && !data.isAffiliated && !!data.wantsToAffiliate,
         },
         update: {
@@ -172,8 +213,10 @@ export async function createRegistrationAction(
           contactName: data.contactName,
           email,
           phone: data.phone,
-          ...(affiliationType ? { affiliationType } : {}),
-          ...(affiliateId ? { affiliateId } : {}),
+          ...(finalCompanyAffiliationType
+            ? { affiliationType: finalCompanyAffiliationType }
+            : {}),
+          ...(finalAffiliateId ? { affiliateId: finalAffiliateId } : {}),
           wantsToAffiliate: !isPadel && !data.isAffiliated && !!data.wantsToAffiliate,
         },
       });
@@ -220,6 +263,7 @@ export async function createRegistrationAction(
             eventDateId: eventDate.id,
             affiliation: affiliationType,
             padelCategory,
+            padelClub,
             isSponsorGuest,
             sponsorName,
             sponsorRnc,

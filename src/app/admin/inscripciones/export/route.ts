@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     r.company.rnc,
     r.event.name,
     formatEventDate(r.eventDate.date),
-    getCategoryLabel(r.affiliation, r.padelCategory),
+    getCategoryLabel(r.affiliation, r.padelCategory, r.padelClub),
     r.participants.map((p) => p.fullName).join(" / "),
     r.totalUsd.toString(),
     STATUS_LABELS[r.status],

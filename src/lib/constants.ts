@@ -69,16 +69,36 @@ export const PADEL_CATEGORY_LABELS: Record<string, string> = {
   MASCULINO_C: "Masculino C",
 };
 
+// Clubes de pádel con convenio: sus miembros pagan la tarifa con descuento
+// en vez de la plana. No es lo mismo que un invitado de patrocinador: aquí
+// sí se cobra (con descuento) y sí se genera proforma.
+export const PADEL_CLUBS = ["LA_PENA", "VIEJEVOS"] as const;
+
+export const PADEL_CLUB_LABELS: Record<string, string> = {
+  LA_PENA: "La Peña",
+  VIEJEVOS: "Viejevos",
+};
+
+export const PADEL_CLUB_DISCOUNT_RATE = 0.2;
+
 // Etiqueta de categoría sin importar el evento: golf usa affiliation
 // (Constructor/Proveedor/Desarrollador), pádel usa padelCategory
 // (género + nivel). Nunca hay los dos a la vez en una misma inscripción.
+// padelClub es aparte: se puede combinar con padelCategory (juega en tal
+// categoría Y es socio de tal club), así que se agrega como sufijo.
 export function getCategoryLabel(
   affiliation?: string | null,
-  padelCategory?: string | null
+  padelCategory?: string | null,
+  padelClub?: string | null
 ): string {
-  if (padelCategory) return PADEL_CATEGORY_LABELS[padelCategory] ?? padelCategory;
-  if (affiliation) return AFFILIATION_LABELS[affiliation] ?? affiliation;
-  return "—";
+  const base = padelCategory
+    ? (PADEL_CATEGORY_LABELS[padelCategory] ?? padelCategory)
+    : affiliation
+      ? (AFFILIATION_LABELS[affiliation] ?? affiliation)
+      : "—";
+  if (!padelClub) return base;
+  const clubLabel = PADEL_CLUB_LABELS[padelClub] ?? padelClub;
+  return `${base} · Club ${clubLabel} (${PADEL_CLUB_DISCOUNT_RATE * 100}% dto.)`;
 }
 
 export const STATUS_LABELS: Record<string, string> = {

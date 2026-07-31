@@ -6,10 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   companyStepSchema,
   normalizeRnc,
+  PADEL_PARTICIPANT_TYPES,
   type CompanyStepInput,
 } from "@/lib/validations/registration.schema";
 import type { ActiveAffiliate } from "@/server/queries/affiliates.queries";
-import { AFFILIATION_LABELS, PADEL_CATEGORY_LABELS } from "@/lib/constants";
+import {
+  AFFILIATION_LABELS,
+  PADEL_CATEGORY_LABELS,
+  PADEL_CLUB_DISCOUNT_RATE,
+  PADEL_CLUB_LABELS,
+} from "@/lib/constants";
 import { findMatchingSponsor } from "@/lib/sponsors";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -98,6 +104,8 @@ export function CompanyStep({
       isSponsorGuest: undefined as unknown as boolean,
       sponsorName: "",
       sponsorRnc: "",
+      padelParticipantType: undefined,
+      padelClub: undefined,
       padelCategory: undefined,
       legalName: "",
       rnc: "",
@@ -111,8 +119,9 @@ export function CompanyStep({
   });
 
   const isAffiliated = watch("isAffiliated");
-  const isSponsorGuest = watch("isSponsorGuest");
+  const padelParticipantType = watch("padelParticipantType");
   const sponsorRnc = watch("sponsorRnc");
+  const isPatrocinador = padelParticipantType === "PATROCINADOR";
 
   const sponsorMatch = useMemo(() => {
     if (!sponsorRnc) return null;
@@ -122,7 +131,7 @@ export function CompanyStep({
   }, [sponsorRnc]);
   const sponsorRncTyped = sponsorRnc ? normalizeRnc(sponsorRnc).length >= 9 : false;
   const sponsorRncMismatch =
-    isSponsorGuest === true && sponsorRncTyped && !sponsorMatch;
+    isPatrocinador && sponsorRncTyped && !sponsorMatch;
 
   const filteredAffiliates = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -142,12 +151,25 @@ export function CompanyStep({
     }
   }
 
-  function chooseSponsorGuest(value: boolean) {
-    setValue("isSponsorGuest", value);
+  function choosePadelType(
+    value: (typeof PADEL_PARTICIPANT_TYPES)[number]
+  ) {
+    setValue("padelParticipantType", value);
+    setValue("isSponsorGuest", value === "PATROCINADOR");
     setSponsorRncAcknowledged(false);
-    if (!value) {
+    if (value !== "PATROCINADOR") {
       setValue("sponsorName", "");
       setValue("sponsorRnc", "");
+    }
+    if (value !== "CLUB") {
+      setValue("padelClub", undefined);
+    }
+    if (value === "AFILIADO") {
+      setValue("isAffiliated", true);
+    } else {
+      setValue("isAffiliated", false);
+      setValue("affiliateId", undefined);
+      setSelectedAffiliate(null);
     }
   }
 
@@ -165,6 +187,63 @@ export function CompanyStep({
   // Para un miembro conocido, la categoría ya está fijada en el registro de
   // socios: no tiene sentido ofrecerla como elección editable.
   const affiliationTypeLocked = !!selectedAffiliate?.affiliationType;
+
+  // Compartido entre golf ("Sí, mi empresa es miembro") y pádel
+  // ("Soy afiliado de ADECLA"): mismo listado de socios, mismo estado.
+  function renderAffiliateSearch() {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="affiliate-search">Busca tu empresa</Label>
+        <div className="relative">
+          <Input
+            id="affiliate-search"
+            placeholder="Escribe el nombre de tu empresa…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setComboboxOpen(true);
+              if (selectedAffiliate) setSelectedAffiliate(null);
+            }}
+            onFocus={() => setComboboxOpen(true)}
+            autoComplete="off"
+          />
+          {comboboxOpen && (
+            <div className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover shadow-md">
+              {filteredAffiliates.length === 0 ? (
+                <p className="px-3 py-3 text-sm text-muted-foreground">
+                  No encontramos esa empresa en nuestro registro de miembros.
+                  Verifica el nombre o escríbenos.
+                </p>
+              ) : (
+                filteredAffiliates.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => selectAffiliate(a)}
+                    className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                  >
+                    {a.name}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+        {errors.affiliateId && (
+          <p className="text-sm text-destructive">
+            {errors.affiliateId.message}
+          </p>
+        )}
+        {selectedAffiliate && (
+          <p className="text-xs text-muted-foreground">
+            Encontramos tu empresa. Completa o corrige lo que haga falta
+            abajo. La administración de ADECLA confirma los datos antes de
+            aprobar la inscripción.
+          </p>
+        )}
+      </div>
+    );
+  }
 
   function renderField(field: FieldProps, disabled = false) {
     return (
@@ -192,7 +271,7 @@ export function CompanyStep({
   }
 
   const readyToSubmit = isPadel
-    ? isSponsorGuest !== undefined &&
+    ? padelParticipantType !== undefined &&
       (!sponsorRncMismatch || sponsorRncAcknowledged)
     : isAffiliated !== undefined;
 
@@ -201,41 +280,106 @@ export function CompanyStep({
       {isPadel ? (
         <>
           <div className="space-y-2">
-            <Label>¿Te invita un patrocinador?</Label>
+            <Label>¿Con qué situación te inscribes?</Label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => chooseSponsorGuest(true)}
+                onClick={() => choosePadelType("AFILIADO")}
                 className={cn(
                   "rounded-lg border p-3 text-left text-sm transition-all",
-                  isSponsorGuest === true
+                  padelParticipantType === "AFILIADO"
                     ? "scale-[1.01] border-primary bg-accent"
                     : "hover:border-primary/40"
                 )}
               >
-                Sí, me invita un patrocinador
+                Soy afiliado de ADECLA
               </button>
               <button
                 type="button"
-                onClick={() => chooseSponsorGuest(false)}
+                onClick={() => choosePadelType("PATROCINADOR")}
                 className={cn(
                   "rounded-lg border p-3 text-left text-sm transition-all",
-                  isSponsorGuest === false
+                  padelParticipantType === "PATROCINADOR"
                     ? "scale-[1.01] border-primary bg-accent"
                     : "hover:border-primary/40"
                 )}
               >
-                No, pago mi inscripción
+                Me invita un patrocinador
+              </button>
+              <button
+                type="button"
+                onClick={() => choosePadelType("CLUB")}
+                className={cn(
+                  "rounded-lg border p-3 text-left text-sm transition-all",
+                  padelParticipantType === "CLUB"
+                    ? "scale-[1.01] border-primary bg-accent"
+                    : "hover:border-primary/40"
+                )}
+              >
+                Soy de un club de pádel
+              </button>
+              <button
+                type="button"
+                onClick={() => choosePadelType("PUBLICO")}
+                className={cn(
+                  "rounded-lg border p-3 text-left text-sm transition-all",
+                  padelParticipantType === "PUBLICO"
+                    ? "scale-[1.01] border-primary bg-accent"
+                    : "hover:border-primary/40"
+                )}
+              >
+                Ninguna de las anteriores, ¡quiero participar!
               </button>
             </div>
-            {errors.isSponsorGuest && (
+            {errors.padelParticipantType && (
               <p className="text-sm text-destructive">
-                Indica si te invita un patrocinador.
+                Indica tu situación para la inscripción.
               </p>
             )}
           </div>
 
-          {isSponsorGuest === true && (
+          {padelParticipantType === "AFILIADO" && renderAffiliateSearch()}
+
+          {padelParticipantType === "CLUB" && (
+            <div className="space-y-2">
+              <Label htmlFor="padelClub">Tu club</Label>
+              <Controller
+                name="padelClub"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger id="padelClub" className="w-full">
+                      <SelectValue placeholder="Selecciona tu club">
+                        {(value: string | null) =>
+                          value ? PADEL_CLUB_LABELS[value] : null
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PADEL_CLUB_LABELS).map(
+                        ([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.padelClub && (
+                <p className="text-sm text-destructive">
+                  {errors.padelClub.message}
+                </p>
+              )}
+              <p className="text-xs text-primary">
+                Los socios de un club con convenio pagan la inscripción con
+                un {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento.
+              </p>
+            </div>
+          )}
+
+          {padelParticipantType === "PATROCINADOR" && (
             <div className="space-y-4 rounded-lg border bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">
                 Al ser invitado de un patrocinador, tu inscripción no genera
@@ -378,58 +522,7 @@ export function CompanyStep({
             )}
           </div>
 
-          {isAffiliated === true && (
-            <div className="space-y-2">
-              <Label htmlFor="affiliate-search">Busca tu empresa</Label>
-              <div className="relative">
-                <Input
-                  id="affiliate-search"
-                  placeholder="Escribe el nombre de tu empresa…"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setComboboxOpen(true);
-                    if (selectedAffiliate) setSelectedAffiliate(null);
-                  }}
-                  onFocus={() => setComboboxOpen(true)}
-                  autoComplete="off"
-                />
-                {comboboxOpen && (
-                  <div className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover shadow-md">
-                    {filteredAffiliates.length === 0 ? (
-                      <p className="px-3 py-3 text-sm text-muted-foreground">
-                        No encontramos esa empresa en nuestro registro de
-                        miembros. Verifica el nombre o escríbenos.
-                      </p>
-                    ) : (
-                      filteredAffiliates.map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => selectAffiliate(a)}
-                          className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                        >
-                          {a.name}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-              {errors.affiliateId && (
-                <p className="text-sm text-destructive">
-                  {errors.affiliateId.message}
-                </p>
-              )}
-              {selectedAffiliate && (
-                <p className="text-xs text-muted-foreground">
-                  Encontramos tu empresa. Completa o corrige lo que haga falta
-                  abajo. La administración de ADECLA confirma los datos antes
-                  de aprobar la inscripción.
-                </p>
-              )}
-            </div>
-          )}
+          {isAffiliated === true && renderAffiliateSearch()}
 
           {isAffiliated === false && (
             <label className="flex items-start gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
