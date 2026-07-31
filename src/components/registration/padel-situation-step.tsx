@@ -49,19 +49,13 @@ interface PadelSituationStepProps {
 const SITUATION_OPTIONS: {
   value: PadelParticipantType;
   label: string;
-  hint: string;
 }[] = [
-  { value: "AFILIADO", label: "Soy afiliado de ADECLA", hint: "Tarifa normal" },
-  { value: "PATROCINADOR", label: "Me invita un patrocinador", hint: "Sin costo" },
-  {
-    value: "CLUB",
-    label: "Soy de un club de pádel",
-    hint: `${PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento`,
-  },
+  { value: "AFILIADO", label: "Soy afiliado de ADECLA" },
+  { value: "PATROCINADOR", label: "Me invita un patrocinador" },
+  { value: "CLUB", label: "Soy de un club de pádel" },
   {
     value: "PUBLICO",
     label: "Ninguna de las anteriores, ¡quiero participar!",
-    hint: "Tarifa normal",
   },
 ];
 
@@ -204,7 +198,6 @@ export function PadelSituationStep({
               )}
             >
               <span className="block">{opt.label}</span>
-              <span className="text-xs text-muted-foreground">{opt.hint}</span>
             </button>
           ))}
         </div>
