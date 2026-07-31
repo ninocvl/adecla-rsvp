@@ -105,7 +105,7 @@ export default async function HomePage() {
             <Reveal className="mx-auto mt-10 max-w-sm">
               <div className="shadow-teal-hover overflow-hidden rounded-xl border-4 border-white">
                 <Image
-                  src="/images/patrocinadores.jpg"
+                  src="/images/patrocinadores.jpeg"
                   alt="Logos de los patrocinadores del ADECLA Golf Tour & Pádel Tournament 2026"
                   width={1280}
                   height={1600}
