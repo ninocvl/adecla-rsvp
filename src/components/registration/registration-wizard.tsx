@@ -328,9 +328,7 @@ export function RegistrationWizard({
                     <span className="font-medium">
                       {formatUsd(PADEL_PRICE_USD)}
                     </span>{" "}
-                    por participante. En el siguiente paso confirmas tu
-                    situación: afiliado, invitado de patrocinador, socio de
-                    un club o público general.
+                    por participante.
                   </p>
                 </div>
               )}

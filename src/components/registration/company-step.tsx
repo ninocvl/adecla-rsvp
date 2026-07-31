@@ -65,9 +65,9 @@ const manualFields: FieldProps[] = [
 ];
 
 const SITUATION_OPTIONS: { value: PadelParticipantType; label: string }[] = [
-  { value: "AFILIADO", label: "Soy afiliado de ADECLA" },
-  { value: "PATROCINADOR", label: "Me invita un patrocinador" },
-  { value: "CLUB", label: "Soy de un club de pádel" },
+  { value: "AFILIADO", label: "Afiliado de ADECLA" },
+  { value: "PATROCINADOR", label: "Invitado de un patrocinador" },
+  { value: "CLUB", label: "Pertenezco a un club de pádel" },
   {
     value: "PUBLICO",
     label: "Ninguna de las anteriores, ¡quiero participar!",
@@ -179,6 +179,22 @@ export function CompanyStep({
     }
   }
 
+  // Vuelve a la pregunta de situación sin perder categoría ni los datos de
+  // contacto ya escritos: solo limpia lo que dependía de la situación
+  // anterior (club, patrocinador, afiliado).
+  function resetPadelSituation() {
+    setValue("padelParticipantType", undefined);
+    setValue("isSponsorGuest", undefined as unknown as boolean);
+    setValue("isAffiliated", undefined as unknown as boolean);
+    setValue("affiliateId", undefined);
+    setValue("padelClub", undefined);
+    setValue("sponsorName", "");
+    setValue("sponsorRnc", "");
+    setSelectedAffiliate(null);
+    setSearch("");
+    setSponsorRncAcknowledged(false);
+  }
+
   function selectAffiliate(affiliate: ActiveAffiliate) {
     setSelectedAffiliate(affiliate);
     setSearch(affiliate.name);
@@ -232,34 +248,29 @@ export function CompanyStep({
 
   return (
     <form onSubmit={handleSubmit(handleSubmitClick)} className="space-y-6">
-      {isPadel ? (
-        <>
-          <div className="space-y-2">
-            <Label>¿Con qué situación te inscribes?</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {SITUATION_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => choosePadelSituation(opt.value)}
-                  className={cn(
-                    "rounded-lg border p-3 text-left text-sm transition-all",
-                    padelParticipantType === opt.value
-                      ? "scale-[1.01] border-primary bg-accent"
-                      : "hover:border-primary/40"
-                  )}
-                >
-                  <span className="block">{opt.label}</span>
-                </button>
-              ))}
-            </div>
-            {errors.padelParticipantType && (
-              <p className="text-sm text-destructive">
-                {errors.padelParticipantType.message}
-              </p>
-            )}
+      {isPadel && padelParticipantType === undefined && (
+        <div className="space-y-2">
+          <Label>Confirma si eres</Label>
+          <div className="grid grid-cols-2 gap-3">
+            {SITUATION_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => choosePadelSituation(opt.value)}
+                className={cn(
+                  "rounded-lg border p-3 text-left text-sm transition-all",
+                  "hover:border-primary/40"
+                )}
+              >
+                <span className="block">{opt.label}</span>
+              </button>
+            ))}
           </div>
+        </div>
+      )}
 
+      {isPadel && padelParticipantType !== undefined && (
+        <>
           {padelParticipantType === "AFILIADO" && (
             <div className="space-y-2">
               <Label htmlFor="affiliate-search">Busca tu empresa</Label>
@@ -464,8 +475,18 @@ export function CompanyStep({
             autoComplete: "name",
           })}
           {manualFields.map((f) => renderField(f))}
+
+          <button
+            type="button"
+            onClick={resetPadelSituation}
+            className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            Cambiar situación
+          </button>
         </>
-      ) : (
+      )}
+
+      {!isPadel && (
         <>
           <div className="space-y-2">
             <Label>¿Tu empresa ya es miembro de ADECLA?</Label>
