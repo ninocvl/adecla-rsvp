@@ -25,10 +25,6 @@ import { Separator } from "@/components/ui/separator";
 import { Stepper } from "./stepper";
 import { PriceSummary } from "./price-summary";
 import { CompanyStep } from "./company-step";
-import {
-  PadelSituationStep,
-  type PadelSituationValue,
-} from "./padel-situation-step";
 import { ParticipantForm, type ParticipantValue } from "./participant-form";
 
 interface RegistrationWizardProps {
@@ -45,16 +41,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-const GOLF_STEPS = ["Evento", "Empresa", "Participantes", "Resumen", "Confirmación"];
-const PADEL_STEPS = [
-  "Evento",
-  "Situación",
-  "Empresa",
-  "Participantes",
-  "Resumen",
-  "Confirmación",
-];
-
 export function RegistrationWizard({
   events,
   affiliates,
@@ -68,7 +54,6 @@ export function RegistrationWizard({
 
   const [step, setStep] = useState(0);
   const [company, setCompany] = useState<CompanyStepInput>();
-  const [padelSituation, setPadelSituation] = useState<PadelSituationValue>();
   const [eventId, setEventId] = useState<string | undefined>(initialEvent?.id);
   const [eventDateIds, setEventDateIds] = useState<string[]>(
     initialEventDateId ? [initialEventDateId] : []
@@ -96,18 +81,11 @@ export function RegistrationWizard({
   );
   const isPadelEvent = event?.slug === "padel";
 
-  // Pádel intercala un paso "Situación" (afiliado/patrocinador/club/público)
-  // entre Evento y Empresa que golf no necesita: en vez de repetir cada
-  // bloque de JSX por evento, cada paso se referencia por una constante que
-  // ya resuelve el número correcto según el evento — así el JSX de
-  // Participantes/Resumen/Confirmación se escribe una sola vez.
   const STEP_EVENTO = 0;
-  const STEP_SITUACION = 1;
-  const STEP_EMPRESA = isPadelEvent ? 2 : 1;
-  const STEP_PARTICIPANTES = isPadelEvent ? 3 : 2;
-  const STEP_RESUMEN = isPadelEvent ? 4 : 3;
-  const STEP_CONFIRMACION = isPadelEvent ? 5 : 4;
-  const stepLabels = isPadelEvent ? PADEL_STEPS : GOLF_STEPS;
+  const STEP_EMPRESA = 1;
+  const STEP_PARTICIPANTES = 2;
+  const STEP_RESUMEN = 3;
+  const STEP_CONFIRMACION = 4;
 
   const affiliation = company?.affiliationType;
   const padelCategory = company?.padelCategory;
@@ -215,7 +193,7 @@ export function RegistrationWizard({
 
   return (
     <div className="space-y-8">
-      <Stepper current={step} steps={stepLabels} />
+      <Stepper current={step} />
 
       <div
         className={cn(
@@ -248,7 +226,6 @@ export function RegistrationWizard({
                         // llenado ese paso para otro evento, se descarta
                         // para no arrastrar respuestas que ya no aplican.
                         setCompany(undefined);
-                        setPadelSituation(undefined);
                       }}
                       className={cn(
                         "rounded-lg border p-4 text-left transition-all",
@@ -361,7 +338,7 @@ export function RegistrationWizard({
               <div className="flex justify-end">
                 <Button
                   disabled={!step0Ready}
-                  onClick={() => setStep(STEP_SITUACION)}
+                  onClick={() => setStep(STEP_EMPRESA)}
                 >
                   Continuar
                 </Button>
@@ -369,40 +346,12 @@ export function RegistrationWizard({
             </section>
           )}
 
-          {isPadelEvent && step === STEP_SITUACION && (
-            <div key="step-situacion" className="step-fade-in">
-              <PadelSituationStep
-                affiliates={affiliates}
-                defaultValues={padelSituation}
-                onBack={() => setStep(STEP_EVENTO)}
-                onNext={(value) => {
-                  setPadelSituation(value);
-                  setStep(STEP_EMPRESA);
-                }}
-              />
-            </div>
-          )}
-
           {step === STEP_EMPRESA && event && (
             <div key="step-empresa" className="step-fade-in">
               <CompanyStep
                 eventSlug={event.slug}
                 affiliates={affiliates}
-                defaultValues={
-                  isPadelEvent
-                    ? ({
-                        ...company,
-                        ...padelSituation,
-                        isSponsorGuest:
-                          padelSituation?.padelParticipantType === "PATROCINADOR",
-                        isAffiliated:
-                          padelSituation?.padelParticipantType === "AFILIADO",
-                        affiliateId: padelSituation?.affiliateId,
-                        legalName:
-                          company?.legalName ?? padelSituation?.affiliateName ?? "",
-                      } as Partial<CompanyStepInput>)
-                    : company
-                }
+                defaultValues={company}
                 onNext={(data) => {
                   setCompany(data);
                   // La tarifa de golf depende de la afiliación que se acaba
@@ -430,9 +379,7 @@ export function RegistrationWizard({
               <div className="mt-4">
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    setStep(isPadelEvent ? STEP_SITUACION : STEP_EVENTO)
-                  }
+                  onClick={() => setStep(STEP_EVENTO)}
                 >
                   Atrás
                 </Button>
