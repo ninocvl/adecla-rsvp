@@ -1,11 +1,26 @@
 import { cn } from "@/lib/utils";
 
-const STEPS = ["Evento", "Empresa", "Participantes", "Resumen", "Confirmación"];
+const DEFAULT_STEPS = [
+  "Evento",
+  "Empresa",
+  "Participantes",
+  "Resumen",
+  "Confirmación",
+];
 
-export function Stepper({ current }: { current: number }) {
+// Pádel intercala un paso "Situación" (afiliado/patrocinador/club/público)
+// entre Evento y Empresa que golf no necesita — de ahí que la cantidad de
+// pasos no sea siempre la misma.
+export function Stepper({
+  current,
+  steps = DEFAULT_STEPS,
+}: {
+  current: number;
+  steps?: string[];
+}) {
   return (
     <ol className="flex items-center gap-1 sm:gap-2" aria-label="Progreso de la inscripción">
-      {STEPS.map((label, index) => {
+      {steps.map((label, index) => {
         const state =
           index < current ? "done" : index === current ? "current" : "pending";
         return (
@@ -51,7 +66,7 @@ export function Stepper({ current }: { current: number }) {
               <div
                 className={cn(
                   "h-0.5 flex-1",
-                  index === STEPS.length - 1
+                  index === steps.length - 1
                     ? "bg-transparent"
                     : state === "done"
                       ? "bg-primary"

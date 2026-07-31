@@ -25,6 +25,10 @@ import { Separator } from "@/components/ui/separator";
 import { Stepper } from "./stepper";
 import { PriceSummary } from "./price-summary";
 import { CompanyStep } from "./company-step";
+import {
+  PadelSituationStep,
+  type PadelSituationValue,
+} from "./padel-situation-step";
 import { ParticipantForm, type ParticipantValue } from "./participant-form";
 
 interface RegistrationWizardProps {
@@ -41,6 +45,16 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+const GOLF_STEPS = ["Evento", "Empresa", "Participantes", "Resumen", "Confirmación"];
+const PADEL_STEPS = [
+  "Evento",
+  "Situación",
+  "Empresa",
+  "Participantes",
+  "Resumen",
+  "Confirmación",
+];
+
 export function RegistrationWizard({
   events,
   affiliates,
@@ -54,6 +68,7 @@ export function RegistrationWizard({
 
   const [step, setStep] = useState(0);
   const [company, setCompany] = useState<CompanyStepInput>();
+  const [padelSituation, setPadelSituation] = useState<PadelSituationValue>();
   const [eventId, setEventId] = useState<string | undefined>(initialEvent?.id);
   const [eventDateIds, setEventDateIds] = useState<string[]>(
     initialEventDateId ? [initialEventDateId] : []
@@ -80,6 +95,20 @@ export function RegistrationWizard({
     [events, eventId]
   );
   const isPadelEvent = event?.slug === "padel";
+
+  // Pádel intercala un paso "Situación" (afiliado/patrocinador/club/público)
+  // entre Evento y Empresa que golf no necesita: en vez de repetir cada
+  // bloque de JSX por evento, cada paso se referencia por una constante que
+  // ya resuelve el número correcto según el evento — así el JSX de
+  // Participantes/Resumen/Confirmación se escribe una sola vez.
+  const STEP_EVENTO = 0;
+  const STEP_SITUACION = 1;
+  const STEP_EMPRESA = isPadelEvent ? 2 : 1;
+  const STEP_PARTICIPANTES = isPadelEvent ? 3 : 2;
+  const STEP_RESUMEN = isPadelEvent ? 4 : 3;
+  const STEP_CONFIRMACION = isPadelEvent ? 5 : 4;
+  const stepLabels = isPadelEvent ? PADEL_STEPS : GOLF_STEPS;
+
   const affiliation = company?.affiliationType;
   const padelCategory = company?.padelCategory;
   const isSponsorGuest = isPadelEvent && company?.isSponsorGuest === true;
@@ -132,7 +161,7 @@ export function RegistrationWizard({
     setParticipantCount(undefined);
     setParticipants([]);
     setServerError(null);
-    setStep(2);
+    setStep(STEP_PARTICIPANTES);
   }
 
   function toggleDate(dateId: string) {
@@ -158,8 +187,7 @@ export function RegistrationWizard({
   }
 
   // La tarifa de golf depende de la afiliación, que todavía no se conoce en
-  // este paso (Empresa va después de Evento) — solo hace falta evento+fecha
-  // aquí. Pádel sí resuelve su precio de una vez (plano o $0 de invitado).
+  // este paso (Empresa va después) — solo hace falta evento+fecha aquí.
   const step0Ready = !!event && selectedDates.length > 0;
 
   function submit() {
@@ -178,7 +206,7 @@ export function RegistrationWizard({
           ...prev,
           ...selectedDates.map((d) => d.id),
         ]);
-        setStep(4);
+        setStep(STEP_CONFIRMACION);
       } else {
         setServerError(response.error);
       }
@@ -187,17 +215,17 @@ export function RegistrationWizard({
 
   return (
     <div className="space-y-8">
-      <Stepper current={step} />
+      <Stepper current={step} steps={stepLabels} />
 
       <div
         className={cn(
           "grid gap-6",
-          step < 4 && "lg:grid-cols-[1fr_320px]"
+          step < STEP_CONFIRMACION && "lg:grid-cols-[1fr_320px]"
         )}
       >
         <div className="space-y-6">
-          {step === 0 && (
-            <section key="step-0" className="step-fade-in space-y-6">
+          {step === STEP_EVENTO && (
+            <section key="step-evento" className="step-fade-in space-y-6">
               <div className="space-y-3">
                 <SectionLabel>Evento</SectionLabel>
                 <div
@@ -220,6 +248,7 @@ export function RegistrationWizard({
                         // llenado ese paso para otro evento, se descarta
                         // para no arrastrar respuestas que ya no aplican.
                         setCompany(undefined);
+                        setPadelSituation(undefined);
                       }}
                       className={cn(
                         "rounded-lg border p-4 text-left transition-all",
@@ -322,10 +351,9 @@ export function RegistrationWizard({
                     <span className="font-medium">
                       {formatUsd(PADEL_PRICE_USD)}
                     </span>{" "}
-                    por participante. Si te invita un patrocinador, no pagas
-                    nada. Si juegas en un club con convenio, tienes{" "}
-                    {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento. Lo
-                    confirmas en el siguiente paso.
+                    por participante. En el siguiente paso confirmas tu
+                    situación: afiliado, invitado de patrocinador, socio de
+                    un club o público general.
                   </p>
                 </div>
               )}
@@ -333,7 +361,7 @@ export function RegistrationWizard({
               <div className="flex justify-end">
                 <Button
                   disabled={!step0Ready}
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(STEP_SITUACION)}
                 >
                   Continuar
                 </Button>
@@ -341,12 +369,40 @@ export function RegistrationWizard({
             </section>
           )}
 
-          {step === 1 && event && (
-            <div key="step-1" className="step-fade-in">
+          {isPadelEvent && step === STEP_SITUACION && (
+            <div key="step-situacion" className="step-fade-in">
+              <PadelSituationStep
+                affiliates={affiliates}
+                defaultValues={padelSituation}
+                onBack={() => setStep(STEP_EVENTO)}
+                onNext={(value) => {
+                  setPadelSituation(value);
+                  setStep(STEP_EMPRESA);
+                }}
+              />
+            </div>
+          )}
+
+          {step === STEP_EMPRESA && event && (
+            <div key="step-empresa" className="step-fade-in">
               <CompanyStep
                 eventSlug={event.slug}
                 affiliates={affiliates}
-                defaultValues={company}
+                defaultValues={
+                  isPadelEvent
+                    ? ({
+                        ...company,
+                        ...padelSituation,
+                        isSponsorGuest:
+                          padelSituation?.padelParticipantType === "PATROCINADOR",
+                        isAffiliated:
+                          padelSituation?.padelParticipantType === "AFILIADO",
+                        affiliateId: padelSituation?.affiliateId,
+                        legalName:
+                          company?.legalName ?? padelSituation?.affiliateName ?? "",
+                      } as Partial<CompanyStepInput>)
+                    : company
+                }
                 onNext={(data) => {
                   setCompany(data);
                   // La tarifa de golf depende de la afiliación que se acaba
@@ -361,7 +417,7 @@ export function RegistrationWizard({
                         p.isEnabled &&
                         p.amountUsd !== null
                     );
-                  if (priceOk) setStep(2);
+                  if (priceOk) setStep(STEP_PARTICIPANTES);
                 }}
               />
               {company && priceUnavailable && (
@@ -372,118 +428,129 @@ export function RegistrationWizard({
                 </Alert>
               )}
               <div className="mt-4">
-                <Button variant="outline" onClick={() => setStep(0)}>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setStep(isPadelEvent ? STEP_SITUACION : STEP_EVENTO)
+                  }
+                >
                   Atrás
                 </Button>
               </div>
             </div>
           )}
 
-          {step === 2 && (
-            <div key="step-2" className="step-fade-in">
+          {step === STEP_PARTICIPANTES && (
+            <div key="step-participantes" className="step-fade-in">
               <ParticipantForm
                 defaultValues={participants}
                 count={participantCount}
                 onCountChange={setParticipantCount}
-                onBack={() => setStep(1)}
+                onBack={() => setStep(STEP_EMPRESA)}
                 onNext={(p) => {
                   setParticipants(p);
-                  setStep(3);
+                  setStep(STEP_RESUMEN);
                 }}
               />
             </div>
           )}
 
-          {step === 3 && company && event && selectedDates.length > 0 && (
-            <section key="step-3" className="step-fade-in space-y-6">
-              {serverError && (
-                <Alert variant="destructive" role="alert">
-                  {serverError}
-                </Alert>
-              )}
-              <Card>
-                <CardContent className="space-y-4 pt-6">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {isPadelEvent ? "Jugador" : "Empresa"}
-                    </p>
-                    <p className="font-medium">{company.legalName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      RNC {company.rnc}
-                      {categoryLabel ? ` · ${categoryLabel}` : ""}
-                    </p>
-                    {isSponsorGuest && (
-                      <p className="text-sm text-primary">
-                        Invitado de {company.sponsorName}, sin costo.
+          {step === STEP_RESUMEN &&
+            company &&
+            event &&
+            selectedDates.length > 0 && (
+              <section key="step-resumen" className="step-fade-in space-y-6">
+                {serverError && (
+                  <Alert variant="destructive" role="alert">
+                    {serverError}
+                  </Alert>
+                )}
+                <Card>
+                  <CardContent className="space-y-4 pt-6">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {isPadelEvent ? "Jugador" : "Empresa"}
                       </p>
-                    )}
-                    {padelClub && (
-                      <p className="text-sm text-primary">
-                        Club {PADEL_CLUB_LABELS[padelClub]},{" "}
-                        {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento.
+                      <p className="font-medium">{company.legalName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        RNC {company.rnc}
+                        {categoryLabel ? ` · ${categoryLabel}` : ""}
                       </p>
-                    )}
-                  </div>
-                  <Separator />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Evento</p>
-                    <p className="font-medium">{event.name}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Fecha{selectedDates.length > 1 ? "s" : ""} del evento
-                    </p>
-                    {selectedDates.map((d) => (
-                      <div key={d.id} className="rounded-lg bg-accent p-4">
-                        <p className="text-lg font-semibold">
-                          {formatEventDate(d.date)}
+                      {isSponsorGuest && (
+                        <p className="text-sm text-primary">
+                          Invitado de {company.sponsorName}, sin costo.
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          {d.label} · {d.venue}
+                      )}
+                      {padelClub && (
+                        <p className="text-sm text-primary">
+                          Club {PADEL_CLUB_LABELS[padelClub]},{" "}
+                          {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento.
                         </p>
-                      </div>
-                    ))}
-                  </div>
-                  <Separator />
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Participantes
-                    </p>
-                    <ul className="mt-1 space-y-1">
-                      {participants.map((p, i) => (
-                        <li key={i} className="font-medium">
-                          {i + 1}. {p.fullName}
-                        </li>
+                      )}
+                    </div>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Evento</p>
+                      <p className="font-medium">{event.name}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Fecha{selectedDates.length > 1 ? "s" : ""} del evento
+                      </p>
+                      {selectedDates.map((d) => (
+                        <div key={d.id} className="rounded-lg bg-accent p-4">
+                          <p className="text-lg font-semibold">
+                            {formatEventDate(d.date)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {d.label} · {d.venue}
+                          </p>
+                        </div>
                       ))}
-                    </ul>
-                    {participants.length === 1 && (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Podrás completar tu pareja más adelante.
+                    </div>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Participantes
                       </p>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {isSponsorGuest
-                      ? "No se genera proforma: tu inscripción queda pendiente de confirmación del patrocinador."
-                      : selectedDates.length > 1
-                        ? "Se generará una proforma por cada fecha, con estos mismos datos, y se enviarán al correo de la empresa."
-                        : "La proforma se emitirá con estos datos y se enviará al correo de la empresa."}
-                  </p>
-                </CardContent>
-              </Card>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(2)}>
-                  Atrás
-                </Button>
-                <Button onClick={submit} disabled={isPending}>
-                  {isPending ? "Generando…" : "Generar inscripción"}
-                </Button>
-              </div>
-            </section>
-          )}
+                      <ul className="mt-1 space-y-1">
+                        {participants.map((p, i) => (
+                          <li key={i} className="font-medium">
+                            {i + 1}. {p.fullName}
+                          </li>
+                        ))}
+                      </ul>
+                      {participants.length === 1 && (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Podrás completar tu pareja más adelante.
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {isSponsorGuest
+                        ? "No se genera proforma: tu inscripción queda pendiente de confirmación del patrocinador."
+                        : selectedDates.length > 1
+                          ? "Se generará una proforma por cada fecha, con estos mismos datos, y se enviarán al correo de la empresa."
+                          : "La proforma se emitirá con estos datos y se enviará al correo de la empresa."}
+                    </p>
+                  </CardContent>
+                </Card>
+                <div className="flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep(STEP_PARTICIPANTES)}
+                  >
+                    Atrás
+                  </Button>
+                  <Button onClick={submit} disabled={isPending}>
+                    {isPending ? "Generando…" : "Generar inscripción"}
+                  </Button>
+                </div>
+              </section>
+            )}
 
-          {step === 4 && result && (
-            <section key="step-4" className="step-fade-in mx-auto max-w-xl space-y-6 text-center">
+          {step === STEP_CONFIRMACION && result && (
+            <section key="step-confirmacion" className="step-fade-in mx-auto max-w-xl space-y-6 text-center">
               <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10">
                 <svg
                   viewBox="0 0 24 24"
@@ -626,7 +693,7 @@ export function RegistrationWizard({
           )}
         </div>
 
-        {step > 0 && step < 4 && (
+        {step > STEP_EVENTO && step < STEP_CONFIRMACION && (
           <PriceSummary
             eventName={event?.name}
             dates={selectedDates.map((d) => ({
