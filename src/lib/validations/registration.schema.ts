@@ -29,6 +29,13 @@ export const PADEL_PARTICIPANT_TYPES = [
 // no se comprueba: lo revisa manualmente el administrador, para no bloquear
 // registros por un algoritmo que no podemos contrastar contra la DGII.
 const rncFormatRegex = /^\d{1}-?\d{2}-?\d{5}-?\d{1}$|^\d{9}$|^\d{11}$/;
+// Jugadores extranjeros no tienen RNC ni cédula dominicana: se acepta
+// también un número de pasaporte (alfanumérico, sin formato fijo entre
+// países).
+const passportFormatRegex = /^[A-Za-z0-9]{5,15}$/;
+function isValidIdDocument(value: string) {
+  return rncFormatRegex.test(value) || passportFormatRegex.test(value);
+}
 
 export function normalizeRnc(rnc: string): string {
   return rnc.replace(/-/g, "");
@@ -102,7 +109,10 @@ const companyFieldsSchema = z.object({
   rnc: z
     .string()
     .trim()
-    .regex(rncFormatRegex, "El RNC debe tener 9 dígitos (o cédula de 11)"),
+    .refine(
+      isValidIdDocument,
+      "Escribe un RNC (9 dígitos), cédula (11 dígitos) o número de pasaporte válido"
+    ),
   contactName: z
     .string()
     .min(3, "Escribe el nombre del contacto")

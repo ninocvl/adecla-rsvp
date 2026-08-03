@@ -40,29 +40,40 @@ interface FieldProps {
   autoComplete?: string;
 }
 
-const manualFields: FieldProps[] = [
-  {
-    id: "contactName",
-    label: "Nombre del contacto",
-    placeholder: "Juan Pérez",
-    autoComplete: "name",
-  },
-  { id: "rnc", label: "RNC o cédula", placeholder: "130123456" },
-  {
-    id: "email",
-    label: "Correo electrónico",
-    type: "email",
-    placeholder: "empresa@ejemplo.com",
-    autoComplete: "email",
-  },
-  {
-    id: "phone",
-    label: "Teléfono",
-    type: "tel",
-    placeholder: "809-555-0000",
-    autoComplete: "tel",
-  },
-];
+function getManualFields(isPadel: boolean): FieldProps[] {
+  return [
+    {
+      id: "contactName",
+      label: "Nombre del contacto",
+      placeholder: "Juan Pérez",
+      autoComplete: "name",
+    },
+    // Golf inscribe empresas dominicanas (siempre tienen RNC). Pádel abre a
+    // jugadores extranjeros sin RNC ni cédula, así que ahí también se acepta
+    // pasaporte.
+    isPadel
+      ? {
+          id: "rnc",
+          label: "RNC, cédula o pasaporte",
+          placeholder: "130123456 o pasaporte",
+        }
+      : { id: "rnc", label: "RNC o cédula", placeholder: "130123456" },
+    {
+      id: "email",
+      label: "Correo electrónico",
+      type: "email",
+      placeholder: "empresa@ejemplo.com",
+      autoComplete: "email",
+    },
+    {
+      id: "phone",
+      label: "Teléfono",
+      type: "tel",
+      placeholder: "809-555-0000",
+      autoComplete: "tel",
+    },
+  ];
+}
 
 const SITUATION_OPTIONS: { value: PadelParticipantType; label: string }[] = [
   { value: "AFILIADO", label: "Afiliado de ADECLA" },
@@ -474,7 +485,7 @@ export function CompanyStep({
             placeholder: "Juan Pérez o Constructora Ejemplo, S.R.L.",
             autoComplete: "name",
           })}
-          {manualFields.map((f) => renderField(f))}
+          {getManualFields(true).map((f) => renderField(f))}
 
           <button
             type="button"
@@ -649,7 +660,7 @@ export function CompanyStep({
                 </p>
               </div>
 
-              {manualFields.map((f) => renderField(f))}
+              {getManualFields(false).map((f) => renderField(f))}
             </>
           )}
         </>
