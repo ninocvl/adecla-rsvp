@@ -41,11 +41,11 @@ export class NodemailerEmailService implements EmailService {
   }
 
   async sendStatusChanged(data: StatusChangeEmailData): Promise<void> {
-    const { html, text } = renderStatusChangedEmail(data);
+    const { html, text, subject } = renderStatusChangedEmail(data);
     await this.transporter.sendMail({
       from: this.from,
       to: data.to,
-      subject: `Tu inscripción ${data.registrationCode} cambió de estado`,
+      subject,
       text,
       html,
     });

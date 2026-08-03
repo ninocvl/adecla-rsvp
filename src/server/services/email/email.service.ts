@@ -17,8 +17,10 @@ export interface ProformaEmailData {
 
 export interface StatusChangeEmailData {
   to: string;
+  contactName: string;
   companyName: string;
   registrationCode: string;
+  status: string;
   newStatusLabel: string;
 }
 

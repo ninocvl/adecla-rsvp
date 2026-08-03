@@ -111,15 +111,29 @@ export function renderProformaCreatedEmail(
   return { html, text };
 }
 
+// Frase en primera persona y voz activa por estado ("estamos revisando",
+// no "está siendo revisada"): así el correo suena a que alguien de ADECLA
+// hizo el cambio, no a un aviso automático genérico.
+const STATUS_MESSAGES: Record<string, string> = {
+  PROFORMA_GENERADA: "ya generamos la proforma de tu inscripción",
+  PENDIENTE_PAGO: "tu inscripción quedó pendiente de pago",
+  EN_REVISION: "estamos revisando tu inscripción",
+  CONFIRMADA: "tu inscripción ya está confirmada",
+  CANCELADA: "cancelamos tu inscripción",
+};
+
 export function renderStatusChangedEmail(
   data: StatusChangeEmailData
-): { html: string; text: string } {
+): { html: string; text: string; subject: string } {
+  const message = STATUS_MESSAGES[data.status] ?? "tu inscripción cambió de estado";
+  const subject = `${data.registrationCode}: ${message}`;
+
   const html = layout(
     `Inscripción ${data.registrationCode}`,
     `
     <h1 style="margin:0 0 8px;font-family:${FONT_DISPLAY};font-size:24px;font-weight:600;color:${COLOR.ink};letter-spacing:-0.01em;">Actualización de tu inscripción</h1>
     <p style="margin:0 0 24px;font-family:${FONT_BODY};font-size:15px;line-height:1.6;color:${COLOR.inkSoft};">
-      La inscripción de <strong style="color:${COLOR.ink};">${data.companyName}</strong> cambió de estado.
+      Hola ${data.contactName}, ${message} (<strong style="color:${COLOR.ink};">${data.registrationCode}</strong>).
     </p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${COLOR.border};border-radius:8px;overflow:hidden;margin-bottom:24px;">
       ${detailRow("Código de inscripción", data.registrationCode, true)}
@@ -132,12 +146,13 @@ export function renderStatusChangedEmail(
   );
 
   const text = [
-    `Hola,`,
+    `Hola ${data.contactName},`,
     "",
-    `La inscripción ${data.registrationCode} de ${data.companyName} ahora está: ${data.newStatusLabel}.`,
+    `${message.charAt(0).toUpperCase()}${message.slice(1)} (${data.registrationCode}).`,
+    `Nuevo estado: ${data.newStatusLabel}`,
     "",
     "ADECLA",
   ].join("\n");
 
-  return { html, text };
+  return { html, text, subject };
 }

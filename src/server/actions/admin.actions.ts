@@ -91,8 +91,10 @@ export async function changeRegistrationStatusAction(
       emailService
         .sendStatusChanged({
           to: registration.company.email,
+          contactName: registration.company.contactName,
           companyName: registration.company.legalName,
           registrationCode: registration.code,
+          status: toStatus,
           newStatusLabel: STATUS_LABELS[toStatus],
         })
         .catch((e) =>
