@@ -142,7 +142,14 @@ export async function getWizardEvents(): Promise<WizardEvent[]> {
   const events = await prisma.event.findMany({
     where: { status: "PUBLISHED" },
     include: {
-      dates: { where: { isActive: true }, orderBy: { date: "asc" } },
+      // Una parada que ya pasó no se puede seguir vendiendo, pero sigue
+      // activa para la landing (recap con fotos) — por eso este filtro es
+      // por fecha, no por isActive: ese campo lo controla el admin para
+      // otros casos (ej. cerrar cupos antes de tiempo), no la fecha real.
+      dates: {
+        where: { isActive: true, date: { gte: new Date() } },
+        orderBy: { date: "asc" },
+      },
       prices: { orderBy: { affiliation: "asc" } },
     },
     orderBy: { createdAt: "asc" },

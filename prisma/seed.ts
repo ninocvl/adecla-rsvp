@@ -62,27 +62,18 @@ async function main() {
       label: "Primera Parada",
       venue: "Punta Espada Golf Club, Cap Cana",
       imageUrl: "/images/golf-25-julio.jpg",
-      // Ya pasó: nadie puede inscribirse en esta parada, se oculta del wizard
-      // pero las inscripciones ya hechas quedan intactas.
-      isActive: false,
     },
     {
       date: new Date("2026-09-05T12:00:00Z"),
       label: "Tercera Parada",
       venue: "La Cana Golf Club, Punta Cana Resort",
       imageUrl: "/images/golf-05-septiembre.jpg",
-      isActive: true,
     },
   ];
   for (const d of golfDates) {
     await prisma.eventDate.upsert({
       where: { eventId_date: { eventId: golf.id, date: d.date } },
-      update: {
-        label: d.label,
-        venue: d.venue,
-        imageUrl: d.imageUrl,
-        isActive: d.isActive,
-      },
+      update: { label: d.label, venue: d.venue, imageUrl: d.imageUrl },
       create: { eventId: golf.id, capacity: 150, ...d },
     });
   }
