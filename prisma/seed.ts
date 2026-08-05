@@ -44,7 +44,7 @@ async function main() {
     update: {},
     create: {
       slug: "golf",
-      name: "Torneo de Golf ADECLA 2026",
+      name: "Torneo de Golf 2026",
       description:
         "Circuito de golf de ADECLA en los mejores campos de Cap Cana y Punta Cana. Se juega por parejas; puedes inscribir un jugador y completar tu pareja más adelante.",
       imageUrl: "/images/golf-25-julio.jpg",
