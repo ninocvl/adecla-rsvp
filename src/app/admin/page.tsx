@@ -71,6 +71,30 @@ export default async function AdminPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">Torneo de Pádel</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="text-2xl font-semibold">
+                {metrics.padelParticipants}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Jugadores inscritos
+              </p>
+            </div>
+            <div>
+              <p className="text-2xl font-semibold">{metrics.padelCompanies}</p>
+              <p className="text-sm text-muted-foreground">
+                Empresas o jugadores distintos inscritos
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Cupos por fecha</CardTitle>
         </CardHeader>
         <CardContent>

@@ -16,6 +16,8 @@ export async function getAdminMetrics() {
     companies,
     affiliationRequests,
     dates,
+    padelSum,
+    padelRegistrants,
   ] = await Promise.all([
     prisma.event.count({ where: { status: "PUBLISHED" } }),
     prisma.participant.count({
@@ -32,6 +34,19 @@ export async function getAdminMetrics() {
       include: { event: { select: { name: true } } },
       orderBy: { date: "asc" },
     }),
+    // Total de jugadores que van a pádel: suma de quantity, no cantidad de
+    // inscripciones (cada una puede traer 1 o 2 jugadores).
+    prisma.registration.aggregate({
+      where: { event: { slug: "padel" }, status: { not: "CANCELADA" } },
+      _sum: { quantity: true },
+    }),
+    // Empresas/personas distintas inscritas en pádel: una misma empresa
+    // (mismo RNC) que se inscribe más de una vez no debe contarse dos veces.
+    prisma.registration.findMany({
+      where: { event: { slug: "padel" }, status: { not: "CANCELADA" } },
+      select: { companyId: true },
+      distinct: ["companyId"],
+    }),
   ]);
 
   return {
@@ -41,6 +56,8 @@ export async function getAdminMetrics() {
     confirmed,
     companies,
     affiliationRequests,
+    padelParticipants: padelSum._sum.quantity ?? 0,
+    padelCompanies: padelRegistrants.length,
     dates: dates.map((d) => ({
       id: d.id,
       eventName: d.event.name,
