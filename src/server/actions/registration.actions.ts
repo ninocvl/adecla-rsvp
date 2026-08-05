@@ -143,6 +143,20 @@ export async function createRegistrationAction(
       // PUBLICO: abierto a cualquiera, tarifa plana sin descuentos.
       unitPriceUsd = PADEL_PRICE_USD;
     }
+  } else if (data.isSponsorGuest) {
+    // Igual que en pádel: invitado de un patrocinador, sin costo y sin
+    // proforma. No pasa por EventPrice ni requiere tipo de empresa.
+    if (!data.sponsorName || !data.sponsorRnc) {
+      return {
+        ok: false,
+        error: "Indica el nombre y el RNC del patrocinador.",
+      };
+    }
+    isSponsorGuest = true;
+    sponsorName = data.sponsorName;
+    sponsorRnc = normalizeRnc(data.sponsorRnc);
+    sponsorRncVerified = !!findMatchingSponsor(data.sponsorRnc);
+    unitPriceUsd = 0;
   } else {
     // Nunca se confía en el nombre/tipo que mande el cliente para el vínculo
     // de afiliado: se relee el registro real del listado de socios. Para una

@@ -177,12 +177,34 @@ function validateCompanyFields(
     return;
   }
 
+  // Golf: afiliado / invitado de patrocinador / ninguna de las anteriores.
+  // isAffiliated queda siempre en true o false una vez elegida la situación
+  // (nunca undefined salvo que todavía no se haya elegido nada), e
+  // isSponsorGuest distingue patrocinador de "ninguna de las anteriores".
   if (data.isAffiliated === undefined) {
     ctx.addIssue({
       code: "custom",
-      message: "Indica si tu empresa ya es miembro de ADECLA.",
+      message: "Indica tu situación para la inscripción.",
       path: ["isAffiliated"],
     });
+    return;
+  }
+  if (data.isSponsorGuest) {
+    if (!data.sponsorName || data.sponsorName.length < 2) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Escribe el nombre del patrocinador.",
+        path: ["sponsorName"],
+      });
+    }
+    if (!data.sponsorRnc || !rncFormatRegex.test(data.sponsorRnc)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "El RNC del patrocinador debe tener 9 dígitos.",
+        path: ["sponsorRnc"],
+      });
+    }
+    return;
   }
   if (data.isAffiliated && !data.affiliateId) {
     ctx.addIssue({

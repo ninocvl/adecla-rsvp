@@ -89,7 +89,8 @@ export function RegistrationWizard({
 
   const affiliation = company?.affiliationType;
   const padelCategory = company?.padelCategory;
-  const isSponsorGuest = isPadelEvent && company?.isSponsorGuest === true;
+  // Invitado de patrocinador: existe tanto en pádel como en golf.
+  const isSponsorGuest = company?.isSponsorGuest === true;
   const padelClub = isPadelEvent ? company?.padelClub : undefined;
   // Beneficio de membresía: un afiliado de ADECLA que juega con acompañante
   // no paga por ese segundo jugador (solo pádel, ver PADEL_PARTICIPANT_TYPES).
@@ -121,11 +122,17 @@ export function RegistrationWizard({
       : padelClub
         ? PADEL_PRICE_USD * (1 - PADEL_CLUB_DISCOUNT_RATE)
         : PADEL_PRICE_USD
-    : golfPrice?.isEnabled && golfPrice.amountUsd !== null
-      ? golfPrice.amountUsd
-      : null;
+    : isSponsorGuest
+      ? 0
+      : golfPrice?.isEnabled && golfPrice.amountUsd !== null
+        ? golfPrice.amountUsd
+        : null;
   const priceUnavailable =
-    !isPadelEvent && !!event && !!affiliation && unitPriceUsd === null;
+    !isPadelEvent &&
+    !isSponsorGuest &&
+    !!event &&
+    !!affiliation &&
+    unitPriceUsd === null;
   // Si se eligieron varias fechas y no todas tienen el mismo estatus de
   // ITBIS, se cobra por seguridad (el servidor sí calcula cada fecha por
   // separado y es la fuente real de verdad en la proforma).
@@ -362,6 +369,7 @@ export function RegistrationWizard({
                   // abajo en vez de dejar seguir hacia un cobro imposible.
                   const priceOk =
                     isPadelEvent ||
+                    data.isSponsorGuest === true ||
                     event.prices.some(
                       (p) =>
                         p.affiliation === data.affiliationType &&
@@ -531,7 +539,7 @@ export function RegistrationWizard({
                         {result[0].code}
                       </span>
                       . Quedaste registrado como invitado de{" "}
-                      {company?.sponsorName}. Nos vemos en la cancha.
+                      {company?.sponsorName}. Nos vemos en el torneo.
                     </>
                   ) : result.length > 1 ? (
                     <>
