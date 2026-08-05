@@ -22,7 +22,13 @@ export interface ProformaSnapshot {
   // proformas emitidas antes de agregar ITBIS no tienen este campo en su
   // snapshot guardado.
   subtotalUsd?: string;
-  // ITBIS (18%) calculado sobre subtotalUsd. Igual de opcional que arriba.
+  // Descuento aplicado sobre subtotalUsd (ej.: acompañante gratis de un
+  // afiliado en pádel). Solo presente cuando hay descuento; el ITBIS ya se
+  // calcula sobre subtotalUsd - discountUsd.
+  discountUsd?: string;
+  discountLabel?: string;
+  // ITBIS (18%) calculado sobre (subtotalUsd - discountUsd). Igual de
+  // opcional que arriba.
   itbisUsd?: string;
   // Total con ITBIS incluido si el snapshot es nuevo; en snapshots viejos
   // (sin subtotalUsd/itbisUsd) es simplemente el total sin desglosar.

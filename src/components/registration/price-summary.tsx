@@ -14,6 +14,7 @@ interface PriceSummaryProps {
   categoryLabel?: string;
   unitPriceUsd: number | null;
   isSponsorGuest?: boolean;
+  freeCompanion?: boolean;
   itbisExempt?: boolean;
   quantity: number;
   rate: number;
@@ -25,15 +26,27 @@ export function PriceSummary({
   categoryLabel,
   unitPriceUsd,
   isSponsorGuest,
+  freeCompanion,
   itbisExempt,
   quantity,
   rate,
 }: PriceSummaryProps) {
+  const dateCount = Math.max(1, dates.length);
   const subtotalUsd =
-    unitPriceUsd !== null ? unitPriceUsd * quantity * Math.max(1, dates.length) : null;
+    unitPriceUsd !== null ? unitPriceUsd * quantity * dateCount : null;
+  const discountUsd =
+    freeCompanion && quantity > 1 && unitPriceUsd !== null
+      ? unitPriceUsd * dateCount
+      : 0;
+  const netSubtotalUsd = subtotalUsd !== null ? subtotalUsd - discountUsd : null;
   const itbisUsd =
-    subtotalUsd !== null ? (itbisExempt ? 0 : subtotalUsd * ITBIS_RATE) : null;
-  const totalUsd = subtotalUsd !== null ? subtotalUsd + (itbisUsd as number) : null;
+    netSubtotalUsd !== null
+      ? itbisExempt
+        ? 0
+        : netSubtotalUsd * ITBIS_RATE
+      : null;
+  const totalUsd =
+    netSubtotalUsd !== null ? netSubtotalUsd + (itbisUsd as number) : null;
 
   return (
     <Card className="h-fit border-t-2 border-t-primary">
@@ -93,6 +106,16 @@ export function PriceSummary({
                   {subtotalUsd !== null ? formatUsd(subtotalUsd) : "—"}
                 </span>
               </div>
+              {discountUsd > 0 && (
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground">
+                    Descuento (acompañante gratis)
+                  </span>
+                  <span className="font-medium tabular-nums text-primary">
+                    -{formatUsd(discountUsd)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">
                   {itbisExempt ? "ITBIS (exento)" : "ITBIS (18%)"}

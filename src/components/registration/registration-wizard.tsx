@@ -91,6 +91,10 @@ export function RegistrationWizard({
   const padelCategory = company?.padelCategory;
   const isSponsorGuest = isPadelEvent && company?.isSponsorGuest === true;
   const padelClub = isPadelEvent ? company?.padelClub : undefined;
+  // Beneficio de membresía: un afiliado de ADECLA que juega con acompañante
+  // no paga por ese segundo jugador (solo pádel, ver PADEL_PARTICIPANT_TYPES).
+  const freeCompanion =
+    isPadelEvent && company?.padelParticipantType === "AFILIADO";
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
@@ -432,6 +436,11 @@ export function RegistrationWizard({
                           {PADEL_CLUB_DISCOUNT_RATE * 100}% de descuento.
                         </p>
                       )}
+                      {freeCompanion && participants.length === 2 && (
+                        <p className="text-sm text-primary">
+                          Acompañante gratis, beneficio de afiliado ADECLA.
+                        </p>
+                      )}
                     </div>
                     <Separator />
                     <div>
@@ -648,6 +657,7 @@ export function RegistrationWizard({
             categoryLabel={categoryLabel}
             unitPriceUsd={unitPriceUsd}
             isSponsorGuest={isSponsorGuest}
+            freeCompanion={freeCompanion}
             itbisExempt={itbisExempt}
             quantity={Math.max(1, participantCount ?? participants.length)}
             rate={rate}

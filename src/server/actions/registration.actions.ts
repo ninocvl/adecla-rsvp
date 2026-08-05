@@ -92,6 +92,10 @@ export async function createRegistrationAction(
   let affiliateId: string | undefined;
 
   let unitPriceUsd: number;
+  // Beneficio de membresía, solo pádel: un afiliado de ADECLA que se
+  // inscribe con acompañante no paga por ese segundo jugador. No aplica al
+  // patrocinador (ya no paga nada) ni al club (ya tiene su propio descuento).
+  let freeCompanion = false;
 
   if (isPadel) {
     if (!data.padelCategory) {
@@ -134,6 +138,7 @@ export async function createRegistrationAction(
       companyAffiliateId = affiliate.id;
       companyAffiliationType = affiliate.affiliationType ?? undefined;
       unitPriceUsd = PADEL_PRICE_USD;
+      freeCompanion = quantity === 2;
     } else {
       // PUBLICO: abierto a cualquiera, tarifa plana sin descuentos.
       unitPriceUsd = PADEL_PRICE_USD;
@@ -178,6 +183,8 @@ export async function createRegistrationAction(
   // invitado de patrocinador paga 0 de cualquier forma, ITBIS incluido —
   // no se le genera proforma más abajo.
   const subtotalUsd = unitPriceUsd * quantity;
+  const discountUsd = freeCompanion ? unitPriceUsd : 0;
+  const netSubtotalUsd = subtotalUsd - discountUsd;
   const categoryLabel = getCategoryLabel(affiliationType, padelCategory, padelClub);
   const registrationStatus = isSponsorGuest
     ? sponsorRncVerified
@@ -232,8 +239,8 @@ export async function createRegistrationAction(
       for (const eventDate of eventDates) {
         const itbisUsd = isItbisExempt(event.slug, eventDate.date)
           ? 0
-          : subtotalUsd * ITBIS_RATE;
-        const totalUsd = subtotalUsd + itbisUsd;
+          : netSubtotalUsd * ITBIS_RATE;
+        const totalUsd = netSubtotalUsd + itbisUsd;
         const totalDopRef = totalUsd * exchangeRate;
 
         const updated = await tx.$executeRaw`
@@ -313,6 +320,12 @@ export async function createRegistrationAction(
           quantity,
           unitPriceUsd: unitPriceUsd.toFixed(2),
           subtotalUsd: subtotalUsd.toFixed(2),
+          ...(discountUsd > 0
+            ? {
+                discountUsd: discountUsd.toFixed(2),
+                discountLabel: "Acompañante gratis (afiliado ADECLA)",
+              }
+            : {}),
           itbisUsd: itbisUsd.toFixed(2),
           totalUsd: totalUsd.toFixed(2),
           exchangeRate: exchangeRate.toFixed(2),

@@ -253,6 +253,11 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
               <Text style={[styles.totalsLine, styles.totalsBold]}>
                 Sub-total General US$
               </Text>
+              {data.discountUsd !== undefined && (
+                <Text style={styles.totalsLine}>
+                  {data.discountLabel ?? "Descuento"}
+                </Text>
+              )}
               <Text style={styles.totalsLine}>
                 {itbisExempt ? "Itbis (exento)" : "Itbis (18%)"}
               </Text>
@@ -262,6 +267,9 @@ export function ProformaDocument({ data, logoSrc }: ProformaDocumentProps) {
               <Text style={[styles.totalsLine, styles.totalsBold]}>
                 {fmt(subtotalUsd)}
               </Text>
+              {data.discountUsd !== undefined && (
+                <Text style={styles.totalsLine}>-{fmt(data.discountUsd)}</Text>
+              )}
               <Text style={styles.totalsLine}>{itbisDisplay}</Text>
               <Text style={styles.totalsBold}>{fmt(data.totalDopRef)}</Text>
             </View>
