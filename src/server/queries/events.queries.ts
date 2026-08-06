@@ -185,3 +185,73 @@ export async function getExchangeRate(): Promise<number> {
   const rate = Number(setting?.value);
   return Number.isNaN(rate) || rate <= 0 ? 60 : rate;
 }
+
+export interface EventDateDetail {
+  eventDateId: string;
+  eventId: string;
+  eventSlug: string;
+  eventName: string;
+  label: string;
+  venue: string;
+  date: Date;
+  capacity: number;
+  reserved: number;
+  available: number;
+  isPast: boolean;
+  playersPerTeam: number;
+  cover: string | null;
+  recap: string[];
+  prices: LandingPriceTier[];
+}
+
+/**
+ * Una parada concreta para su página de detalle, buscada por slug y fecha
+ * (YYYY-MM-DD) en vez de por id: así la URL es legible y estable aunque la
+ * base se vuelva a sembrar y cambien los cuid.
+ */
+export async function getEventDateDetail(
+  slug: string,
+  fecha: string
+): Promise<EventDateDetail | null> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return null;
+  const desde = new Date(`${fecha}T00:00:00.000Z`);
+  const hasta = new Date(`${fecha}T23:59:59.999Z`);
+  if (Number.isNaN(desde.getTime())) return null;
+
+  const eventDate = await prisma.eventDate.findFirst({
+    where: {
+      isActive: true,
+      date: { gte: desde, lte: hasta },
+      event: { slug, status: "PUBLISHED" },
+    },
+    include: {
+      event: {
+        include: { prices: { where: { isEnabled: true, amountUsd: { not: null } } } },
+      },
+    },
+  });
+  if (!eventDate) return null;
+
+  const prices: LandingPriceTier[] = eventDate.event.prices
+    .map((p) => ({ affiliation: p.affiliation, amountUsd: Number(p.amountUsd) }))
+    .filter((p): p is LandingPriceTier => !Number.isNaN(p.amountUsd))
+    .sort((a, b) => a.amountUsd - b.amountUsd);
+
+  return {
+    eventDateId: eventDate.id,
+    eventId: eventDate.eventId,
+    eventSlug: eventDate.event.slug,
+    eventName: eventDate.event.name,
+    label: eventDate.label,
+    venue: eventDate.venue,
+    date: eventDate.date,
+    capacity: eventDate.capacity,
+    reserved: eventDate.reservedCount,
+    available: Math.max(0, eventDate.capacity - eventDate.reservedCount),
+    isPast: eventDate.date.getTime() < Date.now(),
+    playersPerTeam: eventDate.event.playersPerTeam,
+    cover: getEventCover(eventDate.event.slug, eventDate.date) ?? eventDate.imageUrl,
+    recap: getRecapPhotos(eventDate.event.slug, eventDate.date),
+    prices,
+  };
+}

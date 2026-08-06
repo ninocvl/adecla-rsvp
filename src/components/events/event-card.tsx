@@ -38,6 +38,11 @@ export function EventCard({ card }: { card: LandingCard }) {
   const dateParts = isDate
     ? formatDateParts(card.date as Date)
     : { day: "", month: "" };
+  // La URL del detalle usa slug + fecha (YYYY-MM-DD) y no el id de la fila:
+  // se lee, y sobrevive a un reseed que cambie los cuid.
+  const detalleHref = isDate
+    ? `/eventos/${card.eventSlug}/${(card.date as Date).toISOString().slice(0, 10)}`
+    : "";
 
   return (
     <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
@@ -206,28 +211,42 @@ export function EventCard({ card }: { card: LandingCard }) {
         )}
       </CardContent>
 
-      {!isRecap && (
-        <CardFooter>
-          {isDate ? (
+      <CardFooter className="flex-col gap-2">
+        {isDate ? (
+          <>
+            {!isRecap && (
+              <Button
+                className="w-full"
+                disabled={full}
+                nativeButton={false}
+                render={
+                  <Link
+                    href={`/inscripciones/nueva?evento=${card.eventSlug}&fecha=${card.id}`}
+                  />
+                }
+              >
+                {full ? "Sin cupos disponibles" : "Inscribirme"}
+              </Button>
+            )}
+            {/* La página de detalle existe también para una parada ya jugada:
+                ahí es donde vive el recuento con sus fotos. */}
             <Button
               className="w-full"
-              disabled={full}
+              variant="outline"
               nativeButton={false}
-              render={
-                <Link
-                  href={`/inscripciones/nueva?evento=${card.eventSlug}&fecha=${card.id}`}
-                />
-              }
+              render={<Link href={detalleHref} />}
             >
-              {full ? "Sin cupos disponibles" : "Inscribirme"}
+              Ver detalles
             </Button>
-          ) : (
+          </>
+        ) : (
+          !isRecap && (
             <Button className="w-full" variant="secondary" disabled>
               Aún sin fechas
             </Button>
-          )}
-        </CardFooter>
-      )}
+          )
+        )}
+      </CardFooter>
     </Card>
   );
 }

@@ -60,7 +60,7 @@ export function HeroSection() {
             ))}
           </dl>
 
-          <div className="mt-9 flex flex-wrap gap-3">
+          <div className="mt-9">
             <Button
               size="lg"
               className="bg-white text-[#00534d] hover:bg-white/90"
@@ -68,15 +68,6 @@ export function HeroSection() {
               render={<Link href="/inscripciones/nueva" />}
             >
               Inscribirme
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
-              nativeButton={false}
-              render={<Link href="#eventos" />}
-            >
-              Ver el calendario
             </Button>
           </div>
         </div>
