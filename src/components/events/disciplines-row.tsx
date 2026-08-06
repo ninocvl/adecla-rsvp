@@ -12,14 +12,14 @@ const DISCIPLINAS = [
     src: "/images/categoria-golf.jpg",
     alt: "Bola y putter sobre el green",
     nombre: "Golf",
-    detalle: "Dos paradas · Punta Espada y La Cana",
+    detalle: "Dos torneos · Punta Espada y La Cana",
   },
   {
     href: "#eventos",
     src: "/images/categoria-padel.jpg",
     alt: "Pala de pádel y pelotas sobre la cancha",
     nombre: "Pádel",
-    detalle: "Una parada · Los Establos, Cap Cana",
+    detalle: "Un torneo · Los Establos, Cap Cana",
   },
 ];
 
@@ -67,7 +67,7 @@ export function DisciplinesRow() {
             {EXPOCAMACOL.nombre}
           </p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/90">
-            {EXPOCAMACOL.resumen}
+            {EXPOCAMACOL.tagline}
           </p>
           {/* En blanco y no en oro: a 14px el oro sobre teal queda en 3.68:1
               y no alcanza AA. El oro ya marca la sección con el filete. */}

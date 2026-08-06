@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { getLandingCards } from "@/server/queries/events.queries";
-import { EXPOCAMACOL, NOTA_PAGO } from "@/lib/constants";
+import { EXPOCAMACOL, NOTA_PAGO, REVISTA } from "@/lib/constants";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Reveal } from "@/components/shared/reveal";
@@ -27,11 +27,11 @@ export default async function HomePage() {
           <div className="max-w-2xl">
             <span className="section-rule section-rule--oro" aria-hidden />
             <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-              El circuito 2026
+              Descubre nuestros eventos
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Dos deportes en Cap Cana y Punta Cana, más la delegación que
-              ADECLA lleva a la feria de Medellín.
+              Dos deportes en Cap Cana y Punta Cana, más la misión empresarial
+              que ADECLA lleva a Medellín.
             </p>
           </div>
           <Reveal className="mt-10">
@@ -47,10 +47,10 @@ export default async function HomePage() {
             <div className="max-w-2xl">
               <span className="section-rule" aria-hidden />
               <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-                Próximas paradas
+                Próximos eventos
               </h2>
               <p className="mt-3 text-muted-foreground">
-                Elige tu parada, inscribe uno o dos jugadores y descarga tu
+                Elige tu evento, inscribe uno o dos jugadores y descarga tu
                 proforma.
               </p>
             </div>
@@ -81,7 +81,7 @@ export default async function HomePage() {
                 competitivo y espectaculares vistas.
               </p>
               <p className="mt-4 max-w-md text-muted-foreground">
-                Cada parada reunirá a constructores, desarrolladores,
+                Cada evento reunirá a constructores, desarrolladores,
                 proveedores y aliados estratégicos del sector construcción en
                 una jornada que combina competencia deportiva,
                 relacionamiento empresarial y networking.
@@ -124,7 +124,23 @@ export default async function HomePage() {
           id="expocamacol"
           className="border-t bg-white py-20 scroll-mt-20 sm:py-24"
         >
-          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2 lg:gap-14">
+            {/* El flyer oficial manda aquí: es la pieza que ya circuló por
+                redes, así que la página la muestra tal cual en vez de
+                reinterpretarla. */}
+            <Reveal className="order-first mx-auto w-full max-w-sm lg:order-none lg:max-w-md">
+              <div className="shadow-teal-hover overflow-hidden rounded-xl border-4 border-white">
+                <Image
+                  src={EXPOCAMACOL.flyer}
+                  alt={`Flyer: ${EXPOCAMACOL.nombre}, ${EXPOCAMACOL.fechas}, junto a Camacol`}
+                  width={1200}
+                  height={1600}
+                  sizes="(max-width: 1024px) 90vw, 40vw"
+                  className="h-auto w-full"
+                />
+              </div>
+            </Reveal>
+
             <div>
               <span className="section-rule section-rule--oro" aria-hidden />
               <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
@@ -136,34 +152,63 @@ export default async function HomePage() {
               <p className="mt-4 max-w-md text-muted-foreground">
                 {EXPOCAMACOL.resumen}
               </p>
-              <p className="mt-4 max-w-md text-sm text-muted-foreground">
-                La inscripción de la delegación se llena en un formulario
-                aparte. Necesitas pasaporte con al menos seis meses de
-                vigencia al momento del viaje.
+              <ul className="mt-6 max-w-md space-y-2 text-sm text-muted-foreground">
+                <li className="border-t pt-2">
+                  Vuelo, hospedaje y traslados coordinados por ADECLA.
+                </li>
+                <li className="border-t pt-2">
+                  Agenda académica: conferencias y charlas técnicas.
+                </li>
+                <li className="border-t pt-2">
+                  Acceso a la muestra comercial de {EXPOCAMACOL.feria}.
+                </li>
+              </ul>
+              <p className="mt-5 max-w-md text-sm text-muted-foreground">
+                Necesitas pasaporte con al menos seis meses de vigencia al
+                momento del viaje. Los detalles de vuelo y hospedaje se envían
+                por correo a cada participante inscrito.
               </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <a
+                  href={EXPOCAMACOL.formUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex items-center rounded-md bg-primary px-[18px] py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#005f57] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  Reservar mi cupo del viaje
+                </a>
+                <a
+                  href={`mailto:${EXPOCAMACOL.contactoEmail}`}
+                  className="-my-1.5 inline-flex items-center py-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  Solicitar más información
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="revista"
+          className="hero-teal relative overflow-hidden py-20 scroll-mt-20 sm:py-24"
+        >
+          <div className="grain-overlay" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-4">
+            <div className="max-w-xl">
+              <span className="section-rule section-rule--oro" aria-hidden />
+              <h2 className="font-heading text-3xl font-medium text-white sm:text-4xl">
+                {REVISTA.nombre}
+              </h2>
+              <p className="mt-4 text-white/90">{REVISTA.resumen}</p>
               <a
-                href={EXPOCAMACOL.formUrl}
+                href={REVISTA.url}
                 target="_blank"
                 rel="noopener"
-                className="mt-6 inline-flex items-center rounded-md bg-primary px-[18px] py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#005f57] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                className="mt-7 inline-flex items-center rounded-md bg-white px-[18px] py-2.5 text-sm font-semibold text-[#00453f] transition-colors hover:bg-white/90 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
               >
-                Reservar mi cupo del viaje
+                Leer la edición digital
               </a>
             </div>
-            <Reveal className="rounded-xl border bg-secondary/40 p-6">
-              <p className="text-sm font-semibold text-foreground">
-                Qué incluye la coordinación de ADECLA
-              </p>
-              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                <li>Vuelo, hospedaje y traslados de la delegación.</li>
-                <li>Agenda académica: conferencias y charlas técnicas.</li>
-                <li>Acceso a la muestra comercial de más de 500 empresas.</li>
-              </ul>
-              <p className="mt-4 border-t pt-4 text-xs text-muted-foreground">
-                Los detalles de vuelo y hospedaje se envían por correo a cada
-                participante inscrito.
-              </p>
-            </Reveal>
           </div>
         </section>
 
@@ -176,17 +221,20 @@ export default async function HomePage() {
             <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
               Patrocinadores
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-              Empresas que hacen posible el ADECLA Golf Tour &amp; Pádel
-              Tournament 2026.
+            <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
+              Las empresas que hacen posible los eventos de ADECLA 2026.
             </p>
-            <Reveal className="mx-auto mt-10 max-w-sm">
-              <div className="shadow-teal-hover overflow-hidden rounded-xl border-4 border-white">
+            {/* Banner ancho: son ~60 logos y en la tarjeta angosta anterior no
+                se leía ninguno. El tope de 859px es el ancho nativo del
+                archivo — más allá next/image lo ampliaría y se vería borroso. */}
+            <Reveal className="mx-auto mt-10 max-w-[859px]">
+              <div className="overflow-hidden rounded-xl border bg-white p-4 sm:p-6">
                 <Image
                   src="/images/patrocinadores.jpeg"
-                  alt="Logos de los patrocinadores del ADECLA Golf Tour & Pádel Tournament 2026"
-                  width={1280}
-                  height={1600}
+                  alt="Logos de las empresas patrocinadoras de los eventos ADECLA 2026"
+                  width={859}
+                  height={874}
+                  sizes="(max-width: 891px) 92vw, 859px"
                   className="h-auto w-full"
                 />
               </div>

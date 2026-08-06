@@ -4,27 +4,28 @@ import { Reveal } from "@/components/shared/reveal";
 import { HeroCollage } from "./hero-collage";
 
 /*
-THESIS: la landing es el circuito 2026 en orden, no una grilla de eventos
-sueltos. Rechaza el arreglo por defecto de la categoría (titular centrado
-sobre foto full-bleed + tres tarjetas idénticas debajo).
-OWN-WORLD: teal institucional sobre blanco hueso, oro solo para nombrar el
-circuito, Fraunces en titulares y Public Sans en datos. La fotografía es real
+THESIS: la landing es la agenda de eventos ADECLA 2026 en orden, no una
+grilla de eventos sueltos. Rechaza el arreglo por defecto de la categoría
+(titular centrado sobre foto full-bleed + tres tarjetas idénticas debajo).
+OWN-WORLD: teal institucional sobre blanco hueso, oro solo para nombrar la
+marca, Fraunces en titulares y Public Sans en datos. La fotografía es real
 del torneo, nunca stock genérico de "networking".
-STORY: el visitante ve que el circuito ya está corriendo, ubica la parada que
-le toca y se inscribe sin leer toda la página.
-FIRST VIEWPORT: split. Izquierda titular con el año en oro, resumen del
-circuito, tres datos estructurales y la acción primaria. Derecha mosaico de
-fotos reales entrando en diagonal.
+STORY: el visitante ve que el año ya está corriendo, ubica el evento que le
+toca y se inscribe sin leer toda la página.
+FIRST VIEWPORT: split. Izquierda titular con el año en oro, resumen del año,
+tres datos estructurales y la acción primaria. Derecha mosaico de fotos
+reales entrando en diagonal.
 FORM: extensión del mundo ya establecido; composición fijada por la
 referencia que aprobó el cliente.
 */
 
-// Datos estructurales del circuito, no métricas de vanidad: cada uno se puede
-// verificar contando las tarjetas de más abajo.
+// Datos estructurales del año, no métricas de vanidad: cada uno se puede
+// verificar contando las tarjetas de más abajo. Nada de "+40 eventos" ni
+// "3,000 asistentes" mientras no sean cifras reales.
 const RESUMEN = [
-  { valor: "3", etiqueta: "paradas" },
+  { valor: "3", etiqueta: "torneos" },
   { valor: "2", etiqueta: "deportes" },
-  { valor: "1", etiqueta: "viaje internacional" },
+  { valor: "1", etiqueta: "misión empresarial" },
 ];
 
 export function HeroSection() {
@@ -38,8 +39,8 @@ export function HeroSection() {
             <span className="text-[var(--oro-claro)]">2026</span>
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-white/90">
-            Golf en Punta Espada y La Cana, pádel en Los Establos y la feria
-            Expocamacol en Medellín. Te inscribes en minutos y recibes la
+            Golf en Punta Espada y La Cana, pádel en Los Establos y la misión
+            empresarial a Medellín. Te inscribes en minutos y recibes la
             proforma al instante.
           </p>
 

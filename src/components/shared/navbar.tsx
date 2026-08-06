@@ -19,9 +19,9 @@ export async function Navbar() {
           {!isAdmin && (
             <ul className="mr-2 hidden items-center gap-5 md:flex">
               {[
-                { href: "/#circuito", label: "El circuito" },
-                { href: "/#eventos", label: "Paradas" },
-                { href: "/#expocamacol", label: "Expocamacol" },
+                { href: "/#eventos", label: "Eventos" },
+                { href: "/#expocamacol", label: "Misión Empresarial" },
+                { href: "/#revista", label: "Revista" },
               ].map((item) => (
                 <li key={item.href}>
                   <Link

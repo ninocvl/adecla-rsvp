@@ -1,63 +1,65 @@
-import { Clock, Handshake, Megaphone, Presentation } from "lucide-react";
+import { Award, Lightbulb, TrendingUp, Users } from "lucide-react";
 
-// Cuatro razones concretas, no cuatro adjetivos. Van sobre el teal y
-// separadas por filetes, no metidas cada una en su propia tarjeta: repetir
-// la misma caja cuatro veces es lo que vuelve genérica esta sección.
+// Las cuatro razones van sobre fondo claro y centradas, con el icono como
+// primer elemento de cada columna: es el patrón del flyer de Eventos ADECLA
+// 2026. El oro aquí nombra la marca (igual que el filete de sección), no
+// marca nada accionable — ver la regla del oro en DESIGN.md.
 const RAZONES = [
   {
-    icono: Clock,
-    titulo: "Cinco horas por ronda",
+    icono: Users,
+    titulo: "Conecta",
     texto:
-      "Una vuelta de golf da un tiempo con clientes y aliados que ninguna reunión de oficina consigue.",
+      "Amplía tu red con líderes, empresas y profesionales del sector construcción.",
   },
   {
-    icono: Handshake,
-    titulo: "Todo el sector, una cancha",
+    icono: Lightbulb,
+    titulo: "Aprende",
     texto:
-      "Constructores, desarrolladores y proveedores afiliados juegan las mismas paradas del circuito.",
+      "Accede a contenido actualizado, charlas técnicas y mejores prácticas.",
   },
   {
-    icono: Presentation,
-    titulo: "Agenda técnica en Medellín",
-    texto:
-      "Expocamacol suma conferencias, charlas técnicas y lanzamientos de más de 500 expositores.",
+    icono: TrendingUp,
+    titulo: "Genera oportunidades",
+    texto: "Encuentra aliados, clientes y nuevas colaboraciones de negocio.",
   },
   {
-    icono: Megaphone,
-    titulo: "Tu marca en el circuito",
+    icono: Award,
+    titulo: "Posiciona tu marca",
     texto:
-      "Las empresas patrocinadoras acompañan las paradas del año y reciben cupos de cortesía.",
+      "Aumenta tu visibilidad y fortalece el reconocimiento de tu empresa.",
   },
 ];
 
 export function BenefitsBand() {
   return (
-    <section className="hero-teal relative overflow-hidden py-20 sm:py-24">
-      <div className="grain-overlay" aria-hidden />
-      <div className="relative mx-auto max-w-6xl px-4">
-        <div className="max-w-lg">
-          <span className="section-rule section-rule--oro" aria-hidden />
-          <h2 className="font-heading text-3xl font-medium text-white sm:text-4xl">
-            Por qué se juega
+    <section className="border-t bg-secondary/40 py-20 sm:py-24">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="section-rule section-rule--oro mx-auto" aria-hidden />
+          <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
+            ¿Por qué participar en los eventos ADECLA?
           </h2>
-          <p className="mt-3 text-white/90">
-            El circuito existe para que el sector construcción de La Altagracia
-            se encuentre fuera de una sala de reuniones.
-          </p>
         </div>
 
-        <dl className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {RAZONES.map(({ icono: Icono, titulo, texto }) => (
-            <div key={titulo} className="border-t border-white/20 pt-5">
+        {/* Divisores verticales solo en escritorio: apilados en móvil la
+            línea sobra y separa peor que el propio espacio. */}
+        <dl className="mt-14 grid gap-y-12 sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-4 lg:gap-x-0">
+          {RAZONES.map(({ icono: Icono, titulo, texto }, i) => (
+            <div
+              key={titulo}
+              className={`px-2 text-center lg:px-8 ${
+                i > 0 ? "lg:border-l lg:border-border" : ""
+              }`}
+            >
               <Icono
-                className="size-5 text-[var(--oro-claro)]"
-                strokeWidth={1.75}
+                className="mx-auto size-9 text-[var(--oro)]"
+                strokeWidth={1.5}
                 aria-hidden
               />
-              <dt className="mt-4 font-heading text-lg font-medium text-white">
+              <dt className="mt-5 font-heading text-lg font-medium text-foreground">
                 {titulo}
               </dt>
-              <dd className="mt-2 text-sm leading-relaxed text-white/90">
+              <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {texto}
               </dd>
             </div>

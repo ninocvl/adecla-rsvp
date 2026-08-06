@@ -27,13 +27,33 @@ export const ADECLA = {
 // a la que ADECLA lleva una delegación. Por eso no vive en la tabla Event ni
 // pasa por el wizard — la inscripción sigue en el formulario de Tally hasta
 // que se decida migrarla al sistema.
+// Nombre, fechas y reclamo salen del flyer oficial (ver EXPOCAMACOL.flyer):
+// ADECLA lo llama "Misión Empresarial", no "Expocamacol" a secas —
+// Expocamacol es la feria a la que viaja la misión.
 export const EXPOCAMACOL = {
-  nombre: "Expocamacol 2026",
+  nombre: "Misión Empresarial Medellín",
+  feria: "Expocamacol 2026",
+  reclamo: "¡No te quedes sin asistir!",
+  // Versión corta para el tile de la fila de disciplinas, donde el resumen
+  // completo no cabe sin desbordar la tarjeta.
+  tagline:
+    "Del 26 al 29 de agosto, ADECLA viaja a Expocamacol con vuelo, hospedaje y traslados coordinados.",
   resumen:
-    "Feria internacional de construcción, ingeniería y arquitectura en Medellín. Más de 500 empresas exhiben. ADECLA coordina vuelo, hospedaje y traslados de la delegación.",
-  fechas: "26 al 29 de agosto de 2026",
+    "Cuatro días en la feria internacional de construcción, ingeniería y arquitectura de Medellín. Más de 500 empresas exhiben, con agenda académica y charlas técnicas. ADECLA coordina vuelo, hospedaje y traslados de la delegación.",
+  fechas: "Del 26 al 29 de agosto",
   lugar: "Medellín, Colombia",
   formUrl: "https://tally.so/r/Y5baBz",
+  flyer: "/images/expocamacol-mision-empresarial.jpeg",
+  // El flyer dirige las consultas a este correo, distinto del administrativo.
+  contactoEmail: "comunicaciones@adecla.do",
+} as const;
+
+// Revista institucional de ADECLA, publicada como flipbook en Heyzine.
+export const REVISTA = {
+  nombre: "Revista ADECLA",
+  resumen:
+    "Proyectos, entrevistas y análisis del sector construcción de La Altagracia. La edición digital se lee en el navegador, sin descargar nada.",
+  url: "https://heyzine.com/flip-book/b13d8eb2db.html",
 } as const;
 
 export const NOTA_PAGO =
