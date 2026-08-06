@@ -14,19 +14,41 @@ export function Footer() {
           <p className="font-medium text-foreground">Navegación</p>
           <ul className="mt-3 space-y-2">
             <li>
-              <Link href="/" className="hover:text-foreground">
+              <Link
+                href="/"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
+              >
                 Inicio
               </Link>
             </li>
             <li>
-              <Link href="/#eventos" className="hover:text-foreground">
-                Eventos
+              <Link
+                href="/#circuito"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
+              >
+                El circuito
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/#eventos"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
+              >
+                Paradas
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/#expocamacol"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
+              >
+                Expocamacol
               </Link>
             </li>
             <li>
               <Link
                 href="/inscripciones/nueva"
-                className="hover:text-foreground"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
               >
                 Inscribirme
               </Link>
@@ -40,7 +62,7 @@ export function Footer() {
             <li>
               <a
                 href={`tel:+${ADECLA.contacto.whatsapp}`}
-                className="hover:text-foreground"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
               >
                 {ADECLA.contacto.telefono}
               </a>
@@ -48,7 +70,7 @@ export function Footer() {
             <li>
               <a
                 href={`mailto:${ADECLA.contacto.email}`}
-                className="hover:text-foreground"
+                className="-my-1.5 inline-flex items-center py-1.5 hover:text-foreground"
               >
                 {ADECLA.contacto.email}
               </a>
@@ -60,7 +82,7 @@ export function Footer() {
       <div className="border-t px-4 py-3 text-center">
         <Link
           href="/login"
-          className="text-xs text-muted-foreground hover:text-foreground"
+          className="-my-1.5 inline-flex items-center px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           Administrador
         </Link>

@@ -47,6 +47,8 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --color-brand-teal: var(--brand-teal);
+  --color-oro: var(--oro);
+  --color-oro-claro: var(--oro-claro);
 }
 
 :root {
@@ -70,6 +72,12 @@
   --input: oklch(0.934 0 89.9);
   --ring: oklch(0.661 0.116 185.9); /* teal oficial #00a99d */
   --brand-teal: oklch(0.661 0.116 185.9);
+  /* Oro: acento cálido para el año del circuito y los marcadores de parada.
+     No viene del brand book original — se agrega como decisión de 2026 para
+     dar un segundo registro al teal, que solo/sin apoyo se lee frío. El tono
+     es latón (no amarillo): comparte la temperatura de la terracota. */
+  --oro: oklch(0.56 0.105 75); /* #96702a aprox — 4.75:1 sobre blanco, 4.62:1 sobre hueso */
+  --oro-claro: oklch(0.84 0.13 82); /* sobre teal oscuro; 3.68:1 → solo texto grande */
   --chart-1: oklch(0.661 0.116 185.9);
   --chart-2: oklch(0.68 0.097 212.1);
   --chart-3: oklch(0.55 0.16 33);
@@ -106,6 +114,8 @@
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.661 0.116 185.9);
   --brand-teal: oklch(0.661 0.116 185.9);
+  --oro: oklch(0.78 0.12 80);
+  --oro-claro: oklch(0.84 0.13 82);
   --chart-1: oklch(0.661 0.116 185.9);
   --chart-2: oklch(0.68 0.097 212.1);
   --chart-3: oklch(0.65 0.18 33);
@@ -174,11 +184,14 @@
 }
 
 /* Dirección A: bloque de teal oscuro para el hero de la landing. */
+/* El stop claro es #006f66 y no un teal más brillante porque sobre él tiene
+   que caber texto blanco de cuerpo: a #00958a el blanco puro daba 3.71:1 y no
+   alcanzaba AA. Con #006f66 el blanco al 90% queda en 5.25:1. */
 .hero-teal {
   background: radial-gradient(
     120% 140% at 15% 0%,
-    #00958a 0%,
-    #005f57 55%,
+    #006f66 0%,
+    #005a53 55%,
     #00453f 100%
   );
 }
@@ -285,4 +298,33 @@
   .recap-fade {
     animation: none;
   }
+}
+
+/* Rediseño 2026 — el mosaico de fotos del hero entra con un corte diagonal
+   que arranca donde termina la columna de texto. En móvil el collage pasa a
+   ocupar todo el ancho, así que el corte se retira: en vertical recortaría
+   contenido en vez de separar dos columnas. */
+.collage-cut {
+  clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%);
+}
+@media (max-width: 1023px) {
+  .collage-cut {
+    clip-path: none;
+  }
+}
+
+/* Variante en oro de .section-rule, para las secciones que hablan del
+   circuito completo (no de una parada suelta). El teal sigue marcando las
+   secciones operativas; el oro marca las de circuito. */
+.section-rule--oro {
+  background: var(--oro);
+}
+
+/* El bloque de fecha de la tarjeta de evento: el día manda, el mes lo
+   acompaña. Se separa del resto por una línea vertical, no por una caja
+   anidada — una tarjeta dentro de otra tarjeta siempre es de más. */
+.date-block {
+  font-variant-numeric: tabular-nums;
+  line-height: 0.88;
+  letter-spacing: -0.03em;
 }

@@ -67,7 +67,7 @@ export function EventRecapGallery({ photos }: { photos: string[] }) {
               setIndex(0);
               setOpen(true);
             }}
-            className="ml-4 text-sm font-medium text-primary underline-offset-2 hover:underline"
+            className="-my-1.5 ml-4 inline-flex items-center py-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
           >
             Ver las {photos.length} fotos
           </button>

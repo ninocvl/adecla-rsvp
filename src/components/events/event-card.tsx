@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { LandingCard } from "@/server/queries/events.queries";
 import { AFFILIATION_LABELS, PADEL_PRICE_USD } from "@/lib/constants";
 import { PADEL_CATEGORIES_POSTER } from "@/lib/event-media";
-import { formatEventDate, formatUsd } from "@/lib/format";
+import { formatDateParts, formatEventDate, formatUsd } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +35,9 @@ export function EventCard({ card }: { card: LandingCard }) {
   const recapPhotos = card.recapPhotos ?? [];
   const isRecap = isDate && card.isPast;
   const isPadel = card.eventSlug === "padel";
+  const dateParts = isDate
+    ? formatDateParts(card.date as Date)
+    : { day: "", month: "" };
 
   return (
     <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
@@ -59,6 +62,11 @@ export function EventCard({ card }: { card: LandingCard }) {
             </span>
           </div>
         )}
+        {/* El deporte va arriba a la izquierda, sobre la foto: es lo que
+            distingue una parada de otra de un vistazo. */}
+        <Badge className="absolute top-3 left-3 bg-white/90 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-foreground uppercase backdrop-blur-sm">
+          {isPadel ? "Pádel" : "Golf"}
+        </Badge>
         {!isDate && (
           <Badge className="absolute right-3 top-3 bg-white/90 px-3 py-1 text-sm text-foreground shadow-sm backdrop-blur-sm">
             Próximamente
@@ -73,17 +81,37 @@ export function EventCard({ card }: { card: LandingCard }) {
 
       <CardHeader>
         {isDate ? (
-          <>
-            <p className="text-sm font-semibold text-primary">
-              {formatEventDate(card.date as Date)}
-            </p>
-            <p className="font-heading text-xl font-medium leading-tight text-foreground">
-              {card.label}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {card.eventName} · {card.venue}
-            </p>
-          </>
+          <div className="flex items-start gap-4">
+            {/* Bloque de fecha: separado por una línea, no por una caja
+                anidada dentro de la tarjeta. */}
+            <div className="shrink-0 border-r pr-4 text-center">
+              <p
+                className="date-block text-3xl font-semibold text-foreground"
+                aria-hidden
+              >
+                {dateParts.day}
+              </p>
+              <p
+                className="mt-1 text-[0.8rem] font-semibold tracking-widest text-[var(--oro)]"
+                aria-hidden
+              >
+                {dateParts.month}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="font-heading text-xl leading-tight font-medium text-foreground">
+                {card.label}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {card.venue}
+              </p>
+              {/* La fecha completa queda accesible para lectores de
+                  pantalla, que no deben leer "5" y "SEP" sueltos. */}
+              <span className="sr-only">
+                {formatEventDate(card.date as Date)}
+              </span>
+            </div>
+          </div>
         ) : (
           <>
             <p className="font-heading text-xl font-medium text-foreground">
@@ -131,7 +159,7 @@ export function EventCard({ card }: { card: LandingCard }) {
               href={PADEL_CATEGORIES_POSTER}
               target="_blank"
               rel="noopener"
-              className="inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
+              className="-my-1.5 inline-flex items-center py-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
             >
               Ver categorías
             </a>

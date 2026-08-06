@@ -14,6 +14,26 @@ export async function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Logo width={124} height={40} className="lg:h-12" />
         <nav className="flex items-center gap-2 sm:gap-3">
+          {/* Anclas absolutas (/#...) y no relativas: el navbar es global, así
+              que desde el wizard o el panel tienen que volver a la landing. */}
+          {!isAdmin && (
+            <ul className="mr-2 hidden items-center gap-5 md:flex">
+              {[
+                { href: "/#circuito", label: "El circuito" },
+                { href: "/#eventos", label: "Paradas" },
+                { href: "/#expocamacol", label: "Expocamacol" },
+              ].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-sm font-medium text-foreground/80 underline-offset-8 transition-colors hover:text-foreground hover:decoration-[var(--brand-teal)] hover:underline"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
           {isAdmin ? (
             <>
               <AdminNavLink />

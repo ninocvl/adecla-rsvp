@@ -23,6 +23,19 @@ export const ADECLA = {
   },
 } as const;
 
+// Expocamacol no es un torneo de ADECLA: es una feria de terceros en Medellín
+// a la que ADECLA lleva una delegación. Por eso no vive en la tabla Event ni
+// pasa por el wizard — la inscripción sigue en el formulario de Tally hasta
+// que se decida migrarla al sistema.
+export const EXPOCAMACOL = {
+  nombre: "Expocamacol 2026",
+  resumen:
+    "Feria internacional de construcción, ingeniería y arquitectura en Medellín. Más de 500 empresas exhiben. ADECLA coordina vuelo, hospedaje y traslados de la delegación.",
+  fechas: "26 al 29 de agosto de 2026",
+  lugar: "Medellín, Colombia",
+  formUrl: "https://tally.so/r/Y5baBz",
+} as const;
+
 export const NOTA_PAGO =
   "*Los pagos se realizan en pesos dominicanos utilizando la tasa del día.";
 

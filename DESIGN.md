@@ -9,6 +9,8 @@ colors:
   blanco-hueso: "#fcfcf7"
   tinta: "#233738"
   destructivo: "#c4432a"
+  oro: "#b0832f"
+  oro-claro: "#dcae4e"
 typography:
   display:
     fontFamily: "Fraunces, Georgia, serif"
@@ -85,7 +87,8 @@ Esta identidad parte del brand book oficial de ADECLA: paleta de teal (#00a99d) 
 - Titulares en Fraunces con peso variable (560 display / 520 headline), nunca en mayúscula sostenida.
 - Datos y dinero siempre en Public Sans con `tabular-nums`, para que las columnas de montos alineen.
 - Superficies planas por defecto; la elevación aparece solo como respuesta a interacción (hover, foco), nunca como decoración de reposo.
-- Ningún dorado, gradiente ni glassmorphism: la calidez viene de la fotografía real de los campos y del teal, no de efectos.
+- El oro se reserva para el circuito como conjunto (el año, las paradas); nunca para estados, precios ni acciones — eso es territorio del teal.
+- Ningún gradiente decorativo ni glassmorphism: la calidez viene de la fotografía real de los campos, del teal y del oro, no de efectos.
 
 ## 2. Colors
 
@@ -103,6 +106,10 @@ La paleta viene directamente del brand book de ADECLA; la única adaptación es 
 - **Gris Claro** (#e9e9e9 / oklch(0.934 0 89.9)): bordes, divisores, fondos `muted`, fondo de badges neutrales (por ejemplo "Próximamente").
 - **Tinta** (#233738 / oklch(0.32 0.025 200)): reemplaza al negro oficial (#212322) como color de texto por defecto. Mismo propósito, pero con un matiz teal apenas perceptible que lo hace sentir parte de la misma familia cromática en vez de un negro importado de cualquier interfaz. Contraste de 12.2:1 sobre blanco hueso — de sobra para AAA.
 - **Superficie** (#ffffff): tarjetas y paneles se despegan del fondo hueso con blanco puro, sin sombra pesada.
+
+### Acento de circuito
+- **Oro** (#b0832f / oklch(0.62 0.105 75)): agregado en 2026, no viene del brand book original. Marca el circuito como conjunto: el año en el titular del hero, la numeración de las paradas, el separador de las secciones que hablan del tour completo. Es latón, no amarillo — comparte la temperatura de la terracota, así que convive con el teal sin pelearse. 4.7:1 sobre blanco hueso (AA para texto normal).
+- **Oro Claro** (#dcae4e / oklch(0.8 0.13 82)): exclusivo para texto sobre el teal oscuro del hero, donde el oro normal no levanta lo suficiente. Nunca sobre fondo claro.
 
 ### Destructivo
 - **Terracota** (#c4432a / oklch(0.55 0.16 33)): estados cancelados, errores de validación. No es un rojo genérico de framework — tiene la misma temperatura cálida que el resto de la paleta.
@@ -152,7 +159,8 @@ Sistema plano por defecto: las tarjetas se separan del fondo por color de superf
 
 ### Chips / Badges
 - **StatusBadge:** fondo en un tono pastel derivado del color de estado (ámbar para pendiente, esmeralda para confirmada, terracota suave para cancelada), texto en la versión oscura del mismo tono — nunca gris genérico para todos los estados.
-- **"Próximamente":** fondo Gris Claro, texto Tinta. Sin dorado (el brand book no define ninguno).
+- **"Próximamente":** fondo Gris Claro, texto Tinta. Es un estado, así que no lleva oro.
+- **Chip de parada** ("Primera Parada", "Segunda Parada"): el único chip que sí usa oro, porque nombra la posición en el circuito, no un estado.
 
 ### Cards / Containers
 - **Corner Style:** 14px (`rounded.xl`) en tarjetas de evento e inscripción; 8-10px en componentes internos.
@@ -185,7 +193,7 @@ Tarjeta fija durante el wizard de inscripción: monto en Public Sans con `tabula
 - **Don't** usar Poppins, Inter por defecto, o cualquier combinación Poppins+serif genérica — es la primera reflex de una interfaz generada por IA, explícitamente rechazada en PRODUCT.md.
 - **Don't** usar Roboto fuera del logotipo — es la fuente de sistema de Android/Material, demasiado genérica para sostener el tono premium del brand book.
 - **Don't** usar el negro oficial #212322 plano como color de texto; siempre pasar por la Tinta o su rampa.
-- **Don't** inventar un acento dorado — el brand book no define ninguno; la calidez viene del teal y de la fotografía real de los campos.
+- **Don't** usar el oro para estados, montos, botones o cualquier cosa accionable — el oro nombra el circuito, el teal conduce la interacción. Un botón dorado rompe la única regla que hace legible el sistema.
 - **Don't** usar gradientes decorativos, texto con `background-clip` en gradiente, ni glassmorphism sin propósito funcional.
 - **Don't** repetir tarjetas idénticas de icono+título+texto; cada tarjeta de evento resuelve un problema distinto (fecha, cupos, precio).
 - **Don't** usar texto gris claro de baja legibilidad "por elegancia" — todo texto de cuerpo cumple ≥4.5:1 de contraste.

@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { getLandingCards } from "@/server/queries/events.queries";
-import { NOTA_PAGO } from "@/lib/constants";
+import { EXPOCAMACOL, NOTA_PAGO } from "@/lib/constants";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Reveal } from "@/components/shared/reveal";
 import { HeroSection } from "@/components/events/hero-section";
+import { DisciplinesRow } from "@/components/events/disciplines-row";
+import { BenefitsBand } from "@/components/events/benefits-band";
 import { EventCard } from "@/components/events/event-card";
 
 export const dynamic = "force-dynamic";
@@ -18,28 +20,54 @@ export default async function HomePage() {
       <main className="flex-1">
         <HeroSection />
 
-        <section id="eventos" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:py-24">
+        <section
+          id="circuito"
+          className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:py-24"
+        >
           <div className="max-w-2xl">
-            <span className="section-rule" aria-hidden />
+            <span className="section-rule section-rule--oro" aria-hidden />
             <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-              Eventos
+              El circuito 2026
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Elige tu torneo, inscribe uno o dos jugadores y descarga tu
-              proforma.
+              Dos deportes en Cap Cana y Punta Cana, más la delegación que
+              ADECLA lleva a la feria de Medellín.
             </p>
           </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card, i) => (
-              <Reveal key={card.id} delayMs={i * 70}>
-                <EventCard card={card} />
-              </Reveal>
-            ))}
-          </div>
-          <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>
+          <Reveal className="mt-10">
+            <DisciplinesRow />
+          </Reveal>
         </section>
 
-        <section className="relative bg-white py-20 sm:py-24">
+        <section
+          id="eventos"
+          className="border-t bg-white py-20 scroll-mt-20 sm:py-24"
+        >
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="max-w-2xl">
+              <span className="section-rule" aria-hidden />
+              <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
+                Próximas paradas
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                Elige tu parada, inscribe uno o dos jugadores y descarga tu
+                proforma.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {cards.map((card, i) => (
+                <Reveal key={card.id} delayMs={i * 70}>
+                  <EventCard card={card} />
+                </Reveal>
+              ))}
+            </div>
+            <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>
+          </div>
+        </section>
+
+        <BenefitsBand />
+
+        <section className="relative py-20 sm:py-24">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-center lg:gap-0">
             <div className="px-4 lg:pr-12 lg:pl-[max(1rem,calc((100vw-72rem)/2+1rem))]">
               <span className="section-rule" aria-hidden />
@@ -92,7 +120,57 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="border-t bg-secondary/40 py-20 sm:py-24">
+        <section
+          id="expocamacol"
+          className="border-t bg-white py-20 scroll-mt-20 sm:py-24"
+        >
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2">
+            <div>
+              <span className="section-rule section-rule--oro" aria-hidden />
+              <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
+                {EXPOCAMACOL.nombre}
+              </h2>
+              <p className="mt-2 font-medium text-foreground">
+                {EXPOCAMACOL.fechas} · {EXPOCAMACOL.lugar}
+              </p>
+              <p className="mt-4 max-w-md text-muted-foreground">
+                {EXPOCAMACOL.resumen}
+              </p>
+              <p className="mt-4 max-w-md text-sm text-muted-foreground">
+                La inscripción de la delegación se llena en un formulario
+                aparte. Necesitas pasaporte con al menos seis meses de
+                vigencia al momento del viaje.
+              </p>
+              <a
+                href={EXPOCAMACOL.formUrl}
+                target="_blank"
+                rel="noopener"
+                className="mt-6 inline-flex items-center rounded-md bg-primary px-[18px] py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#005f57] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                Reservar mi cupo del viaje
+              </a>
+            </div>
+            <Reveal className="rounded-xl border bg-secondary/40 p-6">
+              <p className="text-sm font-semibold text-foreground">
+                Qué incluye la coordinación de ADECLA
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li>Vuelo, hospedaje y traslados de la delegación.</li>
+                <li>Agenda académica: conferencias y charlas técnicas.</li>
+                <li>Acceso a la muestra comercial de más de 500 empresas.</li>
+              </ul>
+              <p className="mt-4 border-t pt-4 text-xs text-muted-foreground">
+                Los detalles de vuelo y hospedaje se envían por correo a cada
+                participante inscrito.
+              </p>
+            </Reveal>
+          </div>
+        </section>
+
+        <section
+          id="patrocinadores"
+          className="border-t bg-secondary/40 py-20 scroll-mt-20 sm:py-24"
+        >
           <div className="mx-auto max-w-6xl px-4 text-center">
             <span className="section-rule mx-auto" aria-hidden />
             <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
