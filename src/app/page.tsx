@@ -1,5 +1,8 @@
 import Image from "next/image";
-import { getLandingCards } from "@/server/queries/events.queries";
+import {
+  getLandingCards,
+  type LandingCard,
+} from "@/server/queries/events.queries";
 import { EXPOCAMACOL, NOTA_PAGO, REVISTA } from "@/lib/constants";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -8,12 +11,35 @@ import { HeroSection } from "@/components/events/hero-section";
 import { DisciplinesRow } from "@/components/events/disciplines-row";
 import { BenefitsBand } from "@/components/events/benefits-band";
 import { SponsorsMarquee } from "@/components/events/sponsors-marquee";
+import { MisionEmpresarialCard } from "@/components/events/mision-empresarial-card";
 import { EventCard } from "@/components/events/event-card";
 
 export const dynamic = "force-dynamic";
 
+// La misión empresarial no está en la tabla Event (se inscribe por un
+// formulario aparte), así que su tarjeta se intercala aquí por fecha en vez
+// de venir de la consulta.
+type ItemEvento =
+  | { tipo: "evento"; key: string; fecha: number; card: LandingCard }
+  | { tipo: "mision"; key: string; fecha: number };
+
 export default async function HomePage() {
   const cards = await getLandingCards();
+
+  const items: ItemEvento[] = [
+    ...cards.map((card) => ({
+      tipo: "evento" as const,
+      key: card.id,
+      // Un evento sin fecha publicada va al principio, como en getLandingCards.
+      fecha: card.date ? card.date.getTime() : 0,
+      card,
+    })),
+    {
+      tipo: "mision" as const,
+      key: "mision-empresarial",
+      fecha: new Date(`${EXPOCAMACOL.fechaInicioISO}T12:00:00Z`).getTime(),
+    },
+  ].sort((a, b) => a.fecha - b.fecha);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -57,9 +83,13 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {cards.map((card, i) => (
-                <Reveal key={card.id} delayMs={i * 70}>
-                  <EventCard card={card} />
+              {items.map((item, i) => (
+                <Reveal key={item.key} delayMs={i * 70}>
+                  {item.tipo === "mision" ? (
+                    <MisionEmpresarialCard />
+                  ) : (
+                    <EventCard card={item.card} />
+                  )}
                 </Reveal>
               ))}
             </div>
@@ -68,75 +98,6 @@ export default async function HomePage() {
         </section>
 
         <BenefitsBand />
-
-        <section
-          id="expocamacol"
-          className="border-t bg-white py-20 scroll-mt-20 sm:py-24"
-        >
-          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2 lg:gap-14">
-            {/* El flyer oficial manda aquí: es la pieza que ya circuló por
-                redes, así que la página la muestra tal cual en vez de
-                reinterpretarla. */}
-            <Reveal className="order-first mx-auto w-full max-w-sm lg:order-none lg:max-w-md">
-              <div className="shadow-teal-hover overflow-hidden rounded-xl border-4 border-white">
-                <Image
-                  src={EXPOCAMACOL.flyer}
-                  alt={`Flyer: ${EXPOCAMACOL.nombre}, ${EXPOCAMACOL.fechas}, junto a Camacol`}
-                  width={1200}
-                  height={1600}
-                  sizes="(max-width: 1024px) 90vw, 40vw"
-                  className="h-auto w-full"
-                />
-              </div>
-            </Reveal>
-
-            <div>
-              <span className="section-rule section-rule--oro" aria-hidden />
-              <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-                Misión Empresarial{" "}
-                <span className="text-[var(--oro)]">Medellín</span>
-              </h2>
-              <p className="mt-2 font-medium text-foreground">
-                {EXPOCAMACOL.fechas} · {EXPOCAMACOL.lugar}
-              </p>
-              <p className="mt-4 max-w-md text-muted-foreground">
-                {EXPOCAMACOL.resumen}
-              </p>
-              <ul className="mt-6 max-w-md space-y-2 text-sm text-muted-foreground">
-                <li className="border-t pt-2">
-                  Vuelo, hospedaje y traslados coordinados por ADECLA.
-                </li>
-                <li className="border-t pt-2">
-                  Agenda académica: conferencias y charlas técnicas.
-                </li>
-                <li className="border-t pt-2">
-                  Acceso a la muestra comercial de {EXPOCAMACOL.feria}.
-                </li>
-              </ul>
-              <p className="mt-5 max-w-md text-sm text-muted-foreground">
-                Necesitas pasaporte con al menos seis meses de vigencia al
-                momento del viaje. Los detalles de vuelo y hospedaje se envían
-                por correo a cada participante inscrito.
-              </p>
-              <div className="mt-6 flex flex-wrap items-center gap-4">
-                <a
-                  href={EXPOCAMACOL.formUrl}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center rounded-md bg-primary px-[18px] py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[#005f57] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                  Reservar mi cupo del viaje
-                </a>
-                <a
-                  href={`mailto:${EXPOCAMACOL.contactoEmail}`}
-                  className="-my-1.5 inline-flex items-center py-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  Solicitar más información
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <section
           id="revista"

@@ -20,7 +20,7 @@ export async function Navbar() {
             <ul className="mr-2 hidden items-center gap-5 md:flex">
               {[
                 { href: "/#eventos", label: "Eventos" },
-                { href: "/#expocamacol", label: "Misión Empresarial" },
+                { href: "/eventos/mision-empresarial", label: "Misión Empresarial" },
                 { href: "/#revista", label: "Revista" },
               ].map((item) => (
                 <li key={item.href}>

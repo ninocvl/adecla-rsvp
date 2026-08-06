@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { EXPOCAMACOL } from "@/lib/constants";
+import { MISION_DETALLE_HREF } from "./mision-empresarial-card";
 
 // Las tres se presentan igual: foto, velo y rótulo abajo. Antes la misión
 // empresarial era un bloque de teal sin foto y del doble de ancho, así que
@@ -22,13 +23,16 @@ const EVENTOS = [
     nombre: "Pádel",
     detalle: "Un torneo · Los Establos, Cap Cana",
   },
+  // La tercera es una categoría, igual que Golf y Pádel: el networking es lo
+  // que ADECLA ofrece ahí, y la misión a Medellín es el evento concreto que
+  // la representa este año.
   {
-    href: EXPOCAMACOL.formUrl,
-    externo: true,
+    href: MISION_DETALLE_HREF,
+    externo: false,
     src: EXPOCAMACOL.flyer,
     alt: "Flyer de la Misión Empresarial a Medellín",
-    nombre: EXPOCAMACOL.nombre,
-    detalle: `${EXPOCAMACOL.fechas} · ${EXPOCAMACOL.lugar}`,
+    nombre: "Networking",
+    detalle: `Misión Empresarial · ${EXPOCAMACOL.lugar}`,
   },
 ];
 

@@ -41,6 +41,12 @@ export const EXPOCAMACOL = {
   resumen:
     "Cuatro días en la feria internacional de construcción, ingeniería y arquitectura de Medellín. Más de 500 empresas exhiben, con agenda académica y charlas técnicas. ADECLA coordina vuelo, hospedaje y traslados de la delegación.",
   fechas: "Del 26 al 29 de agosto",
+  // Día de inicio, solo para ordenar su tarjeta entre las demás del año.
+  // No vive en la tabla EventDate: la inscripción sigue en Tally, no en el
+  // wizard, así que no es un evento del sistema.
+  fechaInicioISO: "2026-08-26",
+  diaCorto: "26",
+  mesCorto: "AGO",
   lugar: "Medellín, Colombia",
   formUrl: "https://tally.so/r/Y5baBz",
   flyer: "/images/expocamacol-mision-empresarial.jpeg",

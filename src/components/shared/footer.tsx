@@ -9,7 +9,7 @@ import { Logo } from "@/components/shared/logo";
 const NAVEGACION = [
   { href: "/", label: "Inicio" },
   { href: "/#eventos", label: "Eventos" },
-  { href: "/#expocamacol", label: "Misión Empresarial" },
+  { href: "/eventos/mision-empresarial", label: "Misión Empresarial" },
   { href: "/inscripciones/nueva", label: "Inscribirme" },
 ];
 

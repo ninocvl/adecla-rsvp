@@ -39,9 +39,7 @@ export function HeroSection() {
             <span className="text-[var(--oro-claro)]">2026</span>
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-white/90">
-            Golf en Punta Espada y La Cana, pádel en Los Establos y la misión
-            empresarial a Medellín. Te inscribes en minutos y recibes la
-            proforma al instante.
+            Conecta, aprende y genera oportunidades en los espacios que impulsan el sector inmobiliario.
           </p>
 
           {/* dt antes que dd para que el HTML sea válido; el orden visual
