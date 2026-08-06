@@ -7,6 +7,7 @@ import { Reveal } from "@/components/shared/reveal";
 import { HeroSection } from "@/components/events/hero-section";
 import { DisciplinesRow } from "@/components/events/disciplines-row";
 import { BenefitsBand } from "@/components/events/benefits-band";
+import { SponsorsMarquee } from "@/components/events/sponsors-marquee";
 import { EventCard } from "@/components/events/event-card";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,8 @@ export default async function HomePage() {
           <div className="max-w-2xl">
             <span className="section-rule section-rule--oro" aria-hidden />
             <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-              Descubre nuestros eventos
+              Descubre nuestros{" "}
+              <span className="text-[var(--oro)]">eventos</span>
             </h2>
             <p className="mt-3 text-muted-foreground">
               Dos deportes en Cap Cana y Punta Cana, más la misión empresarial
@@ -47,7 +49,7 @@ export default async function HomePage() {
             <div className="max-w-2xl">
               <span className="section-rule" aria-hidden />
               <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-                Próximos eventos
+                Próximos <span className="text-[var(--oro)]">eventos</span>
               </h2>
               <p className="mt-3 text-muted-foreground">
                 Elige tu evento, inscribe uno o dos jugadores y descarga tu
@@ -144,7 +146,8 @@ export default async function HomePage() {
             <div>
               <span className="section-rule section-rule--oro" aria-hidden />
               <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-                {EXPOCAMACOL.nombre}
+                Misión Empresarial{" "}
+                <span className="text-[var(--oro)]">Medellín</span>
               </h2>
               <p className="mt-2 font-medium text-foreground">
                 {EXPOCAMACOL.fechas} · {EXPOCAMACOL.lugar}
@@ -193,13 +196,17 @@ export default async function HomePage() {
           className="hero-teal relative overflow-hidden py-20 scroll-mt-20 sm:py-24"
         >
           <div className="grain-overlay" aria-hidden />
-          <div className="relative mx-auto max-w-6xl px-4">
+          <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
             <div className="max-w-xl">
               <span className="section-rule section-rule--oro" aria-hidden />
               <h2 className="font-heading text-3xl font-medium text-white sm:text-4xl">
-                {REVISTA.nombre}
+                Revista <span className="text-[var(--oro-claro)]">
+                  {REVISTA.nombre}
+                </span>
               </h2>
-              <p className="mt-4 text-white/90">{REVISTA.resumen}</p>
+              <p className="mt-2 text-white/80">{REVISTA.bajada}</p>
+              <p className="mt-4 max-w-md text-white/90">{REVISTA.resumen}</p>
+              <p className="mt-4 text-sm text-white/75">{REVISTA.edicion}</p>
               <a
                 href={REVISTA.url}
                 target="_blank"
@@ -209,6 +216,25 @@ export default async function HomePage() {
                 Leer la edición digital
               </a>
             </div>
+
+            {/* La portada real de la edición, no un icono de revista. */}
+            <Reveal className="order-first mx-auto w-[220px] lg:order-none lg:w-[300px]">
+              <a
+                href={REVISTA.url}
+                target="_blank"
+                rel="noopener"
+                className="shadow-teal-hover block overflow-hidden rounded-lg border-4 border-white/90 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+              >
+                <Image
+                  src={REVISTA.portada}
+                  alt={`Portada de ${REVISTA.nombre}, ${REVISTA.edicion}`}
+                  width={1058}
+                  height={1401}
+                  sizes="(max-width: 1024px) 220px, 300px"
+                  className="h-auto w-full"
+                />
+              </a>
+            </Reveal>
           </div>
         </section>
 
@@ -219,26 +245,16 @@ export default async function HomePage() {
           <div className="mx-auto max-w-6xl px-4 text-center">
             <span className="section-rule mx-auto" aria-hidden />
             <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-              Patrocinadores
+              <span className="text-[var(--oro)]">Patrocinadores</span>
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
               Las empresas que hacen posible los eventos de ADECLA 2026.
             </p>
-            {/* Banner ancho: son ~60 logos y en la tarjeta angosta anterior no
-                se leía ninguno. El tope de 859px es el ancho nativo del
-                archivo — más allá next/image lo ampliaría y se vería borroso. */}
-            <Reveal className="mx-auto mt-10 max-w-[859px]">
-              <div className="overflow-hidden rounded-xl border bg-white p-4 sm:p-6">
-                <Image
-                  src="/images/patrocinadores.jpeg"
-                  alt="Logos de las empresas patrocinadoras de los eventos ADECLA 2026"
-                  width={859}
-                  height={874}
-                  sizes="(max-width: 891px) 92vw, 859px"
-                  className="h-auto w-full"
-                />
-              </div>
-            </Reveal>
+          </div>
+          {/* Fuera del contenedor con padding: la franja va de borde a borde
+              para que los logos entren y salgan de la pantalla. */}
+          <div className="mt-10">
+            <SponsorsMarquee />
           </div>
         </section>
       </main>

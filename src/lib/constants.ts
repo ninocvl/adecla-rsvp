@@ -48,12 +48,16 @@ export const EXPOCAMACOL = {
   contactoEmail: "comunicaciones@adecla.do",
 } as const;
 
-// Revista institucional de ADECLA, publicada como flipbook en Heyzine.
+// Revista institucional de ADECLA, publicada como flipbook en Heyzine. El
+// nombre, la edición y la portada salen de la propia publicación.
 export const REVISTA = {
-  nombre: "Revista ADECLA",
+  nombre: "ConstruEste",
+  bajada: "La revista del desarrollo y la construcción del Este dominicano",
+  edicion: "Edición No. 5 · Mayo 2026 · Ejemplar gratuito",
   resumen:
     "Proyectos, entrevistas y análisis del sector construcción de La Altagracia. La edición digital se lee en el navegador, sin descargar nada.",
   url: "https://heyzine.com/flip-book/b13d8eb2db.html",
+  portada: "/images/revista-adecla-portada.jpg",
 } as const;
 
 export const NOTA_PAGO =

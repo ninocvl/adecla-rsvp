@@ -34,21 +34,24 @@ export function BenefitsBand() {
   return (
     <section className="border-t bg-secondary/40 py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="mx-auto max-w-2xl text-center">
+        {/* max-w-4xl y no 2xl: con 2xl el titular partía en dos líneas. Aquí
+            entra completo en una sola desde tablet. */}
+        <div className="mx-auto max-w-4xl text-center">
           <span className="section-rule section-rule--oro mx-auto" aria-hidden />
-          <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-            ¿Por qué participar en los eventos ADECLA?
+          <h2 className="font-heading text-3xl font-medium text-balance text-foreground sm:text-4xl">
+            ¿Por qué participar en los eventos{" "}
+            <span className="text-[var(--oro)]">ADECLA</span>?
           </h2>
         </div>
 
         {/* Divisores verticales solo en escritorio: apilados en móvil la
             línea sobra y separa peor que el propio espacio. */}
-        <dl className="mt-14 grid gap-y-12 sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-4 lg:gap-x-0">
+        <dl className="mt-14 grid gap-y-12 sm:grid-cols-2 sm:gap-x-10 md:grid-cols-4 md:gap-x-0">
           {RAZONES.map(({ icono: Icono, titulo, texto }, i) => (
             <div
               key={titulo}
-              className={`px-2 text-center lg:px-8 ${
-                i > 0 ? "lg:border-l lg:border-border" : ""
+              className={`px-2 text-center md:px-6 ${
+                i > 0 ? "md:border-l md:border-border" : ""
               }`}
             >
               <Icono

@@ -328,3 +328,58 @@
   line-height: 0.88;
   letter-spacing: -0.03em;
 }
+
+/* Franja de patrocinadores en movimiento continuo. La pista contiene la
+   lista duplicada y se desplaza justo el 50%: al terminar, el primer clon
+   queda exactamente donde estaba el original, así el bucle no salta.
+   La duración es larga a propósito (los logos deben poder leerse, no
+   pasar volando) y se pausa al enfocar o pasar el mouse. */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee {
+  /* Difuminado en los bordes para que los logos entren y salgan en vez de
+     cortarse contra el borde de la sección. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 6rem,
+    #000 calc(100% - 6rem),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 6rem,
+    #000 calc(100% - 6rem),
+    transparent
+  );
+}
+
+.marquee-track {
+  animation: marquee-scroll 90s linear infinite;
+  will-change: transform;
+}
+
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Sin movimiento automático: la franja se vuelve una tira desplazable a
+   mano, que sigue mostrando todos los logos. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+}
