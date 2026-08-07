@@ -29,8 +29,10 @@ const EVENTOS = [
   {
     href: MISION_DETALLE_HREF,
     externo: false,
-    src: EXPOCAMACOL.flyer,
-    alt: "Flyer de la Misión Empresarial a Medellín",
+    // Foto de networking, no el flyer de la misión: el tile nombra la
+    // categoría, y el flyer ya aparece en la tarjeta y en el detalle.
+    src: "/images/networking.jpg",
+    alt: "Profesionales conversando en un evento de networking",
     nombre: "Networking",
     detalle: `Misión Empresarial · ${EXPOCAMACOL.lugar}`,
   },

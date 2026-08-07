@@ -82,17 +82,25 @@ export default async function HomePage() {
                 proforma.
               </p>
             </div>
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Fila que se arrastra en vez de grilla: con cuatro eventos la
+                grilla de tres partía en dos filas y la última quedaba
+                huérfana. Así entran todos lado a lado y se ruedan. */}
+            <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-3 [scrollbar-width:thin]">
               {items.map((item, i) => (
-                <Reveal key={item.key} delayMs={i * 70}>
-                  {item.tipo === "mision" ? (
-                    <MisionEmpresarialCard />
-                  ) : (
-                    <EventCard card={item.card} />
-                  )}
-                </Reveal>
+                <li
+                  key={item.key}
+                  className="w-[300px] shrink-0 snap-start sm:w-[336px]"
+                >
+                  <Reveal delayMs={i * 70} className="h-full">
+                    {item.tipo === "mision" ? (
+                      <MisionEmpresarialCard />
+                    ) : (
+                      <EventCard card={item.card} />
+                    )}
+                  </Reveal>
+                </li>
               ))}
-            </div>
+            </ul>
             <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>
           </div>
         </section>

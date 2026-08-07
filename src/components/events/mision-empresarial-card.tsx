@@ -13,15 +13,24 @@ export const MISION_DETALLE_HREF = "/eventos/mision-empresarial";
 // ahí: se inscribe por un formulario aparte, no por el wizard.
 export function MisionEmpresarialCard() {
   return (
-    <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
-      <div className="relative aspect-[16/10] bg-secondary">
+    <Card className="shadow-teal-hover flex h-full flex-col overflow-hidden pt-0">
+      <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
+        {/* Mismo tratamiento que EventCard: el flyer entero sobre una copia
+            desenfocada, para no cortarlo ni agrandar la tarjeta. */}
+        <Image
+          src={EXPOCAMACOL.flyer}
+          alt=""
+          aria-hidden
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="scale-110 object-cover blur-xl"
+        />
         <Image
           src={EXPOCAMACOL.flyer}
           alt={`Flyer: ${EXPOCAMACOL.nombre}, ${EXPOCAMACOL.fechas}`}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover"
-          style={{ objectPosition: "top" }}
+          className="object-contain"
         />
         <Badge className="absolute top-3 left-3 bg-white/90 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-foreground uppercase backdrop-blur-sm">
           Networking

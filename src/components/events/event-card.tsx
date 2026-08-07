@@ -45,21 +45,35 @@ export function EventCard({ card }: { card: LandingCard }) {
     : "";
 
   return (
-    <Card className="shadow-teal-hover flex flex-col overflow-hidden pt-0">
-      <div className="relative aspect-[16/10] bg-secondary">
+    <Card className="shadow-teal-hover flex h-full flex-col overflow-hidden pt-0">
+      <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
         {card.imageUrl ? (
-          <Image
-            src={card.imageUrl}
-            alt={
-              isDate
-                ? `Flyer: ${card.label}, ${card.eventName}`
-                : `Flyer de ${card.eventName}`
-            }
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover"
-            style={{ objectPosition: card.imagePosition }}
-          />
+          <>
+            {/* Los flyers son verticales (4:5) y la tarjeta es apaisada: con
+                object-cover se perdía media pieza. Se muestran completos
+                sobre una copia desenfocada de sí mismos, que rellena los
+                lados sin agrandar la tarjeta ni inventar un fondo. */}
+            <Image
+              src={card.imageUrl}
+              alt=""
+              aria-hidden
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="scale-110 object-cover blur-xl"
+              style={{ objectPosition: card.imagePosition }}
+            />
+            <Image
+              src={card.imageUrl}
+              alt={
+                isDate
+                  ? `Flyer: ${card.label}, ${card.eventName}`
+                  : `Flyer de ${card.eventName}`
+              }
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-contain"
+            />
+          </>
         ) : (
           <div className="flex h-full items-center justify-center">
             <span className="text-5xl" role="presentation">
