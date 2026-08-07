@@ -34,6 +34,12 @@ export default async function AdminLayout({
             Inscripciones
           </Link>
           <Link
+            href="/admin/participantes"
+            className="border-b-2 border-transparent py-3 font-medium hover:border-primary"
+          >
+            Participantes
+          </Link>
+          <Link
             href="/admin/empresas"
             className="border-b-2 border-transparent py-3 font-medium hover:border-primary"
           >

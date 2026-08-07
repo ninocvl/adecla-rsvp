@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  getAdminRegistrations,
+  getAdminParticipants,
   getEventDatesForFilter,
 } from "@/server/queries/admin.queries";
 import type { RegistrationStatus } from "@/generated/prisma/enums";
 import { STATUS_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { RegistrationTable } from "@/components/admin/registration-table";
+import { ParticipantTable } from "@/components/admin/participant-table";
 
 export const metadata: Metadata = {
-  title: "Inscripciones | Admin ADECLA",
+  title: "Participantes | Admin ADECLA",
 };
 
 const STATUS_KEYS = Object.keys(STATUS_LABELS) as RegistrationStatus[];
 
-export default async function AdminInscripcionesPage({
+export default async function AdminParticipantesPage({
   searchParams,
 }: {
   searchParams: Promise<{ estado?: string; evento?: string }>;
@@ -26,10 +26,17 @@ export default async function AdminInscripcionesPage({
     ? (estado as RegistrationStatus)
     : undefined;
 
-  const [registrations, eventDates] = await Promise.all([
-    getAdminRegistrations({ status, eventDateId: evento }),
+  const [participants, eventDates] = await Promise.all([
+    getAdminParticipants({ status, eventDateId: evento }),
     getEventDatesForFilter(),
   ]);
+
+  // El total que importa para logística es el de jugadores que sí van, así
+  // que las canceladas se cuentan aparte en vez de inflar el número.
+  const activos = participants.filter(
+    (p) => p.registration.status !== "CANCELADA"
+  ).length;
+  const cancelados = participants.length - activos;
 
   function filterHref(params: { estado?: string; evento?: string }) {
     const search = new URLSearchParams();
@@ -38,41 +45,32 @@ export default async function AdminInscripcionesPage({
     if (nextEstado) search.set("estado", nextEstado);
     if (nextEvento) search.set("evento", nextEvento);
     const qs = search.toString();
-    return `/admin/inscripciones${qs ? `?${qs}` : ""}`;
+    return `/admin/participantes${qs ? `?${qs}` : ""}`;
   }
 
   const exportBaseHref = filterHref({}).replace(
-    "/admin/inscripciones",
-    "/admin/inscripciones/export"
+    "/admin/participantes",
+    "/admin/participantes/export"
   );
   const exportSeparator = exportBaseHref.includes("?") ? "&" : "?";
+  const eventoActual = eventDates.find((d) => d.id === evento);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Inscripciones</h1>
+          <h1 className="text-2xl font-semibold">Participantes</h1>
           <p className="mt-1 text-muted-foreground">
-            {registrations.length} resultado
-            {registrations.length === 1 ? "" : "s"}
+            {eventoActual ? eventoActual.label : "Todas las fechas"}
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Arrastra los filtros activos a la vista de participantes: si
-              estás viendo una fecha concreta, ves los jugadores de esa
-              fecha. */}
           <Button
+            variant="outline"
             nativeButton={false}
-            render={
-              <Link
-                href={filterHref({}).replace(
-                  "/admin/inscripciones",
-                  "/admin/participantes"
-                )}
-              />
-            }
+            render={<Link href="/admin/inscripciones" />}
           >
-            Ver participantes
+            Ver inscripciones
           </Button>
           <Button
             variant="outline"
@@ -91,6 +89,23 @@ export default async function AdminInscripcionesPage({
             Descargar Excel
           </Button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        <TotalCard
+          label="Jugadores que van"
+          value={activos}
+          hint="Sin contar inscripciones canceladas"
+        />
+        <TotalCard
+          label="En listado"
+          value={participants.length}
+          hint={
+            cancelados > 0
+              ? `Incluye ${cancelados} de inscripciones canceladas`
+              : "Con los filtros aplicados"
+          }
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -113,7 +128,7 @@ export default async function AdminInscripcionesPage({
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Fecha:</span>
           <FilterChip href={filterHref({ evento: undefined })} active={!evento}>
-            Todos
+            Todas
           </FilterChip>
           {eventDates.map((d) => (
             <FilterChip
@@ -127,7 +142,25 @@ export default async function AdminInscripcionesPage({
         </div>
       )}
 
-      <RegistrationTable registrations={registrations} />
+      <ParticipantTable participants={participants} />
+    </div>
+  );
+}
+
+function TotalCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: number;
+  hint: string;
+}) {
+  return (
+    <div className="min-w-[190px] flex-1 rounded-lg border bg-white p-4">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="mt-1 text-3xl font-semibold tabular-nums">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </div>
   );
 }

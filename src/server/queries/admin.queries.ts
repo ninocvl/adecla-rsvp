@@ -127,3 +127,44 @@ export async function getAdminCompanies() {
 }
 
 export type AdminCompany = Awaited<ReturnType<typeof getAdminCompanies>>[number];
+
+export interface AdminParticipantFilters {
+  status?: RegistrationStatus;
+  eventDateId?: string;
+}
+
+/**
+ * Una fila por participante (no por inscripción): es la lista que se usa para
+ * armar los grupos del torneo y para pasarle los nombres al club, donde una
+ * inscripción de dos jugadores tiene que aparecer como dos personas.
+ */
+export async function getAdminParticipants(
+  filters: AdminParticipantFilters = {}
+) {
+  return prisma.participant.findMany({
+    where: {
+      registration: {
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
+      },
+    },
+    include: {
+      registration: {
+        include: {
+          company: { select: { legalName: true, rnc: true, email: true, phone: true } },
+          event: { select: { name: true } },
+          eventDate: { select: { date: true, label: true, venue: true } },
+        },
+      },
+    },
+    orderBy: [
+      { registration: { eventDate: { date: "asc" } } },
+      { registration: { code: "asc" } },
+      { position: "asc" },
+    ],
+  });
+}
+
+export type AdminParticipant = Awaited<
+  ReturnType<typeof getAdminParticipants>
+>[number];
