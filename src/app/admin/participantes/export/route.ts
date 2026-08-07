@@ -14,6 +14,8 @@ import type { RegistrationStatus } from "@/generated/prisma/enums";
 const HEADERS = [
   "#",
   "Participante",
+  "Tipo",
+  "Compañero",
   "Posición",
   "Correo",
   "Teléfono",
@@ -43,11 +45,26 @@ export async function GET(request: Request) {
   if (evento) filters.eventDateId = evento;
 
   const participants = await getAdminParticipants(filters);
+
+  // Cuántos comparten inscripción, para poder decir en cada fila si va en
+  // pareja o solo y con quién — la hoja se lee sin tener que cruzar códigos
+  // a mano.
+  const porInscripcion = new Map<string, typeof participants>();
+  for (const p of participants) {
+    const grupo = porInscripcion.get(p.registrationId) ?? [];
+    grupo.push(p);
+    porInscripcion.set(p.registrationId, grupo);
+  }
+
   const rows = participants.map((p, i) => {
     const r = p.registration;
+    const grupo = porInscripcion.get(p.registrationId) ?? [p];
+    const companero = grupo.find((g) => g.id !== p.id);
     return [
       i + 1,
       p.fullName,
+      grupo.length > 1 ? "Pareja" : "Individual",
+      companero?.fullName ?? "",
       p.position === 1 ? "Titular" : "Acompañante",
       p.email ?? "",
       p.phone ?? "",

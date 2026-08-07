@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { AdminParticipant } from "@/server/queries/admin.queries";
 import { getCategoryLabel } from "@/lib/constants";
 import { formatShortDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -11,6 +12,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
+
+/**
+ * Marca cada participante con el tamaño de su inscripción y su lugar dentro
+ * de ella. La consulta ya los devuelve ordenados por fecha, código y
+ * posición, así que los dos de una pareja llegan siempre pegados: aquí solo
+ * hace falta saber cuántos comparten inscripción para pintarlos como bloque.
+ */
+export function agruparParejas(participants: AdminParticipant[]) {
+  const porInscripcion = new Map<string, number>();
+  for (const p of participants) {
+    porInscripcion.set(
+      p.registrationId,
+      (porInscripcion.get(p.registrationId) ?? 0) + 1
+    );
+  }
+  return participants.map((p, i) => {
+    const total = porInscripcion.get(p.registrationId) ?? 1;
+    const anterior = participants[i - 1];
+    const siguiente = participants[i + 1];
+    return {
+      p,
+      esPareja: total > 1,
+      total,
+      primeroDelGrupo: anterior?.registrationId !== p.registrationId,
+      ultimoDelGrupo: siguiente?.registrationId !== p.registrationId,
+    };
+  });
+}
 
 export function ParticipantTable({
   participants,
@@ -25,6 +54,8 @@ export function ParticipantTable({
     );
   }
 
+  const filas = agruparParejas(participants);
+
   return (
     <div className="overflow-x-auto rounded-lg border bg-white">
       <Table>
@@ -32,30 +63,66 @@ export function ParticipantTable({
           <TableRow>
             <TableHead className="w-10 text-right">#</TableHead>
             <TableHead>Participante</TableHead>
+            <TableHead>Inscripción</TableHead>
             <TableHead>Contacto</TableHead>
             <TableHead>Empresa</TableHead>
             <TableHead>Evento</TableHead>
             <TableHead>Fecha</TableHead>
             <TableHead>Categoría</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead>Inscripción</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {participants.map((p, i) => {
+          {filas.map(({ p, esPareja, total, primeroDelGrupo, ultimoDelGrupo }, i) => {
             const r = p.registration;
             return (
-              <TableRow key={p.id}>
-                <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
+              <TableRow
+                key={p.id}
+                className={cn(
+                  // Los dos de una pareja se leen como un bloque: fondo tenue
+                  // y sin línea entre ellos, con una barra a la izquierda que
+                  // los abraza. Quien juega solo queda en blanco.
+                  esPareja && "bg-secondary/40",
+                  esPareja && !ultimoDelGrupo && "border-b-0"
+                )}
+              >
+                <TableCell
+                  className={cn(
+                    "relative text-right text-xs text-muted-foreground tabular-nums",
+                    esPareja &&
+                      "before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-primary",
+                    esPareja && primeroDelGrupo && "before:top-1.5 before:rounded-t",
+                    esPareja && ultimoDelGrupo && "before:bottom-1.5 before:rounded-b"
+                  )}
+                >
                   {i + 1}
                 </TableCell>
-                <TableCell className="font-medium">
-                  {p.fullName}
-                  {/* Jugador 2 de una pareja: se marca para que al armar los
-                      grupos se vea de un vistazo quién viene con quién. */}
-                  {p.position > 1 && (
-                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                      (acompañante)
+                <TableCell className="font-medium">{p.fullName}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {primeroDelGrupo ? (
+                    <>
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
+                          esPareja
+                            ? "bg-primary/10 text-primary"
+                            : "bg-secondary text-muted-foreground"
+                        )}
+                      >
+                        {esPareja ? `Pareja (${total})` : "Individual"}
+                      </span>
+                      <Link
+                        href={`/admin/inscripciones/${r.id}`}
+                        className="mt-1 block font-mono text-xs text-primary underline-offset-2 hover:underline"
+                      >
+                        {r.code}
+                      </Link>
+                    </>
+                  ) : (
+                    // La segunda fila no repite el chip ni el código: ya se
+                    // ven en la primera del bloque.
+                    <span className="text-xs text-muted-foreground">
+                      ↳ con {participants[i - 1]?.fullName}
                     </span>
                   )}
                 </TableCell>
@@ -91,14 +158,6 @@ export function ParticipantTable({
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={r.status} />
-                </TableCell>
-                <TableCell>
-                  <Link
-                    href={`/admin/inscripciones/${r.id}`}
-                    className="font-mono text-xs text-primary underline-offset-2 hover:underline"
-                  >
-                    {r.code}
-                  </Link>
                 </TableCell>
               </TableRow>
             );

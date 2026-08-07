@@ -33,10 +33,23 @@ export default async function AdminParticipantesPage({
 
   // El total que importa para logística es el de jugadores que sí van, así
   // que las canceladas se cuentan aparte en vez de inflar el número.
-  const activos = participants.filter(
+  const vigentes = participants.filter(
     (p) => p.registration.status !== "CANCELADA"
-  ).length;
+  );
+  const activos = vigentes.length;
   const cancelados = participants.length - activos;
+
+  // Parejas e individuales sobre los que sí van: es lo que hace falta para
+  // saber cuántos cupos quedan por emparejar.
+  const porInscripcion = new Map<string, number>();
+  for (const p of vigentes) {
+    porInscripcion.set(
+      p.registrationId,
+      (porInscripcion.get(p.registrationId) ?? 0) + 1
+    );
+  }
+  const parejas = [...porInscripcion.values()].filter((n) => n > 1).length;
+  const individuales = [...porInscripcion.values()].filter((n) => n === 1).length;
 
   function filterHref(params: { estado?: string; evento?: string }) {
     const search = new URLSearchParams();
@@ -95,16 +108,21 @@ export default async function AdminParticipantesPage({
         <TotalCard
           label="Jugadores que van"
           value={activos}
-          hint="Sin contar inscripciones canceladas"
-        />
-        <TotalCard
-          label="En listado"
-          value={participants.length}
           hint={
             cancelados > 0
-              ? `Incluye ${cancelados} de inscripciones canceladas`
-              : "Con los filtros aplicados"
+              ? `${participants.length} en listado, ${cancelados} de canceladas`
+              : "Sin contar inscripciones canceladas"
           }
+        />
+        <TotalCard
+          label="Parejas completas"
+          value={parejas}
+          hint="Inscripciones con los dos jugadores"
+        />
+        <TotalCard
+          label="Jugadores solos"
+          value={individuales}
+          hint="Les falta compañero por definir"
         />
       </div>
 
