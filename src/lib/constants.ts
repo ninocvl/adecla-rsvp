@@ -57,6 +57,7 @@ export const PADEL_CATEGORIES = [
   "FEMENINO_B",
   "FEMENINO_C",
   "FEMENINO_D",
+  "MASCULINO_A",
   "MASCULINO_B",
   "MASCULINO_C",
 ] as const;
@@ -65,6 +66,7 @@ export const PADEL_CATEGORY_LABELS: Record<string, string> = {
   FEMENINO_B: "Femenina B",
   FEMENINO_C: "Femenina C",
   FEMENINO_D: "Femenina D",
+  MASCULINO_A: "Masculino A",
   MASCULINO_B: "Masculino B",
   MASCULINO_C: "Masculino C",
 };
