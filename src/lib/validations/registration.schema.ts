@@ -1,4 +1,11 @@
 import { z } from "zod";
+// Las listas de pádel viven en constants.ts y aquí solo se reusan. Antes
+// estaban duplicadas y se desincronizaron: agregar "Masculino A" al
+// desplegable dejaba pasar una opción que este validador rechazaba.
+import {
+  PADEL_CATEGORIES as PADEL_CATEGORIES_BASE,
+  PADEL_CLUBS as PADEL_CLUBS_BASE,
+} from "@/lib/constants";
 
 export const AFFILIATIONS = [
   "CONSTRUCTOR",
@@ -6,15 +13,9 @@ export const AFFILIATIONS = [
   "DESARROLLADOR",
 ] as const;
 
-export const PADEL_CATEGORIES = [
-  "FEMENINO_B",
-  "FEMENINO_C",
-  "FEMENINO_D",
-  "MASCULINO_B",
-  "MASCULINO_C",
-] as const;
+export const PADEL_CATEGORIES = PADEL_CATEGORIES_BASE;
 
-export const PADEL_CLUBS = ["LA_PENA", "VIEJEVOS"] as const;
+export const PADEL_CLUBS = PADEL_CLUBS_BASE;
 
 // Con qué llega el jugador de pádel a inscribirse — decide qué campos
 // aplican y qué tarifa paga. Nunca dos a la vez.
