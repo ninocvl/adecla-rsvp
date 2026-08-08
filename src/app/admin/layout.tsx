@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { puedeVerPanel } from "@/lib/permissions";
 import { Navbar } from "@/components/shared/navbar";
 
 export default async function AdminLayout({
@@ -12,7 +13,7 @@ export default async function AdminLayout({
   if (!session?.user) {
     redirect("/login?callbackUrl=/admin");
   }
-  if (session.user.role !== "ADMIN") {
+  if (!puedeVerPanel(session.user.role)) {
     redirect("/");
   }
 

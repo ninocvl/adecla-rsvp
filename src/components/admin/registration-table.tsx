@@ -12,11 +12,15 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StatusChangeDialog } from "./status-change-dialog";
+import { RegistrationDangerActions } from "./registration-danger-actions";
 
 export function RegistrationTable({
   registrations,
+  editable = true,
 }: {
   registrations: AdminRegistration[];
+  /** El rol LECTOR ve la tabla pero sin ninguna acción que mute datos. */
+  editable?: boolean;
 }) {
   if (registrations.length === 0) {
     return (
@@ -83,11 +87,21 @@ export function RegistrationTable({
                   >
                     Ver
                   </Button>
-                  <StatusChangeDialog
-                    registrationId={r.id}
-                    code={r.code}
-                    currentStatus={r.status}
-                  />
+                  {editable && (
+                    <>
+                      <StatusChangeDialog
+                        registrationId={r.id}
+                        code={r.code}
+                        currentStatus={r.status}
+                      />
+                      <RegistrationDangerActions
+                        registrationId={r.id}
+                        code={r.code}
+                        archivada={!!r.archivedAt}
+                        compacto
+                      />
+                    </>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"

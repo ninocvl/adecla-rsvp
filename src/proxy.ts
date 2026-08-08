@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/auth.config";
+import { puedeVerPanel } from "@/lib/permissions";
 
 const { auth } = NextAuth(authConfig);
 
@@ -18,7 +19,9 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (role !== "ADMIN") {
+  // LECTOR también entra: el panel es de consulta para él. Lo que no
+  // puede hacer se bloquea en cada acción, no aquí.
+  if (!puedeVerPanel(role)) {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 

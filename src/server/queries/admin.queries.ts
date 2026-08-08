@@ -20,13 +20,19 @@ export async function getAdminMetrics() {
     padelRegistrants,
   ] = await Promise.all([
     prisma.event.count({ where: { status: "PUBLISHED" } }),
+    // Lo archivado no cuenta en ninguna métrica: para el panel es como si
+    // no existiera, aunque la fila siga en la base.
     prisma.participant.count({
-      where: { registration: { status: { not: "CANCELADA" } } },
+      where: {
+        registration: { status: { not: "CANCELADA" }, archivedAt: null },
+      },
     }),
     prisma.registration.count({
-      where: { status: { in: PENDING_STATUSES } },
+      where: { status: { in: PENDING_STATUSES }, archivedAt: null },
     }),
-    prisma.registration.count({ where: { status: "CONFIRMADA" } }),
+    prisma.registration.count({
+      where: { status: "CONFIRMADA", archivedAt: null },
+    }),
     prisma.company.count(),
     prisma.company.count({ where: { wantsToAffiliate: true } }),
     prisma.eventDate.findMany({
@@ -37,13 +43,21 @@ export async function getAdminMetrics() {
     // Total de jugadores que van a pádel: suma de quantity, no cantidad de
     // inscripciones (cada una puede traer 1 o 2 jugadores).
     prisma.registration.aggregate({
-      where: { event: { slug: "padel" }, status: { not: "CANCELADA" } },
+      where: {
+        event: { slug: "padel" },
+        status: { not: "CANCELADA" },
+        archivedAt: null,
+      },
       _sum: { quantity: true },
     }),
     // Empresas/personas distintas inscritas en pádel: una misma empresa
     // (mismo RNC) que se inscribe más de una vez no debe contarse dos veces.
     prisma.registration.findMany({
-      where: { event: { slug: "padel" }, status: { not: "CANCELADA" } },
+      where: {
+        event: { slug: "padel" },
+        status: { not: "CANCELADA" },
+        archivedAt: null,
+      },
       select: { companyId: true },
       distinct: ["companyId"],
     }),
@@ -74,6 +88,8 @@ export async function getAdminMetrics() {
 export interface AdminRegistrationFilters {
   status?: RegistrationStatus;
   eventDateId?: string;
+  /** Por defecto el panel solo muestra las vigentes. */
+  archivadas?: boolean;
 }
 
 export async function getAdminRegistrations(
@@ -83,6 +99,9 @@ export async function getAdminRegistrations(
     where: {
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
+      // Archivar saca la inscripción del panel sin borrarla: solo aparece
+      // cuando se pide expresamente el archivo.
+      archivedAt: filters.archivadas ? { not: null } : null,
     },
     include: {
       company: { select: { legalName: true, rnc: true, email: true } },
@@ -131,6 +150,7 @@ export type AdminCompany = Awaited<ReturnType<typeof getAdminCompanies>>[number]
 export interface AdminParticipantFilters {
   status?: RegistrationStatus;
   eventDateId?: string;
+  archivadas?: boolean;
 }
 
 /**
@@ -146,6 +166,7 @@ export async function getAdminParticipants(
       registration: {
         ...(filters.status ? { status: filters.status } : {}),
         ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
+        archivedAt: filters.archivadas ? { not: null } : null,
       },
     },
     include: {
