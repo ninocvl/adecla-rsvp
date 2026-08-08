@@ -104,7 +104,7 @@ async function main() {
       slug: "padel",
       name: "Torneo de Pádel",
       description:
-        "Torneo de pádel abierto al público en Los Establos Sports Complex, Cap Cana. Se juega en parejas del mismo género y categoría (Femenina B/C/D, Masculino B/C).",
+        "Torneo de pádel abierto al público en Los Establos Sports Complex, Cap Cana. Se juega en parejas del mismo género y categoría (Femenina B/C/D, Masculino A/B/C).",
       codePrefix: "PADEL",
       status: "PUBLISHED",
       playersPerTeam: 2,
