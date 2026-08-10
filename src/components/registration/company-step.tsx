@@ -379,18 +379,10 @@ export function CompanyStep({
           {/* El beneficio de pareja gratis es uno por empresa afiliada, así
               que se pide con el cupón en vez de aplicarse solo por ser
               afiliado. Opcional: sin cupón se pagan los dos jugadores.
-              Cuando la empresa ya lo gastó el campo desaparece: pedirle un
-              cupón que el servidor va a rechazar solo la haría perder el
-              viaje. Hace falta haber elegido la empresa para saberlo. */}
-          {padelParticipantType === "AFILIADO" &&
-            selectedAffiliate?.couponUsed && (
-              <p className="rounded-lg border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                Tu empresa ya usó su pareja gratis en una inscripción
-                anterior. Es una por empresa afiliada, así que esta vez los
-                dos jugadores pagan.
-              </p>
-            )}
-
+              Cuando la empresa ya lo gastó no se muestra nada: el paso queda
+              igual que para cualquiera que no tenga cupón, sin anunciarle un
+              beneficio que ya no aplica. Hace falta haber elegido la empresa
+              para saberlo. */}
           {padelParticipantType === "AFILIADO" &&
             selectedAffiliate &&
             !selectedAffiliate.couponUsed && (
