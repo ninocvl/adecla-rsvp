@@ -17,6 +17,7 @@ import {
   PADEL_CLUB_LABELS,
 } from "@/lib/constants";
 import { findMatchingSponsor } from "@/lib/sponsors";
+import { buscarEmpresas } from "@/lib/buscar-empresa";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,11 +161,7 @@ export function CompanyStep({
   const sponsorRnc = watch("sponsorRnc") ?? "";
 
   const filteredAffiliates = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return affiliates.slice(0, 20);
-    return affiliates
-      .filter((a) => a.name.toLowerCase().includes(q))
-      .slice(0, 20);
+    return buscarEmpresas(affiliates, search);
   }, [affiliates, search]);
 
   const sponsorMatch = useMemo(() => {
