@@ -14,7 +14,6 @@ import {
   PADEL_CLUB_LABELS,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
-import { CUPON_PAREJA_GRATIS, esCodigoCuponValido } from "@/lib/coupons";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
@@ -94,14 +93,17 @@ export function RegistrationWizard({
   const isSponsorGuest = company?.isSponsorGuest === true;
   const padelClub = isPadelEvent ? company?.padelClub : undefined;
   // Beneficio de membresía: la empresa afiliada no paga por el acompañante,
-  // pero es UNO por empresa, así que hace falta pedirlo con el cupón. Aquí
-  // solo se comprueba que el código sea el correcto: si esa empresa ya lo
-  // usó únicamente lo sabe el servidor, que rechaza el envío con el motivo.
+  // pero es UNO por empresa, así que hace falta pedirlo con el cupón.
+  //
+  // Aquí solo se mira si escribieron algo, no si el código es el correcto:
+  // comprobarlo en el navegador metería el cupón en el JavaScript que se
+  // descarga, y entonces cualquiera lo leería desde las herramientas del
+  // navegador. Quien escriba un código equivocado ve el descuento en la
+  // previsualización y el servidor le explica al enviar por qué no aplica.
   const freeCompanion =
     isPadelEvent &&
     company?.padelParticipantType === "AFILIADO" &&
-    !!company?.couponCode &&
-    esCodigoCuponValido(company.couponCode);
+    !!company?.couponCode?.trim();
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
@@ -452,11 +454,8 @@ export function RegistrationWizard({
                       )}
                       {freeCompanion && participants.length === 2 && (
                         <p className="text-sm text-primary">
-                          Acompañante gratis con el cupón{" "}
-                          <span className="font-mono">
-                            {CUPON_PAREJA_GRATIS}
-                          </span>
-                          . Lo validamos al generar la inscripción.
+                          Acompañante gratis con tu cupón. Lo validamos al
+                          generar la inscripción.
                         </p>
                       )}
                     </div>

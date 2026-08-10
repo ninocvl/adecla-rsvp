@@ -7,9 +7,12 @@
  * sino quién lo canjeó: el servidor solo lo acepta si la empresa que se está
  * inscribiendo todavía no lo usó (ver el modelo CouponRedemption).
  *
- * No es un secreto: quien lo canjea ya tuvo que elegir su empresa del listado
- * real de socios. Sirve para que el beneficio se pida a propósito y quede
- * registrado, no para autenticar.
+ * IMPORTANTE: este archivo es solo de servidor. Importarlo desde un
+ * componente "use client" mete el código en el JavaScript que descarga
+ * cualquier visitante, y entonces se lee desde las herramientas del
+ * navegador sin que ADECLA se lo haya dado a nadie. El formulario por eso
+ * no comprueba el código: solo mira si escribieron algo y deja que el
+ * servidor decida.
  */
 
 // Sin O/0 ni I/1/L, que se dicta por teléfono y se copia a mano. Cambiarlo

@@ -20,7 +20,6 @@ import { findMatchingSponsor } from "@/lib/sponsors";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CUPON_PAREJA_GRATIS } from "@/lib/coupons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -395,7 +394,7 @@ export function CompanyStep({
               </Label>
               <Input
                 id="couponCode"
-                placeholder={CUPON_PAREJA_GRATIS}
+                placeholder="Escribe el código que te dimos"
                 autoComplete="off"
                 className="font-mono uppercase"
                 {...register("couponCode")}
