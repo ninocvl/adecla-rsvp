@@ -11,9 +11,15 @@ export async function getActiveAffiliates() {
       contactName: true,
       phone: true,
       email: true,
+      // Existe la fila = esta empresa ya gastó su pareja gratis. Se manda al
+      // formulario para no ofrecerle un cupón que el servidor va a rechazar.
+      couponRedemption: { select: { id: true } },
     },
   });
-  return affiliates;
+  return affiliates.map(({ couponRedemption, ...affiliate }) => ({
+    ...affiliate,
+    couponUsed: couponRedemption !== null,
+  }));
 }
 
 export type ActiveAffiliate = Awaited<

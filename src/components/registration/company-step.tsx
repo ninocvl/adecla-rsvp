@@ -219,6 +219,7 @@ export function CompanyStep({
       setSelectedAffiliate(null);
       setSearch("");
       setValue("affiliateId", undefined);
+      setValue("couponCode", "");
     }
     if (value !== "CLUB") setValue("padelClub", undefined);
     if (value !== "PATROCINADOR") {
@@ -247,6 +248,10 @@ export function CompanyStep({
     setSelectedAffiliate(affiliate);
     setSearch(affiliate.name);
     setComboboxOpen(false);
+    // El cupón que se hubiera escrito era para la empresa anterior: si esta
+    // ya lo gastó el campo ni siquiera se muestra, y el valor viejo viajaría
+    // escondido hasta el envío.
+    setValue("couponCode", "");
     setValue("affiliateId", affiliate.id, { shouldValidate: true });
     setValue("legalName", affiliate.name);
     if (affiliate.affiliationType) {
@@ -373,8 +378,22 @@ export function CompanyStep({
 
           {/* El beneficio de pareja gratis es uno por empresa afiliada, así
               que se pide con el cupón en vez de aplicarse solo por ser
-              afiliado. Opcional: sin cupón se pagan los dos jugadores. */}
-          {padelParticipantType === "AFILIADO" && (
+              afiliado. Opcional: sin cupón se pagan los dos jugadores.
+              Cuando la empresa ya lo gastó el campo desaparece: pedirle un
+              cupón que el servidor va a rechazar solo la haría perder el
+              viaje. Hace falta haber elegido la empresa para saberlo. */}
+          {padelParticipantType === "AFILIADO" &&
+            selectedAffiliate?.couponUsed && (
+              <p className="rounded-lg border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                Tu empresa ya usó su pareja gratis en una inscripción
+                anterior. Es una por empresa afiliada, así que esta vez los
+                dos jugadores pagan.
+              </p>
+            )}
+
+          {padelParticipantType === "AFILIADO" &&
+            selectedAffiliate &&
+            !selectedAffiliate.couponUsed && (
             <div className="space-y-2">
               <Label htmlFor="couponCode">
                 Cupón de pareja gratis{" "}
