@@ -12,7 +12,7 @@ import {
   type CreateRegistrationInput,
 } from "@/lib/validations/registration.schema";
 import { findMatchingSponsor } from "@/lib/sponsors";
-import { normalizarCodigoCupon } from "@/lib/coupons";
+import { CUPON_PAREJA_GRATIS, esCodigoCuponValido } from "@/lib/coupons";
 import type { PadelCategory, PadelClub } from "@/generated/prisma/enums";
 import {
   getCategoryLabel,
@@ -96,10 +96,11 @@ export async function createRegistrationAction(
   let unitPriceUsd: number;
   // Beneficio de membresía, solo pádel: la empresa afiliada no paga por el
   // segundo jugador. Es UNO por empresa, no uno por inscripción, así que se
-  // canjea con el cupón de la empresa (ver src/lib/coupons.ts). No aplica al
+  // canjea con el cupón (uno solo para todas, ver src/lib/coupons.ts) y cada
+  // empresa lo puede usar una vez. No aplica al
   // patrocinador (ya no paga nada) ni al club (ya tiene su propio descuento).
   let freeCompanion = false;
-  let cuponId: string | undefined;
+  let cuponAfiliadaId: string | undefined;
   let cuponCodigo: string | undefined;
 
   if (isPadel) {
@@ -144,29 +145,23 @@ export async function createRegistrationAction(
       companyAffiliationType = affiliate.affiliationType ?? undefined;
       unitPriceUsd = PADEL_PRICE_USD;
 
-      // La pareja gratis es UNA por empresa afiliada, no una por inscripción,
-      // así que no basta con ser afiliado: hay que canjear el cupón de la
-      // empresa, y solo sirve una vez. Se valida contra la base porque el
-      // cliente no puede saber si ya se usó.
+      // La pareja gratis es UNA por empresa afiliada, no una por inscripción.
+      // El código es el mismo para todas, así que lo que se verifica contra
+      // la base no es el código sino si esta empresa ya lo canjeó, algo que
+      // el cliente no puede saber.
       if (data.couponCode) {
-        const codigo = normalizarCodigoCupon(data.couponCode);
-        const cupon = await prisma.affiliateCoupon.findUnique({
-          where: { code: codigo },
-          select: { id: true, code: true, affiliateId: true, usedAt: true },
+        if (!esCodigoCuponValido(data.couponCode)) {
+          return { ok: false, error: "Ese cupón no es válido." };
+        }
+        const yaCanjeado = await prisma.couponRedemption.findUnique({
+          where: { affiliateId: affiliate.id },
+          select: { id: true },
         });
-        if (!cupon) {
-          return { ok: false, error: "Ese cupón no existe." };
-        }
-        if (cupon.affiliateId !== affiliate.id) {
+        if (yaCanjeado) {
           return {
             ok: false,
-            error: "Ese cupón pertenece a otra empresa afiliada.",
-          };
-        }
-        if (cupon.usedAt) {
-          return {
-            ok: false,
-            error: "Ese cupón ya se usó. Es uno por empresa afiliada.",
+            error:
+              "Tu empresa ya usó el cupón. Es una pareja gratis por empresa afiliada.",
           };
         }
         if (quantity !== 2) {
@@ -186,8 +181,8 @@ export async function createRegistrationAction(
               "El cupón aplica a una sola fecha. Inscribe una y usa el cupón ahí.",
           };
         }
-        cuponId = cupon.id;
-        cuponCodigo = cupon.code;
+        cuponAfiliadaId = affiliate.id;
+        cuponCodigo = CUPON_PAREJA_GRATIS;
         freeCompanion = true;
       }
     } else {
@@ -417,17 +412,28 @@ export async function createRegistrationAction(
           });
         }
 
-        // Canje del cupón dentro de la misma transacción que crea la
-        // inscripción: si algo falla después, el cupón no queda quemado.
-        // El update exige usedAt null, así que dos envíos simultáneos con el
-        // mismo cupón no pueden canjearlo los dos — el segundo no encuentra
-        // fila que actualizar y la transacción se cae.
-        if (cuponId) {
-          const canjeados = await tx.affiliateCoupon.updateMany({
-            where: { id: cuponId, usedAt: null },
-            data: { usedAt: new Date(), usedByRegistrationId: registration.id },
-          });
-          if (canjeados.count === 0) throw new CouponAlreadyUsedError();
+        // Canje dentro de la misma transacción que crea la inscripción: si
+        // algo falla después, la empresa no pierde su pareja gratis. El
+        // único por afiliada es lo que resuelve dos envíos simultáneos: el
+        // segundo choca contra el índice y su transacción se cae entera.
+        if (cuponAfiliadaId) {
+          try {
+            await tx.couponRedemption.create({
+              data: {
+                code: CUPON_PAREJA_GRATIS,
+                affiliateId: cuponAfiliadaId,
+                registrationId: registration.id,
+              },
+            });
+          } catch (e) {
+            // P2002 = choque contra el único por afiliada, o sea que otra
+            // inscripción de la misma empresa ganó la carrera. Cualquier otro
+            // error sube tal cual: no es un cupón repetido y merece su log.
+            if ((e as { code?: string }).code === "P2002") {
+              throw new CouponAlreadyUsedError();
+            }
+            throw e;
+          }
         }
 
         registrations.push({ registrationId: registration.id, code, snapshot });
@@ -494,7 +500,8 @@ export async function createRegistrationAction(
     if (error instanceof CouponAlreadyUsedError) {
       return {
         ok: false,
-        error: "Ese cupón acaba de usarse. Es uno por empresa afiliada.",
+        error:
+          "Tu empresa acaba de usar el cupón en otra inscripción. Es una pareja gratis por empresa afiliada.",
       };
     }
     console.error("Error creando inscripción:", error);

@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { emailService } from "@/server/services/email";
 import { STATUS_LABELS } from "@/lib/constants";
 import { puedeEditar } from "@/lib/permissions";
-import { generarCodigoCupon } from "@/lib/coupons";
 
 const changeStatusSchema = z.object({
   registrationId: z.string().min(1),
@@ -153,10 +152,9 @@ async function liberarCupon(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   registrationId: string
 ) {
-  await tx.affiliateCoupon.updateMany({
-    where: { usedByRegistrationId: registrationId },
-    data: { usedAt: null, usedByRegistrationId: null },
-  });
+  // Borrar el canje le devuelve la pareja gratis a la empresa: el único por
+  // afiliada vuelve a quedar libre.
+  await tx.couponRedemption.deleteMany({ where: { registrationId } });
 }
 
 function revalidarPanel() {
@@ -314,50 +312,5 @@ export async function deleteRegistrationAction(
     }
     console.error("Error borrando inscripción:", error);
     return { ok: false, error: "No se pudo borrar la inscripción." };
-  }
-}
-
-/**
- * Crea el cupón de pareja gratis para las empresas afiliadas que aún no
- * tienen uno. Es idempotente: se puede volver a ejecutar cuando entren socios
- * nuevos y solo genera los que faltan, sin tocar los ya repartidos.
- */
-export async function generarCuponesFaltantesAction(): Promise<
-  { ok: true; creados: number } | { ok: false; error: string }
-> {
-  const session = await auth();
-  if (!puedeEditar(session?.user?.role)) {
-    return { ok: false, error: "Solo el administrador puede generar cupones." };
-  }
-
-  try {
-    const sinCupon = await prisma.affiliate.findMany({
-      where: { coupon: null },
-      select: { id: true },
-    });
-
-    let creados = 0;
-    for (const afiliado of sinCupon) {
-      // El código es aleatorio, así que puede chocar con uno existente.
-      // Se reintenta unas cuantas veces antes de rendirse.
-      for (let intento = 0; intento < 8; intento++) {
-        try {
-          await prisma.affiliateCoupon.create({
-            data: { code: generarCodigoCupon(), affiliateId: afiliado.id },
-          });
-          creados++;
-          break;
-        } catch (e) {
-          const code = (e as { code?: string }).code;
-          if (code !== "P2002") throw e; // P2002 = choque de único
-        }
-      }
-    }
-
-    revalidatePath("/admin/cupones");
-    return { ok: true, creados };
-  } catch (error) {
-    console.error("Error generando cupones:", error);
-    return { ok: false, error: "No se pudieron generar los cupones." };
   }
 }

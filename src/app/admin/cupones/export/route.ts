@@ -1,10 +1,12 @@
 import { getAdminCoupons } from "@/server/queries/admin.queries";
+import { CUPON_PAREJA_GRATIS } from "@/lib/coupons";
 import { formatEventDate } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
 import { toXlsxBuffer } from "@/lib/xlsx";
 
-// Pensado para repartir: cada fila trae la empresa, su código y a quién
-// escribirle, así se puede armar el correo o el WhatsApp desde la hoja.
+// Pensado para repartir: cada fila trae la empresa, a quién escribirle y si
+// ya usó el cupón, así se arma el correo o el WhatsApp desde la hoja sin
+// mandárselo dos veces a quien ya lo gastó.
 const HEADERS = [
   "Empresa afiliada",
   "Cupón",
@@ -20,16 +22,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format");
 
-  const { cupones } = await getAdminCoupons();
-  const rows = cupones.map((c) => [
-    c.affiliate.name,
-    c.code,
-    c.affiliate.contactName ?? "",
-    c.affiliate.email ?? "",
-    c.affiliate.phone ?? "",
-    c.usedAt ? "Canjeado" : "Sin usar",
-    c.usedByRegistration?.code ?? "",
-    c.usedAt ? formatEventDate(c.usedAt) : "",
+  const { afiliadas } = await getAdminCoupons();
+  const rows = afiliadas.map((a) => [
+    a.name,
+    CUPON_PAREJA_GRATIS,
+    a.contactName ?? "",
+    a.email ?? "",
+    a.phone ?? "",
+    a.couponRedemption ? "Ya lo usó" : "Disponible",
+    a.couponRedemption?.registration.code ?? "",
+    a.couponRedemption ? formatEventDate(a.couponRedemption.createdAt) : "",
   ]);
 
   if (format === "xlsx") {

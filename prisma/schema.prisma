@@ -108,30 +108,30 @@ model Affiliate {
   email           String?
   status          String?
   companies       Company[]
-  // Cupón de pareja gratis: uno por empresa afiliada, de un solo uso.
-  coupon          AffiliateCoupon?
+  // Canje de la pareja gratis. Existe la fila = esta empresa ya la usó.
+  couponRedemption CouponRedemption?
   createdAt       DateTime         @default(now())
 }
 
 /**
- * Cupón de "pareja gratis" del beneficio de membresía: cada empresa afiliada
- * tiene el suyo y solo se puede canjear una vez. Vive en su propia tabla y no
- * como un booleano en Affiliate porque hay que saber también con qué código
- * se canjeó, cuándo y en qué inscripción.
+ * Canje de la "pareja gratis" del beneficio de membresía. El código es uno
+ * solo para todas las afiliadas (ver CUPON_PAREJA_GRATIS en lib/coupons.ts),
+ * así que lo que hay que controlar no es el código sino quién ya lo usó: el
+ * único por afiliada es lo que limita el beneficio a una pareja por empresa.
+ *
+ * Guardamos también el código tal como se canjeó, porque si algún año se
+ * cambia, las inscripciones viejas siguen diciendo con qué entraron.
  */
-model AffiliateCoupon {
-  id                   String        @id @default(cuid())
-  code                 String        @unique
-  affiliateId          String        @unique
-  affiliate            Affiliate     @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-  // Nulo mientras no se canjea. Si la inscripción que lo usó se archiva o se
-  // borra, se vuelve a poner en nulo para devolverle el beneficio a la empresa.
-  usedAt               DateTime?
-  usedByRegistrationId String?       @unique
-  usedByRegistration   Registration? @relation(fields: [usedByRegistrationId], references: [id], onDelete: SetNull)
-  createdAt            DateTime      @default(now())
-
-  @@index([usedAt])
+model CouponRedemption {
+  id             String       @id @default(cuid())
+  code           String
+  affiliateId    String       @unique
+  affiliate      Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  // Si se borra la inscripción, el canje se va con ella y la empresa
+  // recupera su pareja gratis. Archivar la libera igual, pero desde el código.
+  registrationId String       @unique
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
 }
 
 model Event {
@@ -214,7 +214,7 @@ model Registration {
   participants Participant[]
   proforma     Proforma?
   history      StatusHistory[]
-  couponUsed   AffiliateCoupon?
+  couponUsed   CouponRedemption?
   // Archivada: sale del panel y libera el cupo, pero la fila se conserva por
   // si hay que auditar un pago o recuperarla. Es la vía reversible; el
   // borrado real elimina la fila y no deja rastro.

@@ -14,6 +14,7 @@ import {
   PADEL_CLUB_LABELS,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
+import { CUPON_PAREJA_GRATIS, esCodigoCuponValido } from "@/lib/coupons";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
@@ -93,14 +94,14 @@ export function RegistrationWizard({
   const isSponsorGuest = company?.isSponsorGuest === true;
   const padelClub = isPadelEvent ? company?.padelClub : undefined;
   // Beneficio de membresía: la empresa afiliada no paga por el acompañante,
-  // pero es UNO por empresa, así que hace falta canjear su cupón — no basta
-  // con ser afiliado. Aquí solo se previsualiza cuando escribieron un código;
-  // si no vale, el servidor rechaza el envío con el motivo, así que nadie
-  // termina con una proforma mal calculada.
+  // pero es UNO por empresa, así que hace falta pedirlo con el cupón. Aquí
+  // solo se comprueba que el código sea el correcto: si esa empresa ya lo
+  // usó únicamente lo sabe el servidor, que rechaza el envío con el motivo.
   const freeCompanion =
     isPadelEvent &&
     company?.padelParticipantType === "AFILIADO" &&
-    !!company?.couponCode?.trim();
+    !!company?.couponCode &&
+    esCodigoCuponValido(company.couponCode);
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
@@ -453,7 +454,7 @@ export function RegistrationWizard({
                         <p className="text-sm text-primary">
                           Acompañante gratis con el cupón{" "}
                           <span className="font-mono">
-                            {company.couponCode?.trim().toUpperCase()}
+                            {CUPON_PAREJA_GRATIS}
                           </span>
                           . Lo validamos al generar la inscripción.
                         </p>

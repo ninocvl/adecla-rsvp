@@ -195,24 +195,35 @@ export type AdminParticipant = Awaited<
  * inscripción donde se usó. Ordena primero los disponibles: es la lista que
  * ADECLA usa para repartirlos.
  */
+/**
+ * El cupón es uno solo para todas (CUPON_PAREJA_GRATIS), así que la lista
+ * útil es la de afiliadas: quién ya lo canjeó y quién todavía lo tiene
+ * disponible. Se listan todas, no solo las que lo usaron, porque la pregunta
+ * del panel suele ser "¿esta empresa ya lo gastó?".
+ */
 export async function getAdminCoupons() {
-  const [cupones, afiliadosSinCupon] = await Promise.all([
-    prisma.affiliateCoupon.findMany({
-      include: {
-        affiliate: {
-          select: { name: true, email: true, contactName: true, phone: true },
-        },
-        usedByRegistration: {
-          select: { code: true, company: { select: { legalName: true } } },
+  const afiliadas = await prisma.affiliate.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      contactName: true,
+      phone: true,
+      couponRedemption: {
+        select: {
+          createdAt: true,
+          registration: {
+            select: { code: true, company: { select: { legalName: true } } },
+          },
         },
       },
-      orderBy: [{ usedAt: "asc" }, { affiliate: { name: "asc" } }],
-    }),
-    prisma.affiliate.count({ where: { coupon: null } }),
-  ]);
-  return { cupones, afiliadosSinCupon };
+    },
+    orderBy: { name: "asc" },
+  });
+  const canjeados = afiliadas.filter((a) => a.couponRedemption).length;
+  return { afiliadas, canjeados, disponibles: afiliadas.length - canjeados };
 }
 
-export type AdminCoupon = Awaited<
+export type AdminCouponRow = Awaited<
   ReturnType<typeof getAdminCoupons>
->["cupones"][number];
+>["afiliadas"][number];
