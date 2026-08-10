@@ -12,6 +12,7 @@ import {
   type CreateRegistrationInput,
 } from "@/lib/validations/registration.schema";
 import { findMatchingSponsor } from "@/lib/sponsors";
+import { normalizarCodigoCupon } from "@/lib/coupons";
 import type { PadelCategory, PadelClub } from "@/generated/prisma/enums";
 import {
   getCategoryLabel,
@@ -27,6 +28,7 @@ export type CreateRegistrationResult =
   | { ok: false; error: string };
 
 class CapacityError extends Error {}
+class CouponAlreadyUsedError extends Error {}
 
 export async function createRegistrationAction(
   input: CreateRegistrationInput
@@ -92,10 +94,13 @@ export async function createRegistrationAction(
   let affiliateId: string | undefined;
 
   let unitPriceUsd: number;
-  // Beneficio de membresía, solo pádel: un afiliado de ADECLA que se
-  // inscribe con acompañante no paga por ese segundo jugador. No aplica al
+  // Beneficio de membresía, solo pádel: la empresa afiliada no paga por el
+  // segundo jugador. Es UNO por empresa, no uno por inscripción, así que se
+  // canjea con el cupón de la empresa (ver src/lib/coupons.ts). No aplica al
   // patrocinador (ya no paga nada) ni al club (ya tiene su propio descuento).
   let freeCompanion = false;
+  let cuponId: string | undefined;
+  let cuponCodigo: string | undefined;
 
   if (isPadel) {
     if (!data.padelCategory) {
@@ -138,7 +143,53 @@ export async function createRegistrationAction(
       companyAffiliateId = affiliate.id;
       companyAffiliationType = affiliate.affiliationType ?? undefined;
       unitPriceUsd = PADEL_PRICE_USD;
-      freeCompanion = quantity === 2;
+
+      // La pareja gratis es UNA por empresa afiliada, no una por inscripción,
+      // así que no basta con ser afiliado: hay que canjear el cupón de la
+      // empresa, y solo sirve una vez. Se valida contra la base porque el
+      // cliente no puede saber si ya se usó.
+      if (data.couponCode) {
+        const codigo = normalizarCodigoCupon(data.couponCode);
+        const cupon = await prisma.affiliateCoupon.findUnique({
+          where: { code: codigo },
+          select: { id: true, code: true, affiliateId: true, usedAt: true },
+        });
+        if (!cupon) {
+          return { ok: false, error: "Ese cupón no existe." };
+        }
+        if (cupon.affiliateId !== affiliate.id) {
+          return {
+            ok: false,
+            error: "Ese cupón pertenece a otra empresa afiliada.",
+          };
+        }
+        if (cupon.usedAt) {
+          return {
+            ok: false,
+            error: "Ese cupón ya se usó. Es uno por empresa afiliada.",
+          };
+        }
+        if (quantity !== 2) {
+          return {
+            ok: false,
+            error:
+              "El cupón cubre al acompañante, así que aplica solo si inscribes dos jugadores.",
+          };
+        }
+        // El cupón se canjea una sola vez, así que no puede repartirse entre
+        // varias fechas de un mismo envío: se descontaría en todas habiendo
+        // gastado un solo cupón.
+        if (eventDates.length > 1) {
+          return {
+            ok: false,
+            error:
+              "El cupón aplica a una sola fecha. Inscribe una y usa el cupón ahí.",
+          };
+        }
+        cuponId = cupon.id;
+        cuponCodigo = cupon.code;
+        freeCompanion = true;
+      }
     } else {
       // PUBLICO: abierto a cualquiera, tarifa plana sin descuentos.
       unitPriceUsd = PADEL_PRICE_USD;
@@ -337,7 +388,11 @@ export async function createRegistrationAction(
           ...(discountUsd > 0
             ? {
                 discountUsd: discountUsd.toFixed(2),
-                discountLabel: "Acompañante gratis (afiliado ADECLA)",
+                // El código va en la proforma para que el descuento sea
+                // rastreable: quien la revise ve qué cupón se canjeó.
+                discountLabel: cuponCodigo
+                  ? `Acompañante gratis (cupón ${cuponCodigo})`
+                  : "Acompañante gratis (afiliado ADECLA)",
               }
             : {}),
           itbisUsd: itbisUsd.toFixed(2),
@@ -360,6 +415,19 @@ export async function createRegistrationAction(
               snapshot: snapshot as unknown as Prisma.InputJsonValue,
             },
           });
+        }
+
+        // Canje del cupón dentro de la misma transacción que crea la
+        // inscripción: si algo falla después, el cupón no queda quemado.
+        // El update exige usedAt null, así que dos envíos simultáneos con el
+        // mismo cupón no pueden canjearlo los dos — el segundo no encuentra
+        // fila que actualizar y la transacción se cae.
+        if (cuponId) {
+          const canjeados = await tx.affiliateCoupon.updateMany({
+            where: { id: cuponId, usedAt: null },
+            data: { usedAt: new Date(), usedByRegistrationId: registration.id },
+          });
+          if (canjeados.count === 0) throw new CouponAlreadyUsedError();
         }
 
         registrations.push({ registrationId: registration.id, code, snapshot });
@@ -421,6 +489,12 @@ export async function createRegistrationAction(
         ok: false,
         error:
           "No quedan cupos suficientes para una de esas fechas. Elige otra fecha o intenta con menos participantes.",
+      };
+    }
+    if (error instanceof CouponAlreadyUsedError) {
+      return {
+        ok: false,
+        error: "Ese cupón acaba de usarse. Es uno por empresa afiliada.",
       };
     }
     console.error("Error creando inscripción:", error);

@@ -41,6 +41,12 @@ export default async function AdminLayout({
             Participantes
           </Link>
           <Link
+            href="/admin/cupones"
+            className="border-b-2 border-transparent py-3 font-medium hover:border-primary"
+          >
+            Cupones
+          </Link>
+          <Link
             href="/admin/empresas"
             className="border-b-2 border-transparent py-3 font-medium hover:border-primary"
           >

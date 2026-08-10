@@ -92,10 +92,15 @@ export function RegistrationWizard({
   // Invitado de patrocinador: existe tanto en pádel como en golf.
   const isSponsorGuest = company?.isSponsorGuest === true;
   const padelClub = isPadelEvent ? company?.padelClub : undefined;
-  // Beneficio de membresía: un afiliado de ADECLA que juega con acompañante
-  // no paga por ese segundo jugador (solo pádel, ver PADEL_PARTICIPANT_TYPES).
+  // Beneficio de membresía: la empresa afiliada no paga por el acompañante,
+  // pero es UNO por empresa, así que hace falta canjear su cupón — no basta
+  // con ser afiliado. Aquí solo se previsualiza cuando escribieron un código;
+  // si no vale, el servidor rechaza el envío con el motivo, así que nadie
+  // termina con una proforma mal calculada.
   const freeCompanion =
-    isPadelEvent && company?.padelParticipantType === "AFILIADO";
+    isPadelEvent &&
+    company?.padelParticipantType === "AFILIADO" &&
+    !!company?.couponCode?.trim();
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
@@ -446,7 +451,11 @@ export function RegistrationWizard({
                       )}
                       {freeCompanion && participants.length === 2 && (
                         <p className="text-sm text-primary">
-                          Acompañante gratis, beneficio de afiliado ADECLA.
+                          Acompañante gratis con el cupón{" "}
+                          <span className="font-mono">
+                            {company.couponCode?.trim().toUpperCase()}
+                          </span>
+                          . Lo validamos al generar la inscripción.
                         </p>
                       )}
                     </div>

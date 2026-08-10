@@ -370,6 +370,37 @@ export function CompanyStep({
             </div>
           )}
 
+          {/* El beneficio de pareja gratis es uno por empresa afiliada, así
+              que se canjea con el cupón de la empresa en vez de aplicarse
+              solo por ser afiliado. Opcional: sin cupón se pagan los dos. */}
+          {padelParticipantType === "AFILIADO" && (
+            <div className="space-y-2">
+              <Label htmlFor="couponCode">
+                Cupón de pareja gratis{" "}
+                <span className="font-normal text-muted-foreground">
+                  (opcional)
+                </span>
+              </Label>
+              <Input
+                id="couponCode"
+                placeholder="ADECLA-XXXXX"
+                autoComplete="off"
+                className="font-mono uppercase"
+                {...register("couponCode")}
+              />
+              {errors.couponCode && (
+                <p className="text-sm text-destructive">
+                  {errors.couponCode.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Cada empresa afiliada tiene un cupón que cubre al acompañante,
+                y solo se puede usar una vez. Aplica al inscribir dos
+                jugadores. Si no lo tienes a mano, escríbenos.
+              </p>
+            </div>
+          )}
+
           {padelParticipantType === "CLUB" && (
             <div className="space-y-2">
               <Label htmlFor="padelClub">Tu club</Label>

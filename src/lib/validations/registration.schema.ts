@@ -101,6 +101,15 @@ const companyFieldsSchema = z.object({
     .optional(),
   sponsorRnc: z.string().trim().optional(),
   padelClub: z.enum(PADEL_CLUBS).optional(),
+  // Cupón de pareja gratis del afiliado. Opcional: quien no lo trae paga
+  // los dos jugadores. La validez real (que exista, que sea de esa empresa
+  // y que no esté usado) solo la puede decidir el servidor contra la base.
+  couponCode: z
+    .string()
+    .trim()
+    .max(40, "Máximo 40 caracteres")
+    .optional()
+    .transform((v) => (v ? v : undefined)),
 
   // --- Comunes a cualquier evento ---
   legalName: z

@@ -189,3 +189,30 @@ export async function getAdminParticipants(
 export type AdminParticipant = Awaited<
   ReturnType<typeof getAdminParticipants>
 >[number];
+
+/**
+ * Cupones de pareja gratis con su empresa afiliada y, si ya se canjeó, la
+ * inscripción donde se usó. Ordena primero los disponibles: es la lista que
+ * ADECLA usa para repartirlos.
+ */
+export async function getAdminCoupons() {
+  const [cupones, afiliadosSinCupon] = await Promise.all([
+    prisma.affiliateCoupon.findMany({
+      include: {
+        affiliate: {
+          select: { name: true, email: true, contactName: true, phone: true },
+        },
+        usedByRegistration: {
+          select: { code: true, company: { select: { legalName: true } } },
+        },
+      },
+      orderBy: [{ usedAt: "asc" }, { affiliate: { name: "asc" } }],
+    }),
+    prisma.affiliate.count({ where: { coupon: null } }),
+  ]);
+  return { cupones, afiliadosSinCupon };
+}
+
+export type AdminCoupon = Awaited<
+  ReturnType<typeof getAdminCoupons>
+>["cupones"][number];
