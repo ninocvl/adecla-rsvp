@@ -2,35 +2,21 @@
 -- El código del cupón es uno solo para todas (vive en el código, no en la
 -- base), así que lo único que hay que guardar es quién ya lo canjeó: el
 -- único por afiliada es lo que limita el beneficio a una pareja por empresa.
-CREATE TABLE IF NOT EXISTS "CouponRedemption" (
-  "id"             TEXT NOT NULL,
-  "code"           TEXT NOT NULL,
-  "affiliateId"    TEXT NOT NULL,
-  "registrationId" TEXT NOT NULL,
-  "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "CouponRedemption_pkey" PRIMARY KEY ("id")
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS "CouponRedemption_affiliateId_key"
-  ON "CouponRedemption" ("affiliateId");
-CREATE UNIQUE INDEX IF NOT EXISTS "CouponRedemption_registrationId_key"
-  ON "CouponRedemption" ("registrationId");
-
+--
+-- Todo va en una sola sentencia, con las llaves y los únicos declarados en
+-- la propia columna. Antes eran ALTER TABLE sueltos envueltos en bloques
+-- DO $$, y los editores SQL por web parten mal el $$. Postgres nombra estas
+-- restricciones igual que Prisma (tabla_columna_key / _fkey), así que el
+-- esquema queda idéntico.
+--
 -- Si se borra la inscripción, el canje se va con ella y la empresa recupera
--- su pareja gratis. El DO envuelve el ALTER porque ADD CONSTRAINT no acepta
--- IF NOT EXISTS, y así correr el script dos veces no rompe nada.
-DO $$ BEGIN
-  ALTER TABLE "CouponRedemption"
-    ADD CONSTRAINT "CouponRedemption_affiliateId_fkey"
-    FOREIGN KEY ("affiliateId") REFERENCES "Affiliate" ("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  ALTER TABLE "CouponRedemption"
-    ADD CONSTRAINT "CouponRedemption_registrationId_fkey"
-    FOREIGN KEY ("registrationId") REFERENCES "Registration" ("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
+-- su pareja gratis.
+CREATE TABLE IF NOT EXISTS "CouponRedemption" (
+  "id"             TEXT PRIMARY KEY,
+  "code"           TEXT NOT NULL,
+  "affiliateId"    TEXT NOT NULL UNIQUE
+                   REFERENCES "Affiliate" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "registrationId" TEXT NOT NULL UNIQUE
+                   REFERENCES "Registration" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
