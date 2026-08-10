@@ -51,3 +51,6 @@ next-env.d.ts
 
 # Datos reales de contacto de afiliados de ADECLA (PII) — nunca al repo público.
 prisma/affiliates-seed-data.json
+# Mismo dato que el JSON de arriba (correos y telefonos de los socios),
+# solo que en SQL para pegarlo en Neon: tampoco se commitea.
+prisma/afiliados-*.sql
