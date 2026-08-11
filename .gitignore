@@ -54,3 +54,6 @@ prisma/affiliates-seed-data.json
 # Mismo dato que el JSON de arriba (correos y telefonos de los socios),
 # solo que en SQL para pegarlo en Neon: tampoco se commitea.
 prisma/afiliados-*.sql
+
+# Scripts de un solo uso para probar cosas contra la base local.
+tmp-*
