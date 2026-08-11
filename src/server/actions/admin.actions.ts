@@ -5,7 +5,13 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emailService } from "@/server/services/email";
-import { PADEL_CATEGORIES, STATUS_LABELS } from "@/lib/constants";
+import {
+  PADEL_CATEGORIES,
+  PADEL_CATEGORY_LABELS,
+  STATUS_LABELS,
+} from "@/lib/constants";
+import type { Prisma } from "@/generated/prisma/client";
+import type { ProformaSnapshot } from "@/lib/pdf/proforma-types";
 import { puedeEditar } from "@/lib/permissions";
 
 const changeStatusSchema = z.object({
@@ -362,9 +368,33 @@ export async function cambiarCategoriaAction(
       };
     }
 
-    await prisma.registration.update({
-      where: { id: reg.id },
-      data: { padelCategory: parsed.data.padelCategory },
+    await prisma.$transaction(async (tx) => {
+      await tx.registration.update({
+        where: { id: reg.id },
+        data: { padelCategory: parsed.data.padelCategory },
+      });
+
+      // La proforma no lee la inscripción: imprime el snapshot que se guardó
+      // al emitirla, para que un cambio de precios o de tasa no altere un
+      // documento ya entregado. Eso mismo hacía que el PDF siguiera diciendo
+      // la categoría vieja, así que hay que corregirla también ahí.
+      const proforma = await tx.proforma.findUnique({
+        where: { registrationId: reg.id },
+        select: { id: true, snapshot: true },
+      });
+      if (proforma) {
+        const snapshot = proforma.snapshot as unknown as ProformaSnapshot;
+        await tx.proforma.update({
+          where: { id: proforma.id },
+          data: {
+            snapshot: {
+              ...snapshot,
+              affiliation: parsed.data.padelCategory,
+              affiliationLabel: PADEL_CATEGORY_LABELS[parsed.data.padelCategory],
+            } as unknown as Prisma.InputJsonValue,
+          },
+        });
+      }
     });
     revalidarPanel();
     revalidatePath(`/admin/inscripciones/${reg.id}`);
