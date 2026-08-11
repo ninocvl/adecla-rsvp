@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SponsorPicker } from "@/components/registration/sponsor-picker";
 import {
   Select,
   SelectContent,
@@ -173,6 +174,13 @@ export function CompanyStep({
   const isSponsorSituation =
     padelParticipantType === "PATROCINADOR" || (!isPadel && isSponsorGuest === true);
   const sponsorRncMismatch = isSponsorSituation && sponsorRncTyped && !sponsorMatch;
+
+  // Elegir de la lista fija el nombre y el RNC juntos: los dos salen de la
+  // misma fila, así que no pueden quedar descuadrados.
+  function elegirPatrocinador(sponsor: { name: string; rnc: string } | null) {
+    setValue("sponsorName", sponsor?.name ?? "", { shouldValidate: true });
+    setValue("sponsorRnc", sponsor?.rnc ?? "", { shouldValidate: true });
+  }
 
   function chooseGolfSituation(value: GolfSituation) {
     setValue("isAffiliated", value === "AFILIADO", { shouldValidate: true });
@@ -457,62 +465,16 @@ export function CompanyStep({
                 Al ser invitado de un patrocinador, tu inscripción no genera
                 proforma ni tiene costo.
               </p>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorName">Empresa patrocinadora</Label>
-                <Input
-                  id="sponsorName"
-                  placeholder="Nombre del patrocinador"
-                  {...register("sponsorName")}
-                />
-                {errors.sponsorName && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorName.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorRnc">RNC del patrocinador</Label>
-                <Input
-                  id="sponsorRnc"
-                  placeholder="130123456"
-                  {...register("sponsorRnc", {
-                    onChange: () => setSponsorRncAcknowledged(false),
-                  })}
-                />
-                {errors.sponsorRnc && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorRnc.message}
-                  </p>
-                )}
-                {sponsorRncMismatch && (
-                  <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-                    <p className="font-medium text-amber-900">
-                      No encontramos ese RNC en nuestra lista de
-                      patrocinadores.
-                    </p>
-                    <p className="text-amber-800">
-                      Puedes seguir de todas formas: lo revisaremos antes de
-                      confirmar tu cupo. ¿Estás seguro de que el RNC es
-                      correcto?
-                    </p>
-                    <label className="flex items-center gap-2">
-                      <Checkbox
-                        checked={sponsorRncAcknowledged}
-                        onCheckedChange={(checked) =>
-                          setSponsorRncAcknowledged(checked === true)
-                        }
-                      />
-                      <span>Sí, el RNC es correcto.</span>
-                    </label>
-                  </div>
-                )}
-                {sponsorMatch && (
-                  <p className="text-sm text-primary">
-                    Encontramos a {sponsorMatch.name} en nuestra lista de
-                    patrocinadores.
-                  </p>
-                )}
-              </div>
+              <SponsorPicker
+                sponsorName={sponsorName}
+                sponsorRnc={sponsorRnc}
+                register={register}
+                errors={errors}
+                onPick={elegirPatrocinador}
+                rncMismatch={sponsorRncMismatch}
+                acknowledged={sponsorRncAcknowledged}
+                onAcknowledge={setSponsorRncAcknowledged}
+              />
             </div>
           )}
 
@@ -654,62 +616,16 @@ export function CompanyStep({
                 Al ser invitado de un patrocinador, tu inscripción no genera
                 proforma ni tiene costo.
               </p>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorName">Empresa patrocinadora</Label>
-                <Input
-                  id="sponsorName"
-                  placeholder="Nombre del patrocinador"
-                  {...register("sponsorName")}
-                />
-                {errors.sponsorName && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorName.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorRnc">RNC del patrocinador</Label>
-                <Input
-                  id="sponsorRnc"
-                  placeholder="130123456"
-                  {...register("sponsorRnc", {
-                    onChange: () => setSponsorRncAcknowledged(false),
-                  })}
-                />
-                {errors.sponsorRnc && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorRnc.message}
-                  </p>
-                )}
-                {sponsorRncMismatch && (
-                  <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-                    <p className="font-medium text-amber-900">
-                      No encontramos ese RNC en nuestra lista de
-                      patrocinadores.
-                    </p>
-                    <p className="text-amber-800">
-                      Puedes seguir de todas formas: lo revisaremos antes de
-                      confirmar tu cupo. ¿Estás seguro de que el RNC es
-                      correcto?
-                    </p>
-                    <label className="flex items-center gap-2">
-                      <Checkbox
-                        checked={sponsorRncAcknowledged}
-                        onCheckedChange={(checked) =>
-                          setSponsorRncAcknowledged(checked === true)
-                        }
-                      />
-                      <span>Sí, el RNC es correcto.</span>
-                    </label>
-                  </div>
-                )}
-                {sponsorMatch && (
-                  <p className="text-sm text-primary">
-                    Encontramos a {sponsorMatch.name} en nuestra lista de
-                    patrocinadores.
-                  </p>
-                )}
-              </div>
+              <SponsorPicker
+                sponsorName={sponsorName}
+                sponsorRnc={sponsorRnc}
+                register={register}
+                errors={errors}
+                onPick={elegirPatrocinador}
+                rncMismatch={sponsorRncMismatch}
+                acknowledged={sponsorRncAcknowledged}
+                onAcknowledge={setSponsorRncAcknowledged}
+              />
             </div>
           )}
 
