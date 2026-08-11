@@ -5,7 +5,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emailService } from "@/server/services/email";
-import { STATUS_LABELS } from "@/lib/constants";
+import { PADEL_CATEGORIES, STATUS_LABELS } from "@/lib/constants";
 import { puedeEditar } from "@/lib/permissions";
 
 const changeStatusSchema = z.object({
@@ -312,5 +312,65 @@ export async function deleteRegistrationAction(
     }
     console.error("Error borrando inscripción:", error);
     return { ok: false, error: "No se pudo borrar la inscripción." };
+  }
+}
+
+const cambiarCategoriaSchema = z.object({
+  registrationId: z.string().min(1),
+  padelCategory: z.enum(PADEL_CATEGORIES),
+});
+
+export type CambiarCategoriaInput = z.input<typeof cambiarCategoriaSchema>;
+
+/**
+ * Corrige la categoría de pádel de una inscripción. Pasa seguido que la
+ * persona se apunta en la que no es y hay que moverla antes de armar los
+ * cuadros; obligarla a cancelar y volver a inscribirse le quitaría el cupo
+ * y el número de inscripción.
+ *
+ * No toca el precio: la categoría no lo determina (eso lo decide la
+ * situación del jugador), así que la proforma emitida sigue siendo válida.
+ */
+export async function cambiarCategoriaAction(
+  input: CambiarCategoriaInput
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await auth();
+  if (!session?.user || !puedeEditar(session.user.role)) {
+    return {
+      ok: false,
+      error: "Solo el administrador puede cambiar la categoría.",
+    };
+  }
+
+  const parsed = cambiarCategoriaSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Esa categoría no existe." };
+  }
+
+  try {
+    const reg = await prisma.registration.findUnique({
+      where: { id: parsed.data.registrationId },
+      select: { id: true, padelCategory: true },
+    });
+    if (!reg) return { ok: false, error: "No encontramos esa inscripción." };
+    // Golf no tiene categorías de pádel: su equivalente es la afiliación de
+    // la empresa, que no se cambia desde aquí.
+    if (!reg.padelCategory) {
+      return {
+        ok: false,
+        error: "Esta inscripción no es de pádel, no tiene categoría.",
+      };
+    }
+
+    await prisma.registration.update({
+      where: { id: reg.id },
+      data: { padelCategory: parsed.data.padelCategory },
+    });
+    revalidarPanel();
+    revalidatePath(`/admin/inscripciones/${reg.id}`);
+    return { ok: true };
+  } catch (error) {
+    console.error("Error cambiando categoría:", error);
+    return { ok: false, error: "No se pudo cambiar la categoría." };
   }
 }

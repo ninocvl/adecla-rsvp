@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StatusChangeDialog } from "@/components/admin/status-change-dialog";
+import { CategoriaChangeDialog } from "@/components/admin/categoria-change-dialog";
+import { auth } from "@/auth";
+import { puedeEditar } from "@/lib/permissions";
 
 export const metadata: Metadata = {
   title: "Detalle de inscripción | Admin ADECLA",
@@ -29,10 +32,16 @@ export default async function AdminInscripcionDetallePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const registration = await getRegistrationDetail(id);
+  const [registration, session] = await Promise.all([
+    getRegistrationDetail(id),
+    auth(),
+  ]);
   if (!registration) {
     notFound();
   }
+  // El rol de solo lectura no veía la diferencia: los botones aparecían y
+  // fallaban al pulsarlos. Si no puede cambiar nada, mejor no ofrecérselo.
+  const editable = puedeEditar(session?.user?.role);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -50,11 +59,13 @@ export default async function AdminInscripcionDetallePage({
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={registration.status} />
-          <StatusChangeDialog
-            registrationId={registration.id}
-            code={registration.code}
-            currentStatus={registration.status}
-          />
+          {editable && (
+            <StatusChangeDialog
+              registrationId={registration.id}
+              code={registration.code}
+              currentStatus={registration.status}
+            />
+          )}
         </div>
       </div>
 
@@ -168,13 +179,22 @@ export default async function AdminInscripcionDetallePage({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <div className="flex justify-between">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Categoría</span>
-            <span className="font-medium">
-              {getCategoryLabel(
-                registration.affiliation,
-                registration.padelCategory,
-                registration.padelClub
+            <span className="flex items-center gap-3">
+              <span className="font-medium">
+                {getCategoryLabel(
+                  registration.affiliation,
+                  registration.padelCategory,
+                  registration.padelClub
+                )}
+              </span>
+              {editable && registration.padelCategory && (
+                <CategoriaChangeDialog
+                  registrationId={registration.id}
+                  code={registration.code}
+                  currentCategory={registration.padelCategory}
+                />
               )}
             </span>
           </div>
