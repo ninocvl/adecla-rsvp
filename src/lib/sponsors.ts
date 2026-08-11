@@ -24,6 +24,7 @@ export const SPONSORS: { name: string; rnc: string }[] = [
   { name: "Metalsider", rnc: "1-32-11355-1" },
   { name: "Banco Múltiple Vimenca", rnc: "101021411" },
   { name: "Nardi", rnc: "130362483" },
+  { name: "DOWNTOWN SOLUTIONS SERVICES YAR, SRL", rnc: "1-31-31251-9" },
 ];
 
 export function findMatchingSponsor(rnc: string) {
