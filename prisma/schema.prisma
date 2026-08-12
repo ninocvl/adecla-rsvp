@@ -157,6 +157,10 @@ model EventDate {
   eventId       String
   event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   date          DateTime
+  // Último día cuando el torneo dura más de uno. Nulo = un solo día. La
+  // parada de pádel se juega 14 y 15, y mostrar solo el 14 hacía que la
+  // gente creyera que era un día suelto.
+  endDate       DateTime?
   label         String
   venue         String
   imageUrl      String?

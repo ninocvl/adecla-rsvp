@@ -8,6 +8,8 @@ import {
 export interface LandingEventDate {
   id: string;
   date: Date;
+  /** Último día si el torneo dura más de uno (ver formatEventDateRange). */
+  endDate: Date | null;
   label: string;
   venue: string;
   imageUrl: string | null;
@@ -164,6 +166,7 @@ export async function getWizardEvents(): Promise<WizardEvent[]> {
     dates: event.dates.map((d) => ({
       id: d.id,
       date: d.date,
+      endDate: d.endDate,
       label: d.label,
       venue: d.venue,
       imageUrl: d.imageUrl,
