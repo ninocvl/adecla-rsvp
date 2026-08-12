@@ -2,11 +2,18 @@ import {
   getAdminParticipants,
   type AdminParticipantFilters,
 } from "@/server/queries/admin.queries";
-import { STATUS_LABELS, getCategoryLabel } from "@/lib/constants";
+import {
+  PADEL_CATEGORIES,
+  STATUS_LABELS,
+  getCategoryLabel,
+} from "@/lib/constants";
 import { formatEventDate } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
 import { toXlsxBuffer } from "@/lib/xlsx";
-import type { RegistrationStatus } from "@/generated/prisma/enums";
+import type {
+  PadelCategory,
+  RegistrationStatus,
+} from "@/generated/prisma/enums";
 
 // Una fila por jugador, no por inscripción: es el listado que se le pasa al
 // club para armar los grupos, así que una pareja tiene que salir como dos
@@ -36,13 +43,22 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const estado = searchParams.get("estado");
   const evento = searchParams.get("evento");
+  const categoria = searchParams.get("categoria");
+  const genero = searchParams.get("genero");
   const format = searchParams.get("format");
 
+  // Los mismos filtros que la pantalla: se descarga lo que se está viendo,
+  // que es como se pide la hoja de una sola categoría para armar su cuadro.
   const filters: AdminParticipantFilters = {};
   if (estado && estado in STATUS_LABELS) {
     filters.status = estado as RegistrationStatus;
   }
   if (evento) filters.eventDateId = evento;
+  if (PADEL_CATEGORIES.includes(categoria as PadelCategory)) {
+    filters.padelCategory = categoria as PadelCategory;
+  } else if (genero === "FEMENINO" || genero === "MASCULINO") {
+    filters.genero = genero;
+  }
 
   const participants = await getAdminParticipants(filters);
 
@@ -82,6 +98,12 @@ export async function GET(request: Request) {
     ];
   });
 
+  const sufijo = filters.padelCategory
+    ? `-${filters.padelCategory.toLowerCase()}`
+    : filters.genero
+      ? `-${filters.genero.toLowerCase()}`
+      : "";
+
   if (format === "xlsx") {
     const buffer = await toXlsxBuffer("Participantes", HEADERS, rows);
     return new Response(new Uint8Array(buffer), {
@@ -89,7 +111,7 @@ export async function GET(request: Request) {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition":
-          'attachment; filename="participantes-adecla.xlsx"',
+          `attachment; filename="participantes-adecla${sufijo}.xlsx"`,
       },
     });
   }
@@ -97,7 +119,7 @@ export async function GET(request: Request) {
   return new Response(toCsv(HEADERS, rows), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="participantes-adecla.csv"',
+      "Content-Disposition": `attachment; filename="participantes-adecla${sufijo}.csv"`,
     },
   });
 }

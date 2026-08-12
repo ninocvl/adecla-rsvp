@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import type { RegistrationStatus } from "@/generated/prisma/enums";
+import type {
+  PadelCategory,
+  RegistrationStatus,
+} from "@/generated/prisma/enums";
+import { PADEL_CATEGORIES } from "@/lib/constants";
 
 const PENDING_STATUSES: RegistrationStatus[] = [
   "PROFORMA_GENERADA",
@@ -151,6 +155,9 @@ export interface AdminParticipantFilters {
   status?: RegistrationStatus;
   eventDateId?: string;
   archivadas?: boolean;
+  padelCategory?: PadelCategory;
+  /** El género sale del prefijo de la categoría, no hay campo aparte. */
+  genero?: "FEMENINO" | "MASCULINO";
 }
 
 /**
@@ -166,6 +173,17 @@ export async function getAdminParticipants(
       registration: {
         ...(filters.status ? { status: filters.status } : {}),
         ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
+        ...(filters.padelCategory
+          ? { padelCategory: filters.padelCategory }
+          : filters.genero
+            ? {
+                padelCategory: {
+                  in: PADEL_CATEGORIES.filter((c) =>
+                    c.startsWith(filters.genero!)
+                  ),
+                },
+              }
+            : {}),
         archivedAt: filters.archivadas ? { not: null } : null,
       },
     },

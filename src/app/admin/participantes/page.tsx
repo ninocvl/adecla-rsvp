@@ -4,8 +4,15 @@ import {
   getAdminParticipants,
   getEventDatesForFilter,
 } from "@/server/queries/admin.queries";
-import type { RegistrationStatus } from "@/generated/prisma/enums";
-import { STATUS_LABELS } from "@/lib/constants";
+import type {
+  PadelCategory,
+  RegistrationStatus,
+} from "@/generated/prisma/enums";
+import {
+  PADEL_CATEGORIES,
+  PADEL_CATEGORY_LABELS,
+  STATUS_LABELS,
+} from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ParticipantTable } from "@/components/admin/participant-table";
@@ -16,18 +23,44 @@ export const metadata: Metadata = {
 
 const STATUS_KEYS = Object.keys(STATUS_LABELS) as RegistrationStatus[];
 
+// El género no es un campo: vive en el prefijo de la categoría. Filtrar por
+// él es quedarse con las tres categorías de ese lado del cuadro.
+const GENEROS = [
+  { value: "FEMENINO", label: "Femenina" },
+  { value: "MASCULINO", label: "Masculino" },
+] as const;
+
 export default async function AdminParticipantesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string; evento?: string }>;
+  searchParams: Promise<{
+    estado?: string;
+    evento?: string;
+    categoria?: string;
+    genero?: string;
+  }>;
 }) {
-  const { estado, evento } = await searchParams;
+  const { estado, evento, categoria, genero } = await searchParams;
   const status = STATUS_KEYS.includes(estado as RegistrationStatus)
     ? (estado as RegistrationStatus)
     : undefined;
+  const padelCategory = PADEL_CATEGORIES.includes(categoria as PadelCategory)
+    ? (categoria as PadelCategory)
+    : undefined;
+  // Elegir una categoría concreta ya implica el género, así que el filtro
+  // de género solo cuenta cuando no hay categoría elegida.
+  const generoFiltro =
+    !padelCategory && (genero === "FEMENINO" || genero === "MASCULINO")
+      ? genero
+      : undefined;
 
   const [participants, eventDates] = await Promise.all([
-    getAdminParticipants({ status, eventDateId: evento }),
+    getAdminParticipants({
+      status,
+      eventDateId: evento,
+      padelCategory,
+      genero: generoFiltro,
+    }),
     getEventDatesForFilter(),
   ]);
 
@@ -51,12 +84,33 @@ export default async function AdminParticipantesPage({
   const parejas = [...porInscripcion.values()].filter((n) => n > 1).length;
   const individuales = [...porInscripcion.values()].filter((n) => n === 1).length;
 
-  function filterHref(params: { estado?: string; evento?: string }) {
+  function filterHref(params: {
+    estado?: string;
+    evento?: string;
+    categoria?: string;
+    genero?: string;
+  }) {
     const search = new URLSearchParams();
     const nextEstado = "estado" in params ? params.estado : estado;
     const nextEvento = "evento" in params ? params.evento : evento;
+    // Elegir categoría limpia el género y al revés: son la misma pregunta a
+    // dos niveles, y mantener los dos daría combinaciones sin resultados.
+    const nextCategoria =
+      "categoria" in params
+        ? params.categoria
+        : "genero" in params
+          ? undefined
+          : categoria;
+    const nextGenero =
+      "genero" in params
+        ? params.genero
+        : "categoria" in params
+          ? undefined
+          : genero;
     if (nextEstado) search.set("estado", nextEstado);
     if (nextEvento) search.set("evento", nextEvento);
+    if (nextCategoria) search.set("categoria", nextCategoria);
+    if (nextGenero) search.set("genero", nextGenero);
     const qs = search.toString();
     return `/admin/participantes${qs ? `?${qs}` : ""}`;
   }
@@ -74,7 +128,16 @@ export default async function AdminParticipantesPage({
         <div>
           <h1 className="text-2xl font-semibold">Participantes</h1>
           <p className="mt-1 text-muted-foreground">
-            {eventoActual ? eventoActual.label : "Todas las fechas"}
+            {[
+              eventoActual ? eventoActual.label : "Todas las fechas",
+              padelCategory
+                ? PADEL_CATEGORY_LABELS[padelCategory]
+                : generoFiltro
+                  ? GENEROS.find((g) => g.value === generoFiltro)?.label
+                  : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -138,6 +201,44 @@ export default async function AdminParticipantesPage({
             active={status === s}
           >
             {STATUS_LABELS[s]}
+          </FilterChip>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Género:</span>
+        <FilterChip
+          href={filterHref({ genero: undefined })}
+          active={!generoFiltro && !padelCategory}
+        >
+          Todos
+        </FilterChip>
+        {GENEROS.map((g) => (
+          <FilterChip
+            key={g.value}
+            href={filterHref({ genero: g.value })}
+            active={generoFiltro === g.value}
+          >
+            {g.label}
+          </FilterChip>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Categoría:</span>
+        <FilterChip
+          href={filterHref({ categoria: undefined })}
+          active={!padelCategory}
+        >
+          Todas
+        </FilterChip>
+        {PADEL_CATEGORIES.map((c) => (
+          <FilterChip
+            key={c}
+            href={filterHref({ categoria: c })}
+            active={padelCategory === c}
+          >
+            {PADEL_CATEGORY_LABELS[c]}
           </FilterChip>
         ))}
       </div>
