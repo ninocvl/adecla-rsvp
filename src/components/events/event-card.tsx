@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { LandingCard } from "@/server/queries/events.queries";
 import { AFFILIATION_LABELS, PADEL_PRICE_USD } from "@/lib/constants";
 import { PADEL_CATEGORIES_POSTER } from "@/lib/event-media";
-import { formatEventDate, formatUsd } from "@/lib/format";
+import { formatEventDateRange, formatUsd } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,7 +75,7 @@ export function EventCard({ card }: { card: LandingCard }) {
         {isDate ? (
           <>
             <p className="text-sm font-semibold text-primary">
-              {formatEventDate(card.date as Date)}
+              {formatEventDateRange(card.date as Date, card.endDate)}
             </p>
             <p className="font-heading text-xl font-medium leading-tight text-foreground">
               {card.label}

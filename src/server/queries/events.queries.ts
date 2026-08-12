@@ -38,6 +38,8 @@ export interface LandingCard {
   // Constructor, Proveedor o Desarrollador — nunca un monto único.
   priceTiers: LandingPriceTier[];
   date?: Date;
+  /** Último día si la parada dura más de uno (ver formatEventDateRange). */
+  endDate?: Date | null;
   label?: string;
   venue?: string;
   available?: number;
@@ -82,6 +84,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           minPriceUsd,
           priceTiers,
           date: d.date,
+          endDate: d.endDate,
           label: d.label,
           venue: d.venue,
           available: Math.max(0, d.capacity - d.reservedCount),
