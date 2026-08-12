@@ -7,6 +7,7 @@ import {
   type CambiarCategoriaInput,
 } from "@/server/actions/admin.actions";
 import { PADEL_CATEGORIES, PADEL_CATEGORY_LABELS } from "@/lib/constants";
+import type { PadelCategory } from "@/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,11 +21,16 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-type PadelCategory = CambiarCategoriaInput["padelCategory"];
+type CategoriaElegible = CambiarCategoriaInput["padelCategory"];
 
 interface CategoriaChangeDialogProps {
   registrationId: string;
   code: string;
+  /**
+   * La que tiene guardada, que puede ser una categoría ya retirada del
+   * torneo (Femenina D). Se acepta para poder abrir el diálogo y moverla;
+   * lo que no se puede es volver a elegirla.
+   */
   currentCategory: PadelCategory;
 }
 
@@ -34,10 +40,15 @@ export function CategoriaChangeDialog({
   currentCategory,
 }: CategoriaChangeDialogProps) {
   const [open, setOpen] = useState(false);
-  const [categoria, setCategoria] = useState<PadelCategory>(currentCategory);
+  const [categoria, setCategoria] = useState<CategoriaElegible | undefined>(
+    PADEL_CATEGORIES.includes(currentCategory as CategoriaElegible)
+      ? (currentCategory as CategoriaElegible)
+      : undefined
+  );
   const [isPending, startTransition] = useTransition();
 
   function submit() {
+    if (!categoria) return;
     startTransition(async () => {
       const r = await cambiarCategoriaAction({
         registrationId,

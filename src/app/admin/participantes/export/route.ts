@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     filters.status = estado as RegistrationStatus;
   }
   if (evento) filters.eventDateId = evento;
-  if (PADEL_CATEGORIES.includes(categoria as PadelCategory)) {
+  if ((PADEL_CATEGORIES as readonly string[]).includes(categoria ?? "")) {
     filters.padelCategory = categoria as PadelCategory;
   } else if (genero === "FEMENINO" || genero === "MASCULINO") {
     filters.genero = genero;

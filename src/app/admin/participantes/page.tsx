@@ -13,9 +13,9 @@ import {
   PADEL_CATEGORY_LABELS,
   STATUS_LABELS,
 } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ParticipantTable } from "@/components/admin/participant-table";
+import { FilterMenu } from "@/components/admin/filter-menu";
 
 export const metadata: Metadata = {
   title: "Participantes | Admin ADECLA",
@@ -44,7 +44,7 @@ export default async function AdminParticipantesPage({
   const status = STATUS_KEYS.includes(estado as RegistrationStatus)
     ? (estado as RegistrationStatus)
     : undefined;
-  const padelCategory = PADEL_CATEGORIES.includes(categoria as PadelCategory)
+  const padelCategory = (PADEL_CATEGORIES as readonly string[]).includes(categoria ?? "")
     ? (categoria as PadelCategory)
     : undefined;
   // Elegir una categoría concreta ya implica el género, así que el filtro
@@ -114,6 +114,8 @@ export default async function AdminParticipantesPage({
     const qs = search.toString();
     return `/admin/participantes${qs ? `?${qs}` : ""}`;
   }
+
+  const hayFiltros = !!(status || evento || padelCategory || generoFiltro);
 
   const exportBaseHref = filterHref({}).replace(
     "/admin/participantes",
@@ -189,77 +191,96 @@ export default async function AdminParticipantesPage({
         />
       </div>
 
+      {/* Los cuatro filtros responden a la misma pregunta —qué corte de la
+          lista quiero ver—, así que van juntos en una línea. Antes cada uno
+          desplegaba todas sus opciones como fichas en su propia fila: cuatro
+          filas y dieciséis fichas para elegir cuatro cosas. */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Estado:</span>
-        <FilterChip href={filterHref({ estado: undefined })} active={!status}>
-          Todos
-        </FilterChip>
-        {STATUS_KEYS.map((s) => (
-          <FilterChip
-            key={s}
-            href={filterHref({ estado: s })}
-            active={status === s}
+        <FilterMenu
+          label="Estado"
+          value={status ? STATUS_LABELS[status] : "Todos"}
+          active={!!status}
+          options={[
+            {
+              label: "Todos",
+              href: filterHref({ estado: undefined }),
+              active: !status,
+            },
+            ...STATUS_KEYS.map((s) => ({
+              label: STATUS_LABELS[s],
+              href: filterHref({ estado: s }),
+              active: status === s,
+            })),
+          ]}
+        />
+        <FilterMenu
+          label="Género"
+          value={
+            generoFiltro
+              ? (GENEROS.find((g) => g.value === generoFiltro)?.label ?? "Todos")
+              : "Todos"
+          }
+          active={!!generoFiltro}
+          options={[
+            {
+              label: "Todos",
+              href: filterHref({ genero: undefined }),
+              active: !generoFiltro && !padelCategory,
+            },
+            ...GENEROS.map((g) => ({
+              label: g.label,
+              href: filterHref({ genero: g.value }),
+              active: generoFiltro === g.value,
+            })),
+          ]}
+        />
+        <FilterMenu
+          label="Categoría"
+          value={
+            padelCategory ? PADEL_CATEGORY_LABELS[padelCategory] : "Todas"
+          }
+          active={!!padelCategory}
+          options={[
+            {
+              label: "Todas",
+              href: filterHref({ categoria: undefined }),
+              active: !padelCategory,
+            },
+            ...PADEL_CATEGORIES.map((c) => ({
+              label: PADEL_CATEGORY_LABELS[c],
+              href: filterHref({ categoria: c }),
+              active: padelCategory === c,
+            })),
+          ]}
+        />
+        {eventDates.length > 1 && (
+          <FilterMenu
+            label="Fecha"
+            value={eventoActual ? eventoActual.label : "Todas"}
+            active={!!evento}
+            options={[
+              {
+                label: "Todas",
+                href: filterHref({ evento: undefined }),
+                active: !evento,
+              },
+              ...eventDates.map((d) => ({
+                label: d.label,
+                href: filterHref({ evento: d.id }),
+                active: evento === d.id,
+              })),
+            ]}
+          />
+        )}
+        {hayFiltros && (
+          <Link
+            href="/admin/participantes"
+            className="ml-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
-            {STATUS_LABELS[s]}
-          </FilterChip>
-        ))}
+            Quitar filtros
+          </Link>
+        )}
       </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Género:</span>
-        <FilterChip
-          href={filterHref({ genero: undefined })}
-          active={!generoFiltro && !padelCategory}
-        >
-          Todos
-        </FilterChip>
-        {GENEROS.map((g) => (
-          <FilterChip
-            key={g.value}
-            href={filterHref({ genero: g.value })}
-            active={generoFiltro === g.value}
-          >
-            {g.label}
-          </FilterChip>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Categoría:</span>
-        <FilterChip
-          href={filterHref({ categoria: undefined })}
-          active={!padelCategory}
-        >
-          Todas
-        </FilterChip>
-        {PADEL_CATEGORIES.map((c) => (
-          <FilterChip
-            key={c}
-            href={filterHref({ categoria: c })}
-            active={padelCategory === c}
-          >
-            {PADEL_CATEGORY_LABELS[c]}
-          </FilterChip>
-        ))}
-      </div>
-
-      {eventDates.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Fecha:</span>
-          <FilterChip href={filterHref({ evento: undefined })} active={!evento}>
-            Todas
-          </FilterChip>
-          {eventDates.map((d) => (
-            <FilterChip
-              key={d.id}
-              href={filterHref({ evento: d.id })}
-              active={evento === d.id}
-            >
-              {d.label}
-            </FilterChip>
-          ))}
-        </div>
-      )}
 
       <ParticipantTable participants={participants} />
     </div>
@@ -281,29 +302,5 @@ function TotalCard({
       <p className="mt-1 text-3xl font-semibold tabular-nums">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </div>
-  );
-}
-
-function FilterChip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "rounded-full border px-3 py-1 text-sm transition-colors",
-        active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "bg-white hover:border-primary/50"
-      )}
-    >
-      {children}
-    </Link>
   );
 }
