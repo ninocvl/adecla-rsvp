@@ -30,6 +30,24 @@ export const ADECLA = {
 // Nombre, fechas y reclamo salen del flyer oficial (ver EXPOCAMACOL.flyer):
 // ADECLA lo llama "Misión Empresarial", no "Expocamacol" a secas —
 // Expocamacol es la feria a la que viaja la misión.
+/**
+ * Almuerzo con el MIVED: networking, ya celebrado. No vive en la tabla Event
+ * porque nunca tuvo inscripción por la web — se convocó por invitación.
+ */
+export const ALMUERZO_MIVED = {
+  nombre: "Almuerzo con el MIVED",
+  resumen:
+    "Los afiliados de ADECLA almorzaron con el Ministerio de la Vivienda, Hábitat y Edificaciones para conocer el plan de modernización de permisología.",
+  fecha: "7 de mayo de 2026",
+  fechaISO: "2026-05-07",
+  lugar: "SBG, Punta Cana",
+  cover: "/images/almuerzo-mived/recap-07.jpg",
+  fotos: Array.from(
+    { length: 15 },
+    (_, i) => `/images/almuerzo-mived/recap-${String(i + 1).padStart(2, "0")}.jpg`
+  ),
+} as const;
+
 export const EXPOCAMACOL = {
   nombre: "Misión Empresarial Medellín",
   feria: "Expocamacol 2026",

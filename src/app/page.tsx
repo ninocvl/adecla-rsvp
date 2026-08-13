@@ -4,7 +4,12 @@ import {
   getLandingCards,
   type LandingCard,
 } from "@/server/queries/events.queries";
-import { EXPOCAMACOL, NOTA_PAGO, REVISTA } from "@/lib/constants";
+import {
+  ALMUERZO_MIVED,
+  EXPOCAMACOL,
+  NOTA_PAGO,
+  REVISTA,
+} from "@/lib/constants";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Reveal } from "@/components/shared/reveal";
@@ -14,6 +19,7 @@ import { BenefitsBand } from "@/components/events/benefits-band";
 import { SponsorsMarquee } from "@/components/events/sponsors-marquee";
 import { MisionEmpresarialCard } from "@/components/events/mision-empresarial-card";
 import { EventCard } from "@/components/events/event-card";
+import { AlmuerzoMivedCard } from "@/components/events/almuerzo-mived-card";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +28,8 @@ export const dynamic = "force-dynamic";
 // de venir de la consulta.
 type ItemEvento =
   | { tipo: "evento"; key: string; fecha: number; card: LandingCard }
-  | { tipo: "mision"; key: string; fecha: number };
+  | { tipo: "mision"; key: string; fecha: number }
+  | { tipo: "almuerzo"; key: string; fecha: number };
 
 // Las tres disciplinas de la fila de arriba. Pulsar una filtra la lista de
 // abajo en vez de llevarse a la persona a otra página: golf tiene dos
@@ -36,7 +43,10 @@ const DISCIPLINAS: Record<string, { nombre: string; incluye: (i: ItemEvento) => 
     nombre: "Pádel",
     incluye: (i) => i.tipo === "evento" && i.card.eventSlug === "padel",
   },
-  networking: { nombre: "Networking", incluye: (i) => i.tipo === "mision" },
+  networking: {
+    nombre: "Networking",
+    incluye: (i) => i.tipo === "mision" || i.tipo === "almuerzo",
+  },
 };
 
 export default async function HomePage({
@@ -63,9 +73,22 @@ export default async function HomePage({
       key: "mision-empresarial",
       fecha: new Date(`${EXPOCAMACOL.fechaInicioISO}T12:00:00Z`).getTime(),
     },
+    {
+      tipo: "almuerzo" as const,
+      key: "almuerzo-mived",
+      fecha: new Date(`${ALMUERZO_MIVED.fechaISO}T12:00:00Z`).getTime(),
+    },
   ].sort((a, b) => a.fecha - b.fecha);
 
   const visibles = filtro ? items.filter(DISCIPLINAS[filtro].incluye) : items;
+
+  // Lo que ya pasó deja de ser una oferta y pasa a ser memoria del año. Con
+  // dos eventos vividos, mezclarlos con los que aún se venden obligaba a
+  // leer la insignia de cada tarjeta para saber a cuál te puedes apuntar.
+  const yaPaso = (i: ItemEvento) =>
+    i.tipo === "almuerzo" || (i.tipo === "evento" && !!i.card.isPast);
+  const proximos = visibles.filter((i) => !yaPaso(i));
+  const vividos = visibles.filter(yaPaso).reverse();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -121,7 +144,7 @@ export default async function HomePage({
                 grilla de tres partía en dos filas y la última quedaba
                 huérfana. Así entran todos lado a lado y se ruedan. */}
             <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-3 [scrollbar-width:thin]">
-              {visibles.map((item, i) => (
+              {proximos.map((item, i) => (
                 <li
                   key={item.key}
                   className="w-[300px] shrink-0 snap-start sm:w-[336px]"
@@ -129,6 +152,8 @@ export default async function HomePage({
                   <Reveal delayMs={i * 70} className="h-full">
                     {item.tipo === "mision" ? (
                       <MisionEmpresarialCard />
+                    ) : item.tipo === "almuerzo" ? (
+                      <AlmuerzoMivedCard />
                     ) : (
                       <EventCard card={item.card} />
                     )}
@@ -137,6 +162,37 @@ export default async function HomePage({
               ))}
             </ul>
             <p className="mt-6 text-sm text-muted-foreground">{NOTA_PAGO}</p>
+
+            {vividos.length > 0 && (
+              <div className="mt-16 border-t pt-12">
+                <div className="max-w-2xl">
+                  <h3 className="font-heading text-2xl font-medium text-foreground">
+                    Así se <span className="text-[var(--oro)]">vivió</span>
+                  </h3>
+                  <p className="mt-3 text-muted-foreground">
+                    Lo que ya pasó este año, con sus fotos.
+                  </p>
+                </div>
+                <ul className="-mx-4 mt-8 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-3 [scrollbar-width:thin]">
+                  {vividos.map((item, i) => (
+                    <li
+                      key={item.key}
+                      className="w-[300px] shrink-0 snap-start sm:w-[336px]"
+                    >
+                      <Reveal delayMs={i * 70} className="h-full">
+                        {item.tipo === "almuerzo" ? (
+                          <AlmuerzoMivedCard />
+                        ) : item.tipo === "evento" ? (
+                          <EventCard card={item.card} />
+                        ) : (
+                          <MisionEmpresarialCard />
+                        )}
+                      </Reveal>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </section>
 
