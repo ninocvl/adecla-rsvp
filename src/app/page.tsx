@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   getLandingCards,
   type LandingCard,
@@ -23,8 +24,31 @@ type ItemEvento =
   | { tipo: "evento"; key: string; fecha: number; card: LandingCard }
   | { tipo: "mision"; key: string; fecha: number };
 
-export default async function HomePage() {
-  const cards = await getLandingCards();
+// Las tres disciplinas de la fila de arriba. Pulsar una filtra la lista de
+// abajo en vez de llevarse a la persona a otra página: golf tiene dos
+// paradas, así que "ver golf" solo tiene sentido como "muéstrame las dos".
+const DISCIPLINAS: Record<string, { nombre: string; incluye: (i: ItemEvento) => boolean }> = {
+  golf: {
+    nombre: "Golf",
+    incluye: (i) => i.tipo === "evento" && i.card.eventSlug === "golf",
+  },
+  padel: {
+    nombre: "Pádel",
+    incluye: (i) => i.tipo === "evento" && i.card.eventSlug === "padel",
+  },
+  networking: { nombre: "Networking", incluye: (i) => i.tipo === "mision" },
+};
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ disciplina?: string }>;
+}) {
+  const [cards, { disciplina }] = await Promise.all([
+    getLandingCards(),
+    searchParams,
+  ]);
+  const filtro = disciplina && disciplina in DISCIPLINAS ? disciplina : undefined;
 
   const items: ItemEvento[] = [
     ...cards.map((card) => ({
@@ -40,6 +64,8 @@ export default async function HomePage() {
       fecha: new Date(`${EXPOCAMACOL.fechaInicioISO}T12:00:00Z`).getTime(),
     },
   ].sort((a, b) => a.fecha - b.fecha);
+
+  const visibles = filtro ? items.filter(DISCIPLINAS[filtro].incluye) : items;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -63,7 +89,7 @@ export default async function HomePage() {
             </p>
           </div>
           <Reveal className="mt-10">
-            <DisciplinesRow />
+            <DisciplinesRow activa={filtro} />
           </Reveal>
         </section>
 
@@ -78,15 +104,24 @@ export default async function HomePage() {
                 Próximos <span className="text-[var(--oro)]">eventos</span>
               </h2>
               <p className="mt-3 text-muted-foreground">
-                Elige tu evento, inscribe uno o dos jugadores y descarga tu
-                proforma.
+                {filtro
+                  ? `Solo ${DISCIPLINAS[filtro].nombre}. Inscribe uno o dos jugadores y descarga tu proforma.`
+                  : "Elige tu evento, inscribe uno o dos jugadores y descarga tu proforma."}
               </p>
+              {filtro && (
+                <Link
+                  href="/#eventos"
+                  className="mt-3 inline-flex text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Ver todos los eventos
+                </Link>
+              )}
             </div>
             {/* Fila que se arrastra en vez de grilla: con cuatro eventos la
                 grilla de tres partía en dos filas y la última quedaba
                 huérfana. Así entran todos lado a lado y se ruedan. */}
             <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-3 [scrollbar-width:thin]">
-              {items.map((item, i) => (
+              {visibles.map((item, i) => (
                 <li
                   key={item.key}
                   className="w-[300px] shrink-0 snap-start sm:w-[336px]"
