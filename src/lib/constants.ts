@@ -96,10 +96,13 @@ export const AFFILIATION_LABELS: Record<string, string> = {
 // no pagan (ver isSponsorGuest en Registration).
 export const PADEL_PRICE_USD = 50;
 
+// Categorías que se pueden elegir hoy. Femenina D se retiró del torneo; el
+// valor sigue en el enum de la base y en las etiquetas de abajo para que una
+// fila vieja se siga leyendo en vez de salir en blanco.
 export const PADEL_CATEGORIES = [
   "FEMENINO_B",
   "FEMENINO_C",
-  "FEMENINO_D",
+  "MASCULINO_A",
   "MASCULINO_B",
   "MASCULINO_C",
 ] as const;
@@ -108,6 +111,7 @@ export const PADEL_CATEGORY_LABELS: Record<string, string> = {
   FEMENINO_B: "Femenina B",
   FEMENINO_C: "Femenina C",
   FEMENINO_D: "Femenina D",
+  MASCULINO_A: "Masculino A",
   MASCULINO_B: "Masculino B",
   MASCULINO_C: "Masculino C",
 };
