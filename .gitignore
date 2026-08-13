@@ -57,3 +57,7 @@ prisma/afiliados-*.sql
 
 # Scripts de un solo uso para probar cosas contra la base local.
 tmp-*
+
+# Volcado de fotos sin procesar (1,5 GB): las que se usen van optimizadas
+# a public/images con un nombre que diga que son.
+public/images/Almuerzo Mived/

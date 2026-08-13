@@ -52,7 +52,10 @@ const MEDIA: Record<string, EventMedia> = {
     recap: recapSeries("recap-golf-25jul", 16),
   },
   "golf|2026-09-05": {
-    cover: "/images/eventos-2026/golf-septiembre.jpg",
+    // Foto en juego, no la del grupo posando: la parada de septiembre
+    // todavía se vende, y una tarjeta que invita a jugar funciona mejor con
+    // alguien jugando.
+    cover: "/images/eventos-2026/golf-septiembre-juego.jpg",
   },
   "padel|2026-08-14": {
     cover: "/images/eventos-2026/padel-agosto.jpg",
