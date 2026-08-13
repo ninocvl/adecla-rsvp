@@ -37,9 +37,9 @@ export const EXPOCAMACOL = {
   // Versión corta para el tile de la fila de disciplinas, donde el resumen
   // completo no cabe sin desbordar la tarjeta.
   tagline:
-    "Del 26 al 29 de agosto, ADECLA viaja a Expocamacol con vuelo, hospedaje y traslados coordinados.",
+    "Del 26 al 29 de agosto, ADECLA viaja a Expocamacol con una delegación de sus afiliados.",
   resumen:
-    "Cuatro días en la feria internacional de construcción, ingeniería y arquitectura de Medellín. Más de 500 empresas exhiben, con agenda académica y charlas técnicas. ADECLA coordina vuelo, hospedaje y traslados de la delegación.",
+    "Cuatro días en la feria internacional de construcción, ingeniería y arquitectura de Medellín. Más de 500 empresas exhiben, con agenda académica y charlas técnicas.",
   fechas: "Del 26 al 29 de agosto",
   // Día de inicio, solo para ordenar su tarjeta entre las demás del año.
   // No vive en la tabla EventDate: la inscripción sigue en Tally, no en el

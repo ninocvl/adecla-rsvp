@@ -28,6 +28,33 @@ function groupPriceTiers(tiers: LandingCard["priceTiers"]) {
     .map(([amountUsd, labels]) => ({ amountUsd, labels }));
 }
 
+/**
+ * El estado de cupos. Cuando la parada se agota y hay pieza de "agotado",
+ * la insignia abre esa pieza: el flyer de la portada sigue siendo el de
+ * siempre, y quien quiera confirmar que ya no entra tiene dónde mirarlo.
+ */
+function CuposBadge({ full, card }: { full: boolean; card: LandingCard }) {
+  const insignia = (
+    <Badge variant={full ? "outline" : "secondary"} className="shrink-0">
+      {full ? "Sin cupos" : `${card.available} cupos`}
+    </Badge>
+  );
+  if (!full || !card.soldOutPoster) return insignia;
+  return (
+    <a
+      href={card.soldOutPoster}
+      target="_blank"
+      rel="noopener"
+      // Área de toque cómoda sin agrandar la insignia: el margen negativo
+      // devuelve el espacio que añade el padding.
+      className="-m-1.5 shrink-0 rounded-full p-1.5 transition-opacity hover:opacity-80"
+      aria-label={`${card.label}: sin cupos. Ver el anuncio de agotado.`}
+    >
+      {insignia}
+    </a>
+  );
+}
+
 export function EventCard({ card }: { card: LandingCard }) {
   const isDate = card.kind === "date";
   const full = isDate && (card.available ?? 0) <= 0;
@@ -161,12 +188,7 @@ export function EventCard({ card }: { card: LandingCard }) {
                 Abierto al público. Los invitados de un patrocinador no
                 pagan.
               </p>
-              <Badge
-                variant={full ? "outline" : "secondary"}
-                className="shrink-0"
-              >
-                {full ? "Sin cupos" : `${card.available} cupos`}
-              </Badge>
+              <CuposBadge full={full} card={card} />
             </div>
             <div className="flex items-baseline justify-between text-sm">
               <dt className="text-muted-foreground">Por participante</dt>
@@ -189,12 +211,7 @@ export function EventCard({ card }: { card: LandingCard }) {
               <p className="text-xs text-muted-foreground">
                 Tarifa por participante, según tu categoría de membresía
               </p>
-              <Badge
-                variant={full ? "outline" : "secondary"}
-                className="shrink-0"
-              >
-                {full ? "Sin cupos" : `${card.available} cupos`}
-              </Badge>
+              <CuposBadge full={full} card={card} />
             </div>
             {priceGroups.length > 0 ? (
               <dl className="space-y-1">

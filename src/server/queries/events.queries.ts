@@ -44,6 +44,8 @@ export interface LandingCard {
   // Solo aplica a kind "date": la parada ya se jugó, así que la tarjeta
   // deja de vender cupos y pasa a mostrar el recap con fotos (si hay).
   isPast?: boolean;
+  /** Pieza de "agotado", si la parada se quedó sin cupos y aún no se juega. */
+  soldOutPoster?: string | null;
   recapPhotos?: string[];
 }
 
@@ -69,10 +71,9 @@ export async function getLandingCards(): Promise<LandingCard[]> {
       for (const d of event.dates) {
         const isPast = d.date.getTime() < Date.now();
         const available = Math.max(0, d.capacity - d.reservedCount);
-        // Sin cupos y sin jugar: la pieza de "agotado" sustituye al flyer.
-        // Seguir mostrando el que invita a inscribirse es lo que hace que
-        // la gente llame preguntando si todavía puede entrar.
-        const soldOutCover =
+        // La pieza de "agotado" no sustituye al flyer: se abre al pulsar el
+        // estado "Sin cupos", como el póster de categorías.
+        const soldOutPoster =
           available === 0 && !isPast ? getSoldOutCover(event.slug, d.date) : null;
         cards.push({
           kind: "date",
@@ -82,11 +83,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           description: event.description,
           // event-media.ts manda; los valores de la base quedan solo como
           // respaldo para datos sembrados antes de mover esto a código.
-          imageUrl:
-            soldOutCover ??
-            getEventCover(event.slug, d.date) ??
-            d.imageUrl ??
-            event.imageUrl,
+          imageUrl: getEventCover(event.slug, d.date) ?? d.imageUrl ?? event.imageUrl,
           imagePosition: getEventCoverPosition(event.slug, d.date),
           minPriceUsd,
           priceTiers,
@@ -96,6 +93,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           available,
           capacity: d.capacity,
           isPast,
+          soldOutPoster,
           recapPhotos: isPast ? getRecapPhotos(event.slug, d.date) : [],
         });
       }

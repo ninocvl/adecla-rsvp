@@ -67,8 +67,8 @@ export function MisionEmpresarialCard() {
 
       <CardContent className="flex-1">
         <p className="text-sm text-muted-foreground">
-          Delegación de ADECLA a {EXPOCAMACOL.feria}. Vuelo, hospedaje y
-          traslados coordinados.
+          Delegación de ADECLA a {EXPOCAMACOL.feria}, la feria de construcción
+          más grande de Colombia.
         </p>
         <p className="mt-3 border-t pt-3 text-sm text-muted-foreground">
           La inscripción se llena en un formulario aparte.

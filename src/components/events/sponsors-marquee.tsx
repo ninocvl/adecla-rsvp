@@ -16,7 +16,7 @@ const TOTAL_LOGOS = 57;
 // globals.css (.marquee-track) para poder anularla con prefers-reduced-motion.
 export function SponsorsMarquee() {
   return (
-    <div className="marquee relative overflow-hidden py-2">
+    <div className="marquee relative overflow-hidden py-3">
       <div className="marquee-track flex w-max items-center">
         {[0, 1].map((i) => (
           /* eslint-disable-next-line @next/next/no-img-element */
@@ -28,7 +28,7 @@ export function SponsorsMarquee() {
             width={12225}
             height={112}
             decoding="async"
-            className="h-14 w-auto max-w-none shrink-0 pr-14 sm:h-16"
+            className="h-20 w-auto max-w-none shrink-0 pr-14 sm:h-24"
           />
         ))}
       </div>

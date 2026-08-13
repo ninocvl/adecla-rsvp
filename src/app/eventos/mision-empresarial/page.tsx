@@ -5,7 +5,6 @@ import {
   Handshake,
   MapPin,
   Package,
-  Plane,
   Presentation,
   Store,
   TrendingUp,
@@ -28,8 +27,10 @@ const RAZONES = [
   { icono: Presentation, titulo: "Aprende de la agenda", texto: "técnica y académica." },
 ];
 
+// Solo lo que ADECLA da de verdad. El viaje lo costea y organiza cada
+// participante: prometer vuelo y hospedaje aquí generaba una expectativa
+// que nadie iba a cumplir.
 const INCLUYE = [
-  { icono: Plane, texto: "Vuelo, hospedaje y traslados coordinados por ADECLA." },
   { icono: Presentation, texto: "Agenda académica: conferencias y charlas técnicas." },
   { icono: Store, texto: `Acceso a la muestra comercial de ${EXPOCAMACOL.feria}.` },
 ];
@@ -114,7 +115,7 @@ export default function MisionEmpresarialPage() {
                   <div>
                     <dt className="text-muted-foreground">Incluye</dt>
                     <dd className="mt-0.5 font-medium text-foreground">
-                      Vuelo, hospedaje, traslados y acceso a la feria.
+                      Agenda académica y acceso a la feria.
                     </dd>
                   </div>
                 </div>
@@ -149,8 +150,8 @@ export default function MisionEmpresarialPage() {
             <p>{EXPOCAMACOL.resumen}</p>
             <p>
               Necesitas pasaporte con al menos seis meses de vigencia al momento
-              del viaje. Los detalles de vuelo y hospedaje se envían por correo a
-              cada participante inscrito.
+              del viaje. El vuelo y el hospedaje corren por cuenta de cada
+              participante.
             </p>
           </div>
 
