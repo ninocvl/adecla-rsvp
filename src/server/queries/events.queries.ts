@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import {
   getEventCover,
   getEventCoverPosition,
+  getSoldOutCover,
   getRecapPhotos,
 } from "@/lib/event-media";
 
@@ -67,6 +68,12 @@ export async function getLandingCards(): Promise<LandingCard[]> {
     if (event.status === "PUBLISHED" && event.dates.length > 0) {
       for (const d of event.dates) {
         const isPast = d.date.getTime() < Date.now();
+        const available = Math.max(0, d.capacity - d.reservedCount);
+        // Sin cupos y sin jugar: la pieza de "agotado" sustituye al flyer.
+        // Seguir mostrando el que invita a inscribirse es lo que hace que
+        // la gente llame preguntando si todavía puede entrar.
+        const soldOutCover =
+          available === 0 && !isPast ? getSoldOutCover(event.slug, d.date) : null;
         cards.push({
           kind: "date",
           id: d.id,
@@ -75,14 +82,18 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           description: event.description,
           // event-media.ts manda; los valores de la base quedan solo como
           // respaldo para datos sembrados antes de mover esto a código.
-          imageUrl: getEventCover(event.slug, d.date) ?? d.imageUrl ?? event.imageUrl,
+          imageUrl:
+            soldOutCover ??
+            getEventCover(event.slug, d.date) ??
+            d.imageUrl ??
+            event.imageUrl,
           imagePosition: getEventCoverPosition(event.slug, d.date),
           minPriceUsd,
           priceTiers,
           date: d.date,
           label: d.label,
           venue: d.venue,
-          available: Math.max(0, d.capacity - d.reservedCount),
+          available,
           capacity: d.capacity,
           isPast,
           recapPhotos: isPast ? getRecapPhotos(event.slug, d.date) : [],

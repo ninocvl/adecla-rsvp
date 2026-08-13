@@ -23,6 +23,12 @@ interface EventMedia {
    * propio valor según dónde esté el sujeto.
    */
   coverPosition?: string;
+  /**
+   * Pieza que reemplaza la portada cuando se agotan los cupos y el torneo
+   * todavía no se ha jugado. Que el flyer siga invitando a inscribirse
+   * cuando ya no se puede es lo que genera las llamadas preguntando.
+   */
+  soldOut?: string;
   /** Fotos del torneo ya jugado. Ausente mientras no se haya jugado. */
   recap?: string[];
 }
@@ -50,6 +56,7 @@ const MEDIA: Record<string, EventMedia> = {
   },
   "padel|2026-08-14": {
     cover: "/images/eventos-2026/padel-agosto.jpg",
+    soldOut: "/images/padel-sold-out.jpg",
   },
   // Placeholder mientras el evento no tenga fecha publicada.
   padel: {
@@ -74,6 +81,14 @@ export function getEventCover(eventSlug: string, date?: Date): string | null {
 
 export function getEventCoverPosition(eventSlug: string, date?: Date): string {
   return MEDIA[keyFor(eventSlug, date)]?.coverPosition ?? "top";
+}
+
+/**
+ * Pieza de "agotado" del evento, si la tiene. La decide quien consulta,
+ * que es quien sabe cuántos cupos quedan.
+ */
+export function getSoldOutCover(eventSlug: string, date?: Date): string | null {
+  return MEDIA[keyFor(eventSlug, date)]?.soldOut ?? null;
 }
 
 export function getRecapPhotos(eventSlug: string, date: Date): string[] {
