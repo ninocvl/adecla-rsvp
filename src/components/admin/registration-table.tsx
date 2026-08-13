@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StatusChangeDialog } from "./status-change-dialog";
-import { RegistrationDangerActions } from "./registration-danger-actions";
+import { RegistrationRowMenu } from "./registration-row-menu";
 
 export function RegistrationTable({
   registrations,
@@ -88,34 +88,34 @@ export function RegistrationTable({
                     Ver
                   </Button>
                   {editable && (
-                    <>
-                      <StatusChangeDialog
-                        registrationId={r.id}
-                        code={r.code}
-                        currentStatus={r.status}
-                      />
-                      <RegistrationDangerActions
-                        registrationId={r.id}
-                        code={r.code}
-                        archivada={!!r.archivedAt}
-                        compacto
-                      />
-                    </>
+                    <StatusChangeDialog
+                      registrationId={r.id}
+                      code={r.code}
+                      currentStatus={r.status}
+                    />
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    nativeButton={false}
-                    render={
-                      <a
-                        href={`/api/proformas/${r.id}/pdf`}
-                        target="_blank"
-                        rel="noopener"
-                      />
-                    }
-                  >
-                    Proforma
-                  </Button>
+                  {editable ? (
+                    <RegistrationRowMenu
+                      registrationId={r.id}
+                      code={r.code}
+                      archivada={!!r.archivedAt}
+                    />
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={`/api/proformas/${r.id}/pdf`}
+                          target="_blank"
+                          rel="noopener"
+                        />
+                      }
+                    >
+                      Proforma
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

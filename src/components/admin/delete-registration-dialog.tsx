@@ -2,11 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import {
-  archiveRegistrationAction,
-  deleteRegistrationAction,
-  restoreRegistrationAction,
-} from "@/server/actions/admin.actions";
+import { deleteRegistrationAction } from "@/server/actions/admin.actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,69 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface Props {
-  registrationId: string;
-  code: string;
-  archivada?: boolean;
-  /** En la tabla los botones van compactos; en el detalle, a tamaño normal. */
-  compacto?: boolean;
-}
-
-export function RegistrationDangerActions({
-  registrationId,
-  code,
-  archivada = false,
-  compacto = false,
-}: Props) {
-  const size = compacto ? ("sm" as const) : undefined;
-  const [isPending, startTransition] = useTransition();
-
-  function archivar() {
-    startTransition(async () => {
-      const r = await archiveRegistrationAction(registrationId);
-      if (r.ok) toast.success(`${code} archivada. Liberó sus cupos.`);
-      else toast.error(r.error);
-    });
-  }
-
-  function restaurar() {
-    startTransition(async () => {
-      const r = await restoreRegistrationAction(registrationId);
-      if (r.ok) toast.success(`${code} restaurada.`);
-      else toast.error(r.error);
-    });
-  }
-
-  return (
-    <>
-      {archivada ? (
-        <Button
-          variant="outline"
-          size={size}
-          onClick={restaurar}
-          disabled={isPending}
-        >
-          Restaurar
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          size={size}
-          onClick={archivar}
-          disabled={isPending}
-        >
-          Archivar
-        </Button>
-      )}
-      <DeleteDialog
-        registrationId={registrationId}
-        code={code}
-        size={size}
-      />
-    </>
-  );
-}
-
 /**
  * Doble confirmación para el borrado real: primero hay que aceptar la
  * advertencia y después escribir el código de la inscripción. Son dos actos
@@ -90,16 +23,25 @@ export function RegistrationDangerActions({
  * El servidor vuelve a comprobar el código, así que saltarse el diálogo no
  * sirve de nada.
  */
-function DeleteDialog({
+export function DeleteDialog({
   registrationId,
   code,
   size,
+  open: openExterno,
+  onOpenChange,
+  sinDisparador = false,
 }: {
   registrationId: string;
   code: string;
   size?: "sm";
+  /** Control desde fuera, para abrirlo desde un elemento de menú. */
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+  sinDisparador?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [openInterno, setOpenInterno] = useState(false);
+  const open = openExterno ?? openInterno;
+  const setOpen = onOpenChange ?? setOpenInterno;
   const [paso, setPaso] = useState<1 | 2>(1);
   const [codigo, setCodigo] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -128,17 +70,19 @@ function DeleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={cerrar}>
-      <DialogTrigger
-        render={
-          <Button
-            variant="outline"
-            size={size}
-            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            Borrar
-          </Button>
-        }
-      />
+      {!sinDisparador && (
+        <DialogTrigger
+          render={
+            <Button
+              variant="outline"
+              size={size}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              Borrar
+            </Button>
+          }
+        />
+      )}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
