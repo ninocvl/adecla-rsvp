@@ -96,9 +96,10 @@ export const AFFILIATION_LABELS: Record<string, string> = {
 // no pagan (ver isSponsorGuest en Registration).
 export const PADEL_PRICE_USD = 50;
 
-// Categorías que se pueden elegir hoy. Femenina D se retiró del torneo; el
-// valor sigue en el enum de la base y en las etiquetas de abajo para que una
-// fila vieja se siga leyendo en vez de salir en blanco.
+// Categorías que se pueden elegir hoy. Femenina D se retiró del torneo y sus
+// inscritas pasaron a Femenina C; el valor sigue existiendo en el enum de la
+// base (Postgres no deja quitarlo sin recrear el tipo) y en las etiquetas de
+// abajo, para que una fila vieja se siga leyendo en vez de salir en blanco.
 export const PADEL_CATEGORIES = [
   "FEMENINO_B",
   "FEMENINO_C",

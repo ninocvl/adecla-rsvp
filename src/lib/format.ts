@@ -54,6 +54,35 @@ export function formatDateParts(date: Date | string): {
   };
 }
 
+/**
+ * "14 y 15 de agosto de 2026" cuando el torneo dura dos días, y la fecha
+ * suelta cuando dura uno. Se evita el guion tipográfico porque esto se lee
+ * en voz alta por teléfono tan a menudo como en pantalla.
+ */
+export function formatEventDateRange(
+  date: Date | string,
+  endDate?: Date | string | null
+): string {
+  if (!endDate) return formatEventDate(date);
+
+  const inicio = new Date(date);
+  const fin = new Date(endDate);
+  const mismoMes =
+    inicio.getUTCFullYear() === fin.getUTCFullYear() &&
+    inicio.getUTCMonth() === fin.getUTCMonth();
+
+  if (!mismoMes) return `${formatEventDate(inicio)} al ${formatEventDate(fin)}`;
+
+  // Mismo mes: no hace falta repetirlo. "14 y 15 de agosto de 2026".
+  const resto = new Intl.DateTimeFormat("es-DO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(fin);
+  return `${inicio.getUTCDate()} y ${resto}`;
+}
+
 export function formatShortDate(date: Date | string): string {
   return new Intl.DateTimeFormat("es-DO", {
     day: "2-digit",

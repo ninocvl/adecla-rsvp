@@ -17,11 +17,13 @@ import {
   PADEL_CLUB_LABELS,
 } from "@/lib/constants";
 import { findMatchingSponsor } from "@/lib/sponsors";
+import { buscarEmpresas } from "@/lib/buscar-empresa";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SponsorPicker } from "@/components/registration/sponsor-picker";
 import {
   Select,
   SelectContent,
@@ -160,11 +162,7 @@ export function CompanyStep({
   const sponsorRnc = watch("sponsorRnc") ?? "";
 
   const filteredAffiliates = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return affiliates.slice(0, 20);
-    return affiliates
-      .filter((a) => a.name.toLowerCase().includes(q))
-      .slice(0, 20);
+    return buscarEmpresas(affiliates, search);
   }, [affiliates, search]);
 
   const sponsorMatch = useMemo(() => {
@@ -176,6 +174,13 @@ export function CompanyStep({
   const isSponsorSituation =
     padelParticipantType === "PATROCINADOR" || (!isPadel && isSponsorGuest === true);
   const sponsorRncMismatch = isSponsorSituation && sponsorRncTyped && !sponsorMatch;
+
+  // Elegir de la lista fija el nombre y el RNC juntos: los dos salen de la
+  // misma fila, así que no pueden quedar descuadrados.
+  function elegirPatrocinador(sponsor: { name: string; rnc: string } | null) {
+    setValue("sponsorName", sponsor?.name ?? "", { shouldValidate: true });
+    setValue("sponsorRnc", sponsor?.rnc ?? "", { shouldValidate: true });
+  }
 
   function chooseGolfSituation(value: GolfSituation) {
     setValue("isAffiliated", value === "AFILIADO", { shouldValidate: true });
@@ -218,6 +223,7 @@ export function CompanyStep({
       setSelectedAffiliate(null);
       setSearch("");
       setValue("affiliateId", undefined);
+      setValue("couponCode", "");
     }
     if (value !== "CLUB") setValue("padelClub", undefined);
     if (value !== "PATROCINADOR") {
@@ -246,6 +252,10 @@ export function CompanyStep({
     setSelectedAffiliate(affiliate);
     setSearch(affiliate.name);
     setComboboxOpen(false);
+    // El cupón que se hubiera escrito era para la empresa anterior: si esta
+    // ya lo gastó el campo ni siquiera se muestra, y el valor viejo viajaría
+    // escondido hasta el envío.
+    setValue("couponCode", "");
     setValue("affiliateId", affiliate.id, { shouldValidate: true });
     setValue("legalName", affiliate.name);
     if (affiliate.affiliationType) {
@@ -370,6 +380,43 @@ export function CompanyStep({
             </div>
           )}
 
+          {/* El beneficio de pareja gratis es uno por empresa afiliada, así
+              que se pide con el cupón en vez de aplicarse solo por ser
+              afiliado. Opcional: sin cupón se pagan los dos jugadores.
+              Cuando la empresa ya lo gastó no se muestra nada: el paso queda
+              igual que para cualquiera que no tenga cupón, sin anunciarle un
+              beneficio que ya no aplica. Hace falta haber elegido la empresa
+              para saberlo. */}
+          {padelParticipantType === "AFILIADO" &&
+            selectedAffiliate &&
+            !selectedAffiliate.couponUsed && (
+            <div className="space-y-2">
+              <Label htmlFor="couponCode">
+                Cupón de pareja gratis{" "}
+                <span className="font-normal text-muted-foreground">
+                  (opcional)
+                </span>
+              </Label>
+              <Input
+                id="couponCode"
+                placeholder="Escribe el código que te dimos"
+                autoComplete="off"
+                className="font-mono uppercase"
+                {...register("couponCode")}
+              />
+              {errors.couponCode && (
+                <p className="text-sm text-destructive">
+                  {errors.couponCode.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                El cupón cubre al acompañante y cada empresa afiliada lo puede
+                usar una vez. Aplica al inscribir dos jugadores. Si no lo
+                tienes a mano, escríbenos.
+              </p>
+            </div>
+          )}
+
           {padelParticipantType === "CLUB" && (
             <div className="space-y-2">
               <Label htmlFor="padelClub">Tu club</Label>
@@ -418,62 +465,16 @@ export function CompanyStep({
                 Al ser invitado de un patrocinador, tu inscripción no genera
                 proforma ni tiene costo.
               </p>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorName">Empresa patrocinadora</Label>
-                <Input
-                  id="sponsorName"
-                  placeholder="Nombre del patrocinador"
-                  {...register("sponsorName")}
-                />
-                {errors.sponsorName && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorName.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorRnc">RNC del patrocinador</Label>
-                <Input
-                  id="sponsorRnc"
-                  placeholder="130123456"
-                  {...register("sponsorRnc", {
-                    onChange: () => setSponsorRncAcknowledged(false),
-                  })}
-                />
-                {errors.sponsorRnc && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorRnc.message}
-                  </p>
-                )}
-                {sponsorRncMismatch && (
-                  <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-                    <p className="font-medium text-amber-900">
-                      No encontramos ese RNC en nuestra lista de
-                      patrocinadores.
-                    </p>
-                    <p className="text-amber-800">
-                      Puedes seguir de todas formas: lo revisaremos antes de
-                      confirmar tu cupo. ¿Estás seguro de que el RNC es
-                      correcto?
-                    </p>
-                    <label className="flex items-center gap-2">
-                      <Checkbox
-                        checked={sponsorRncAcknowledged}
-                        onCheckedChange={(checked) =>
-                          setSponsorRncAcknowledged(checked === true)
-                        }
-                      />
-                      <span>Sí, el RNC es correcto.</span>
-                    </label>
-                  </div>
-                )}
-                {sponsorMatch && (
-                  <p className="text-sm text-primary">
-                    Encontramos a {sponsorMatch.name} en nuestra lista de
-                    patrocinadores.
-                  </p>
-                )}
-              </div>
+              <SponsorPicker
+                sponsorName={sponsorName}
+                sponsorRnc={sponsorRnc}
+                register={register}
+                errors={errors}
+                onPick={elegirPatrocinador}
+                rncMismatch={sponsorRncMismatch}
+                acknowledged={sponsorRncAcknowledged}
+                onAcknowledge={setSponsorRncAcknowledged}
+              />
             </div>
           )}
 
@@ -615,62 +616,16 @@ export function CompanyStep({
                 Al ser invitado de un patrocinador, tu inscripción no genera
                 proforma ni tiene costo.
               </p>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorName">Empresa patrocinadora</Label>
-                <Input
-                  id="sponsorName"
-                  placeholder="Nombre del patrocinador"
-                  {...register("sponsorName")}
-                />
-                {errors.sponsorName && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorName.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sponsorRnc">RNC del patrocinador</Label>
-                <Input
-                  id="sponsorRnc"
-                  placeholder="130123456"
-                  {...register("sponsorRnc", {
-                    onChange: () => setSponsorRncAcknowledged(false),
-                  })}
-                />
-                {errors.sponsorRnc && (
-                  <p className="text-sm text-destructive">
-                    {errors.sponsorRnc.message}
-                  </p>
-                )}
-                {sponsorRncMismatch && (
-                  <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-                    <p className="font-medium text-amber-900">
-                      No encontramos ese RNC en nuestra lista de
-                      patrocinadores.
-                    </p>
-                    <p className="text-amber-800">
-                      Puedes seguir de todas formas: lo revisaremos antes de
-                      confirmar tu cupo. ¿Estás seguro de que el RNC es
-                      correcto?
-                    </p>
-                    <label className="flex items-center gap-2">
-                      <Checkbox
-                        checked={sponsorRncAcknowledged}
-                        onCheckedChange={(checked) =>
-                          setSponsorRncAcknowledged(checked === true)
-                        }
-                      />
-                      <span>Sí, el RNC es correcto.</span>
-                    </label>
-                  </div>
-                )}
-                {sponsorMatch && (
-                  <p className="text-sm text-primary">
-                    Encontramos a {sponsorMatch.name} en nuestra lista de
-                    patrocinadores.
-                  </p>
-                )}
-              </div>
+              <SponsorPicker
+                sponsorName={sponsorName}
+                sponsorRnc={sponsorRnc}
+                register={register}
+                errors={errors}
+                onPick={elegirPatrocinador}
+                rncMismatch={sponsorRncMismatch}
+                acknowledged={sponsorRncAcknowledged}
+                onAcknowledge={setSponsorRncAcknowledged}
+              />
             </div>
           )}
 

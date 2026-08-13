@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { LandingCard } from "@/server/queries/events.queries";
 import { AFFILIATION_LABELS, PADEL_PRICE_USD } from "@/lib/constants";
 import { PADEL_CATEGORIES_POSTER } from "@/lib/event-media";
-import { formatDateParts, formatEventDate, formatUsd } from "@/lib/format";
+import { formatDateParts, formatEventDateRange, formatUsd } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +65,14 @@ export function EventCard({ card }: { card: LandingCard }) {
   const dateParts = isDate
     ? formatDateParts(card.date as Date)
     : { day: "", month: "" };
+  // Una parada de dos días muestra los dos en el bloque grande ("14–15"):
+  // enseñar solo el primero es lo que hacía creer que era un día suelto.
+  const finParts = card.endDate ? formatDateParts(card.endDate) : null;
+  const diasVisibles =
+    finParts && finParts.month === dateParts.month
+      ? `${dateParts.day}–${finParts.day}`
+      : dateParts.day;
+
   // La URL del detalle usa slug + fecha (YYYY-MM-DD) y no el id de la fila:
   // se lee, y sobrevive a un reseed que cambie los cuid.
   const detalleHref = isDate
@@ -135,7 +143,7 @@ export function EventCard({ card }: { card: LandingCard }) {
                 className="date-block text-3xl font-semibold text-foreground"
                 aria-hidden
               >
-                {dateParts.day}
+                {diasVisibles}
               </p>
               <p
                 className="mt-1 text-[0.8rem] font-semibold tracking-widest text-[var(--oro)]"
@@ -152,9 +160,9 @@ export function EventCard({ card }: { card: LandingCard }) {
                 {card.venue}
               </p>
               {/* La fecha completa queda accesible para lectores de
-                  pantalla, que no deben leer "5" y "SEP" sueltos. */}
+                  pantalla, que no deben leer "14" y "AGO" sueltos. */}
               <span className="sr-only">
-                {formatEventDate(card.date as Date)}
+                {formatEventDateRange(card.date as Date, card.endDate)}
               </span>
             </div>
           </div>

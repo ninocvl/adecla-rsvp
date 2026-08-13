@@ -4,10 +4,11 @@ import { logoutAction } from "@/server/actions/auth.actions";
 import { Logo } from "@/components/shared/logo";
 import { AdminNavLink } from "@/components/shared/admin-nav-link";
 import { Button } from "@/components/ui/button";
+import { puedeVerPanel } from "@/lib/permissions";
 
 export async function Navbar() {
   const session = await auth();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const isAdmin = puedeVerPanel(session?.user?.role);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur">

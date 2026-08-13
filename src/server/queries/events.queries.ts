@@ -9,6 +9,8 @@ import {
 export interface LandingEventDate {
   id: string;
   date: Date;
+  /** Último día si el torneo dura más de uno (ver formatEventDateRange). */
+  endDate: Date | null;
   label: string;
   venue: string;
   imageUrl: string | null;
@@ -37,6 +39,8 @@ export interface LandingCard {
   // Constructor, Proveedor o Desarrollador — nunca un monto único.
   priceTiers: LandingPriceTier[];
   date?: Date;
+  /** Último día si la parada dura más de uno (ver formatEventDateRange). */
+  endDate?: Date | null;
   label?: string;
   venue?: string;
   available?: number;
@@ -88,6 +92,7 @@ export async function getLandingCards(): Promise<LandingCard[]> {
           minPriceUsd,
           priceTiers,
           date: d.date,
+          endDate: d.endDate,
           label: d.label,
           venue: d.venue,
           available,
@@ -173,6 +178,7 @@ export async function getWizardEvents(): Promise<WizardEvent[]> {
     dates: event.dates.map((d) => ({
       id: d.id,
       date: d.date,
+      endDate: d.endDate,
       label: d.label,
       venue: d.venue,
       imageUrl: d.imageUrl,

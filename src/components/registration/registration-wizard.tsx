@@ -14,7 +14,7 @@ import {
   PADEL_CLUB_LABELS,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
-import { formatEventDate, formatUsd } from "@/lib/format";
+import { formatEventDate, formatEventDateRange, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,10 @@ export function RegistrationWizard({
     (events.length === 1 ? events[0] : undefined);
 
   const [step, setStep] = useState(0);
+  // Quien llega desde la tarjeta de un evento ya eligió: enseñarle el otro
+  // torneo solo lo hace dudar de si está en el sitio correcto. Queda la
+  // salida por si de verdad se equivocó de enlace.
+  const [eventoFijoAbierto, setEventoFijoAbierto] = useState(false);
   const [company, setCompany] = useState<CompanyStepInput>();
   const [eventId, setEventId] = useState<string | undefined>(initialEvent?.id);
   const [eventDateIds, setEventDateIds] = useState<string[]>(
@@ -80,6 +84,8 @@ export function RegistrationWizard({
     [events, eventId]
   );
   const isPadelEvent = event?.slug === "padel";
+  const eventoFijo =
+    !eventoFijoAbierto && initialEventSlug ? initialEvent : undefined;
 
   const STEP_EVENTO = 0;
   const STEP_EMPRESA = 1;
@@ -92,10 +98,18 @@ export function RegistrationWizard({
   // Invitado de patrocinador: existe tanto en pádel como en golf.
   const isSponsorGuest = company?.isSponsorGuest === true;
   const padelClub = isPadelEvent ? company?.padelClub : undefined;
-  // Beneficio de membresía: un afiliado de ADECLA que juega con acompañante
-  // no paga por ese segundo jugador (solo pádel, ver PADEL_PARTICIPANT_TYPES).
+  // Beneficio de membresía: la empresa afiliada no paga por el acompañante,
+  // pero es UNO por empresa, así que hace falta pedirlo con el cupón.
+  //
+  // Aquí solo se mira si escribieron algo, no si el código es el correcto:
+  // comprobarlo en el navegador metería el cupón en el JavaScript que se
+  // descarga, y entonces cualquiera lo leería desde las herramientas del
+  // navegador. Quien escriba un código equivocado ve el descuento en la
+  // previsualización y el servidor le explica al enviar por qué no aplica.
   const freeCompanion =
-    isPadelEvent && company?.padelParticipantType === "AFILIADO";
+    isPadelEvent &&
+    company?.padelParticipantType === "AFILIADO" &&
+    !!company?.couponCode?.trim();
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
@@ -215,6 +229,23 @@ export function RegistrationWizard({
         <div className="space-y-6">
           {step === STEP_EVENTO && (
             <section key="step-evento" className="step-fade-in space-y-6">
+              {eventoFijo ? (
+                <div className="space-y-3">
+                  <SectionLabel>Evento</SectionLabel>
+                  <div className="rounded-lg border border-primary bg-accent p-4">
+                    <p className="font-medium">{eventoFijo.name}</p>
+                    {events.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setEventoFijoAbierto(true)}
+                        className="mt-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                      >
+                        Vine por otro evento
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
               <div className="space-y-3">
                 <SectionLabel>Evento</SectionLabel>
                 <div
@@ -254,6 +285,7 @@ export function RegistrationWizard({
                   ))}
                 </div>
               </div>
+              )}
 
               {event && (
                 <div className="space-y-3">
@@ -315,7 +347,7 @@ export function RegistrationWizard({
                         >
                           <span>
                             <span className="block font-medium">
-                              {formatEventDate(d.date)}
+                              {formatEventDateRange(d.date, d.endDate)}
                             </span>
                             <span className="text-sm text-muted-foreground">
                               {d.label} · {d.venue}
@@ -446,7 +478,8 @@ export function RegistrationWizard({
                       )}
                       {freeCompanion && participants.length === 2 && (
                         <p className="text-sm text-primary">
-                          Acompañante gratis, beneficio de afiliado ADECLA.
+                          Acompañante gratis con tu cupón. Lo validamos al
+                          generar la inscripción.
                         </p>
                       )}
                     </div>
@@ -462,7 +495,7 @@ export function RegistrationWizard({
                       {selectedDates.map((d) => (
                         <div key={d.id} className="rounded-lg bg-accent p-4">
                           <p className="text-lg font-semibold">
-                            {formatEventDate(d.date)}
+                            {formatEventDateRange(d.date, d.endDate)}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {d.label} · {d.venue}
@@ -659,7 +692,7 @@ export function RegistrationWizard({
           <PriceSummary
             eventName={event?.name}
             dates={selectedDates.map((d) => ({
-              text: formatEventDate(d.date),
+              text: formatEventDateRange(d.date, d.endDate),
               venue: d.venue,
             }))}
             categoryLabel={categoryLabel}

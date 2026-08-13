@@ -9,6 +9,10 @@ datasource db {
 
 enum Role {
   ADMIN
+  // Entra al panel y lo ve todo, pero no cambia nada: ni estados, ni
+  // archivar, ni borrar. Para quien necesita consultar inscripciones sin
+  // riesgo de tocar datos.
+  LECTOR
   COMPANY
 }
 
@@ -104,7 +108,30 @@ model Affiliate {
   email           String?
   status          String?
   companies       Company[]
+  // Canje de la pareja gratis. Existe la fila = esta empresa ya la usó.
+  couponRedemption CouponRedemption?
   createdAt       DateTime         @default(now())
+}
+
+/**
+ * Canje de la "pareja gratis" del beneficio de membresía. El código es uno
+ * solo para todas las afiliadas (ver CUPON_PAREJA_GRATIS en lib/coupons.ts),
+ * así que lo que hay que controlar no es el código sino quién ya lo usó: el
+ * único por afiliada es lo que limita el beneficio a una pareja por empresa.
+ *
+ * Guardamos también el código tal como se canjeó, porque si algún año se
+ * cambia, las inscripciones viejas siguen diciendo con qué entraron.
+ */
+model CouponRedemption {
+  id             String       @id @default(cuid())
+  code           String
+  affiliateId    String       @unique
+  affiliate      Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  // Si se borra la inscripción, el canje se va con ella y la empresa
+  // recupera su pareja gratis. Archivar la libera igual, pero desde el código.
+  registrationId String       @unique
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
 }
 
 model Event {
@@ -130,6 +157,10 @@ model EventDate {
   eventId       String
   event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   date          DateTime
+  // Último día cuando el torneo dura más de uno. Nulo = un solo día. La
+  // parada de pádel se juega 14 y 15, y mostrar solo el 14 hacía que la
+  // gente creyera que era un día suelto.
+  endDate       DateTime?
   label         String
   venue         String
   imageUrl      String?
@@ -187,11 +218,17 @@ model Registration {
   participants Participant[]
   proforma     Proforma?
   history      StatusHistory[]
+  couponUsed   CouponRedemption?
+  // Archivada: sale del panel y libera el cupo, pero la fila se conserva por
+  // si hay que auditar un pago o recuperarla. Es la vía reversible; el
+  // borrado real elimina la fila y no deja rastro.
+  archivedAt   DateTime?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
   @@index([companyId])
   @@index([eventDateId, status])
+  @@index([archivedAt])
 }
 
 model Participant {

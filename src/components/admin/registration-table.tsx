@@ -12,11 +12,15 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StatusChangeDialog } from "./status-change-dialog";
+import { RegistrationRowMenu } from "./registration-row-menu";
 
 export function RegistrationTable({
   registrations,
+  editable = true,
 }: {
   registrations: AdminRegistration[];
+  /** El rol LECTOR ve la tabla pero sin ninguna acción que mute datos. */
+  editable?: boolean;
 }) {
   if (registrations.length === 0) {
     return (
@@ -83,25 +87,35 @@ export function RegistrationTable({
                   >
                     Ver
                   </Button>
-                  <StatusChangeDialog
-                    registrationId={r.id}
-                    code={r.code}
-                    currentStatus={r.status}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    nativeButton={false}
-                    render={
-                      <a
-                        href={`/api/proformas/${r.id}/pdf`}
-                        target="_blank"
-                        rel="noopener"
-                      />
-                    }
-                  >
-                    Proforma
-                  </Button>
+                  {editable && (
+                    <StatusChangeDialog
+                      registrationId={r.id}
+                      code={r.code}
+                      currentStatus={r.status}
+                    />
+                  )}
+                  {editable ? (
+                    <RegistrationRowMenu
+                      registrationId={r.id}
+                      code={r.code}
+                      archivada={!!r.archivedAt}
+                    />
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={`/api/proformas/${r.id}/pdf`}
+                          target="_blank"
+                          rel="noopener"
+                        />
+                      }
+                    >
+                      Proforma
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

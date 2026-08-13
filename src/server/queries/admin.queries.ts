@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import type { RegistrationStatus } from "@/generated/prisma/enums";
+import type {
+  PadelCategory,
+  RegistrationStatus,
+} from "@/generated/prisma/enums";
+import { PADEL_CATEGORIES } from "@/lib/constants";
 
 const PENDING_STATUSES: RegistrationStatus[] = [
   "PROFORMA_GENERADA",
@@ -20,13 +24,19 @@ export async function getAdminMetrics() {
     padelRegistrants,
   ] = await Promise.all([
     prisma.event.count({ where: { status: "PUBLISHED" } }),
+    // Lo archivado no cuenta en ninguna métrica: para el panel es como si
+    // no existiera, aunque la fila siga en la base.
     prisma.participant.count({
-      where: { registration: { status: { not: "CANCELADA" } } },
+      where: {
+        registration: { status: { not: "CANCELADA" }, archivedAt: null },
+      },
     }),
     prisma.registration.count({
-      where: { status: { in: PENDING_STATUSES } },
+      where: { status: { in: PENDING_STATUSES }, archivedAt: null },
     }),
-    prisma.registration.count({ where: { status: "CONFIRMADA" } }),
+    prisma.registration.count({
+      where: { status: "CONFIRMADA", archivedAt: null },
+    }),
     prisma.company.count(),
     prisma.company.count({ where: { wantsToAffiliate: true } }),
     prisma.eventDate.findMany({
@@ -37,13 +47,21 @@ export async function getAdminMetrics() {
     // Total de jugadores que van a pádel: suma de quantity, no cantidad de
     // inscripciones (cada una puede traer 1 o 2 jugadores).
     prisma.registration.aggregate({
-      where: { event: { slug: "padel" }, status: { not: "CANCELADA" } },
+      where: {
+        event: { slug: "padel" },
+        status: { not: "CANCELADA" },
+        archivedAt: null,
+      },
       _sum: { quantity: true },
     }),
     // Empresas/personas distintas inscritas en pádel: una misma empresa
     // (mismo RNC) que se inscribe más de una vez no debe contarse dos veces.
     prisma.registration.findMany({
-      where: { event: { slug: "padel" }, status: { not: "CANCELADA" } },
+      where: {
+        event: { slug: "padel" },
+        status: { not: "CANCELADA" },
+        archivedAt: null,
+      },
       select: { companyId: true },
       distinct: ["companyId"],
     }),
@@ -74,6 +92,8 @@ export async function getAdminMetrics() {
 export interface AdminRegistrationFilters {
   status?: RegistrationStatus;
   eventDateId?: string;
+  /** Por defecto el panel solo muestra las vigentes. */
+  archivadas?: boolean;
 }
 
 export async function getAdminRegistrations(
@@ -83,6 +103,9 @@ export async function getAdminRegistrations(
     where: {
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
+      // Archivar saca la inscripción del panel sin borrarla: solo aparece
+      // cuando se pide expresamente el archivo.
+      archivedAt: filters.archivadas ? { not: null } : null,
     },
     include: {
       company: { select: { legalName: true, rnc: true, email: true } },
@@ -131,6 +154,10 @@ export type AdminCompany = Awaited<ReturnType<typeof getAdminCompanies>>[number]
 export interface AdminParticipantFilters {
   status?: RegistrationStatus;
   eventDateId?: string;
+  archivadas?: boolean;
+  padelCategory?: PadelCategory;
+  /** El género sale del prefijo de la categoría, no hay campo aparte. */
+  genero?: "FEMENINO" | "MASCULINO";
 }
 
 /**
@@ -146,6 +173,18 @@ export async function getAdminParticipants(
       registration: {
         ...(filters.status ? { status: filters.status } : {}),
         ...(filters.eventDateId ? { eventDateId: filters.eventDateId } : {}),
+        ...(filters.padelCategory
+          ? { padelCategory: filters.padelCategory }
+          : filters.genero
+            ? {
+                padelCategory: {
+                  in: PADEL_CATEGORIES.filter((c) =>
+                    c.startsWith(filters.genero!)
+                  ),
+                },
+              }
+            : {}),
+        archivedAt: filters.archivadas ? { not: null } : null,
       },
     },
     include: {
@@ -168,3 +207,41 @@ export async function getAdminParticipants(
 export type AdminParticipant = Awaited<
   ReturnType<typeof getAdminParticipants>
 >[number];
+
+/**
+ * Cupones de pareja gratis con su empresa afiliada y, si ya se canjeó, la
+ * inscripción donde se usó. Ordena primero los disponibles: es la lista que
+ * ADECLA usa para repartirlos.
+ */
+/**
+ * El cupón es uno solo para todas (CUPON_PAREJA_GRATIS), así que la lista
+ * útil es la de afiliadas: quién ya lo canjeó y quién todavía lo tiene
+ * disponible. Se listan todas, no solo las que lo usaron, porque la pregunta
+ * del panel suele ser "¿esta empresa ya lo gastó?".
+ */
+export async function getAdminCoupons() {
+  const afiliadas = await prisma.affiliate.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      contactName: true,
+      phone: true,
+      couponRedemption: {
+        select: {
+          createdAt: true,
+          registration: {
+            select: { code: true, company: { select: { legalName: true } } },
+          },
+        },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+  const canjeados = afiliadas.filter((a) => a.couponRedemption).length;
+  return { afiliadas, canjeados, disponibles: afiliadas.length - canjeados };
+}
+
+export type AdminCouponRow = Awaited<
+  ReturnType<typeof getAdminCoupons>
+>["afiliadas"][number];

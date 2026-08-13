@@ -6,9 +6,11 @@ import {
 } from "@/server/queries/admin.queries";
 import type { RegistrationStatus } from "@/generated/prisma/enums";
 import { STATUS_LABELS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { RegistrationTable } from "@/components/admin/registration-table";
+import { FilterMenu } from "@/components/admin/filter-menu";
+import { auth } from "@/auth";
+import { puedeEditar } from "@/lib/permissions";
 
 export const metadata: Metadata = {
   title: "Inscripciones | Admin ADECLA",
@@ -19,24 +21,39 @@ const STATUS_KEYS = Object.keys(STATUS_LABELS) as RegistrationStatus[];
 export default async function AdminInscripcionesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string; evento?: string }>;
+  searchParams: Promise<{ estado?: string; evento?: string; archivadas?: string }>;
 }) {
-  const { estado, evento } = await searchParams;
+  const { estado, evento, archivadas } = await searchParams;
+  const verArchivadas = archivadas === "1";
   const status = STATUS_KEYS.includes(estado as RegistrationStatus)
     ? (estado as RegistrationStatus)
     : undefined;
 
-  const [registrations, eventDates] = await Promise.all([
-    getAdminRegistrations({ status, eventDateId: evento }),
+  const [session, registrations, eventDates] = await Promise.all([
+    auth(),
+    getAdminRegistrations({
+      status,
+      eventDateId: evento,
+      archivadas: verArchivadas,
+    }),
     getEventDatesForFilter(),
   ]);
+  const editable = puedeEditar(session?.user?.role);
+  const eventoActual = eventDates.find((d) => d.id === evento);
+  const hayFiltros = !!(status || evento || verArchivadas);
 
-  function filterHref(params: { estado?: string; evento?: string }) {
+  function filterHref(params: {
+    estado?: string;
+    evento?: string;
+    archivadas?: string;
+  }) {
     const search = new URLSearchParams();
     const nextEstado = "estado" in params ? params.estado : estado;
     const nextEvento = "evento" in params ? params.evento : evento;
+    const nextArch = "archivadas" in params ? params.archivadas : archivadas;
     if (nextEstado) search.set("estado", nextEstado);
     if (nextEvento) search.set("evento", nextEvento);
+    if (nextArch) search.set("archivadas", nextArch);
     const qs = search.toString();
     return `/admin/inscripciones${qs ? `?${qs}` : ""}`;
   }
@@ -93,65 +110,81 @@ export default async function AdminInscripcionesPage({
         </div>
       </div>
 
+      {!editable && (
+        <p className="rounded-lg border bg-white px-4 py-3 text-sm text-muted-foreground">
+          Tu cuenta es de solo lectura: puedes consultar y descargar, pero no
+          cambiar estados, archivar ni borrar.
+        </p>
+      )}
+
+      {/* Una sola línea de menús, como en Participantes: cada disparador
+          dice qué hay aplicado sin abrirlo, y así caben más filtros sin
+          añadir otra fila de fichas. */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Estado:</span>
-        <FilterChip href={filterHref({ estado: undefined })} active={!status}>
-          Todos
-        </FilterChip>
-        {STATUS_KEYS.map((s) => (
-          <FilterChip
-            key={s}
-            href={filterHref({ estado: s })}
-            active={status === s}
+        <FilterMenu
+          label="Mostrar"
+          value={verArchivadas ? "Archivadas" : "Vigentes"}
+          active={verArchivadas}
+          options={[
+            {
+              label: "Vigentes",
+              href: filterHref({ archivadas: undefined }),
+              active: !verArchivadas,
+            },
+            {
+              label: "Archivadas",
+              href: filterHref({ archivadas: "1" }),
+              active: verArchivadas,
+            },
+          ]}
+        />
+        <FilterMenu
+          label="Estado"
+          value={status ? STATUS_LABELS[status] : "Todos"}
+          active={!!status}
+          options={[
+            {
+              label: "Todos",
+              href: filterHref({ estado: undefined }),
+              active: !status,
+            },
+            ...STATUS_KEYS.map((s) => ({
+              label: STATUS_LABELS[s],
+              href: filterHref({ estado: s }),
+              active: status === s,
+            })),
+          ]}
+        />
+        {eventDates.length > 1 && (
+          <FilterMenu
+            label="Fecha"
+            value={eventoActual ? eventoActual.label : "Todas"}
+            active={!!evento}
+            options={[
+              {
+                label: "Todas",
+                href: filterHref({ evento: undefined }),
+                active: !evento,
+              },
+              ...eventDates.map((d) => ({
+                label: d.label,
+                href: filterHref({ evento: d.id }),
+                active: evento === d.id,
+              })),
+            ]}
+          />
+        )}
+        {hayFiltros && (
+          <Link
+            href="/admin/inscripciones"
+            className="ml-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
-            {STATUS_LABELS[s]}
-          </FilterChip>
-        ))}
+            Quitar filtros
+          </Link>
+        )}
       </div>
 
-      {eventDates.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Fecha:</span>
-          <FilterChip href={filterHref({ evento: undefined })} active={!evento}>
-            Todos
-          </FilterChip>
-          {eventDates.map((d) => (
-            <FilterChip
-              key={d.id}
-              href={filterHref({ evento: d.id })}
-              active={evento === d.id}
-            >
-              {d.label}
-            </FilterChip>
-          ))}
-        </div>
-      )}
-
-      <RegistrationTable registrations={registrations} />
+      <RegistrationTable registrations={registrations} editable={editable} />
     </div>
-  );
-}
-
-function FilterChip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "rounded-full border px-3 py-1 text-sm transition-colors",
-        active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "bg-white hover:border-primary/50"
-      )}
-    >
-      {children}
-    </Link>
   );
 }
