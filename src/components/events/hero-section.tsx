@@ -19,15 +19,6 @@ FORM: extensión del mundo ya establecido; composición fijada por la
 referencia que aprobó el cliente.
 */
 
-// Datos estructurales del año, no métricas de vanidad: cada uno se puede
-// verificar contando las tarjetas de más abajo. Nada de "+40 eventos" ni
-// "3,000 asistentes" mientras no sean cifras reales.
-const RESUMEN = [
-  { valor: "3", etiqueta: "torneos" },
-  { valor: "2", etiqueta: "deportes" },
-  { valor: "1", etiqueta: "misión empresarial" },
-];
-
 export function HeroSection() {
   return (
     <section className="hero-teal relative overflow-hidden">
@@ -41,22 +32,6 @@ export function HeroSection() {
           <p className="mt-5 max-w-md text-lg leading-relaxed text-white/90">
             Conecta, aprende y genera oportunidades en los espacios que impulsan el sector inmobiliario.
           </p>
-
-          {/* dt antes que dd para que el HTML sea válido; el orden visual
-              (número y después etiqueta) se resuelve con `order`, no
-              duplicando el texto en un sr-only. */}
-          <dl className="mt-8 flex flex-wrap items-baseline gap-x-6 gap-y-3">
-            {RESUMEN.map((item) => (
-              <div key={item.etiqueta} className="flex items-baseline gap-2">
-                <dt className="order-2 text-sm text-white/90">
-                  {item.etiqueta}
-                </dt>
-                <dd className="order-1 text-2xl font-semibold tabular-nums text-[var(--oro-claro)]">
-                  {item.valor}
-                </dd>
-              </div>
-            ))}
-          </dl>
 
           <div className="mt-9">
             <Button
