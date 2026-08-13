@@ -41,9 +41,10 @@ export const ALMUERZO_MIVED = {
   fecha: "7 de mayo de 2026",
   fechaISO: "2026-05-07",
   lugar: "SBG, Punta Cana",
-  cover: "/images/almuerzo-mived/recap-07.jpg",
+  // La misma que abre la galería: la ponencia, no el montaje de las mesas.
+  cover: "/images/almuerzo-mived/recap-01.jpg",
   fotos: Array.from(
-    { length: 15 },
+    { length: 11 },
     (_, i) => `/images/almuerzo-mived/recap-${String(i + 1).padStart(2, "0")}.jpg`
   ),
 } as const;
