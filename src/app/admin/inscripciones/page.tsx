@@ -91,6 +91,14 @@ export default async function AdminInscripcionesPage({
           >
             Ver participantes
           </Button>
+          {editable && (
+            <Button
+              nativeButton={false}
+              render={<Link href="/admin/inscripciones/nueva" />}
+            >
+              Nueva inscripción
+            </Button>
+          )}
           <Button
             variant="outline"
             nativeButton={false}
