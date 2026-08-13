@@ -37,15 +37,19 @@ function recapSeries(prefix: string, count: number) {
 // Clave: "slug|YYYY-MM-DD" para una parada con fecha (cada parada tiene su
 // propio flyer), o solo "slug" para un evento que aún no tiene fechas.
 const MEDIA: Record<string, EventMedia> = {
+  // Portadas 2026: fotos del propio torneo, recortadas de las piezas que
+  // hizo diseño. De cada pieza se toma solo la foto — el título, la fecha y
+  // el lugar los pone la web, así se leen en móvil y se actualizan solos si
+  // se mueve una fecha, en vez de tener que rehacer la imagen.
   "golf|2026-07-25": {
-    cover: "/images/golf-25-julio.jpg",
+    cover: "/images/eventos-2026/golf-julio.jpg",
     recap: recapSeries("recap-golf-25jul", 16),
   },
   "golf|2026-09-05": {
-    cover: "/images/golf-05-septiembre.jpg",
+    cover: "/images/eventos-2026/golf-septiembre.jpg",
   },
   "padel|2026-08-14": {
-    cover: "/images/padel-establos.jpeg",
+    cover: "/images/eventos-2026/padel-agosto.jpg",
   },
   // Placeholder mientras el evento no tenga fecha publicada.
   padel: {
