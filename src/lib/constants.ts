@@ -31,11 +31,12 @@ export const ADECLA = {
 // ADECLA lo llama "Misión Empresarial", no "Expocamacol" a secas —
 // Expocamacol es la feria a la que viaja la misión.
 /**
- * Almuerzo con el MIVED: networking, ya celebrado. No vive en la tabla Event
+ * Diálogo Estratégico: Mived y Sector Construcción
+ * networking, ya celebrado. No vive en la tabla Event
  * porque nunca tuvo inscripción por la web — se convocó por invitación.
  */
 export const ALMUERZO_MIVED = {
-  nombre: "Almuerzo con el MIVED",
+  nombre: "Diálogo Estratégico: Mived y Sector Construcción",
   resumen:
     "Los afiliados de ADECLA almorzaron con el Ministerio de la Vivienda, Hábitat y Edificaciones para conocer el plan de modernización de permisología.",
   fecha: "7 de mayo de 2026",
