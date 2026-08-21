@@ -1,57 +1,28 @@
 import Image from "next/image";
 
-// Fotos reales de la Primera Parada (25 de julio) mezcladas con las dos
-// disciplinas del circuito. No es decoración de stock: la prueba de que el
-// torneo existe y ya se jugó es la propia foto del torneo.
-const TILES = [
-  {
-    src: "/images/golf-atardecer.jpg",
-    alt: "Jugador de golf al atardecer en un campo del circuito",
-    className: "col-span-2 row-span-2",
-    priority: true,
-  },
-  {
-    src: "/images/recap-golf-25jul-03.jpg",
-    alt: "Salida desde el tee en la Primera Parada del ADECLA Golf Tour",
-    className: "col-span-1 row-span-2",
-    priority: true,
-  },
-  {
-    src: "/images/categoria-padel.jpg",
-    alt: "Pala y pelotas de pádel sobre la cancha",
-    className: "col-span-1 row-span-1",
-    priority: false,
-  },
-  {
-    src: "/images/recap-golf-25jul-09.jpg",
-    alt: "Participantes de ADECLA durante la Primera Parada en Punta Espada",
-    className: "col-span-2 row-span-1",
-    priority: false,
-  },
-];
-
+/**
+ * La portada del hero: una sola pieza de ADECLA con fotos reales del año
+ * (el torneo, el corte de cinta, la revista, los reconocimientos).
+ *
+ * Antes eran cuatro fotos sueltas en una cuadrícula, dos de ellas de stock.
+ * La pieza ya trae su propia composición en diagonal, así que no lleva el
+ * recorte que usaba la cuadrícula: le cortaría el carrito de golf de la
+ * esquina. Y la caja respeta la proporción del archivo para que no se
+ * pierdan los trofeos de la derecha ni las jugadoras de la izquierda.
+ */
 export function HeroCollage() {
   return (
-    <div className="collage-cut grid aspect-[4/3] grid-cols-3 grid-rows-3 gap-1.5 lg:aspect-[5/4]">
-      {TILES.map((tile) => (
-        <div
-          key={tile.src}
-          className={`relative overflow-hidden rounded-sm ${tile.className}`}
-        >
-          <Image
-            src={tile.src}
-            alt={tile.alt}
-            fill
-            sizes="(max-width: 1024px) 100vw, 45vw"
-            className="object-cover"
-            // Las cuatro piezas están sobre la línea de flotación, así que
-            // ninguna debe esperar al IntersectionObserver: las dos grandes
-            // van con priority (precarga) y las dos chicas en eager.
-            priority={tile.priority}
-            loading={tile.priority ? undefined : "eager"}
-          />
-        </div>
-      ))}
+    <div className="relative aspect-[1567/1063] overflow-hidden rounded-sm">
+      <Image
+        src="/images/hero-portada.jpg"
+        alt="Momentos de ADECLA 2026: el torneo de golf, el corte de cinta de la feria, la revista ConstruEste y los reconocimientos del año"
+        fill
+        sizes="(max-width: 1024px) 100vw, 45vw"
+        className="object-cover"
+        // Está sobre la línea de flotación: se precarga en vez de esperar al
+        // scroll.
+        priority
+      />
     </div>
   );
 }

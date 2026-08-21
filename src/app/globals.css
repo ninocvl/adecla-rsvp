@@ -304,15 +304,6 @@
    que arranca donde termina la columna de texto. En móvil el collage pasa a
    ocupar todo el ancho, así que el corte se retira: en vertical recortaría
    contenido en vez de separar dos columnas. */
-.collage-cut {
-  clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%);
-}
-@media (max-width: 1023px) {
-  .collage-cut {
-    clip-path: none;
-  }
-}
-
 /* Variante en oro de .section-rule, para las secciones que hablan del
    circuito completo (no de una parada suelta). El teal sigue marcando las
    secciones operativas; el oro marca las de circuito. */
