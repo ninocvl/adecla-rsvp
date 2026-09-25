@@ -166,6 +166,11 @@ model EventDate {
   imageUrl      String?
   capacity      Int            @default(150)
   reservedCount Int            @default(0)
+  // Límite aparte solo para pádel PUBLICO: el resto de la capacidad queda
+  // reservado para afiliados, patrocinadores y socios de club aunque el
+  // público se agote. Nulo = sin límite propio (comparte todo el cupo).
+  publicCapacity      Int?
+  publicReservedCount Int      @default(0)
   isActive      Boolean        @default(true)
   registrations Registration[]
 

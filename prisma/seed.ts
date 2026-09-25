@@ -128,6 +128,10 @@ async function main() {
       label: "Segunda Parada",
       venue: "Los Establos Sports Complex, Cap Cana",
       capacity: 144,
+      // Cupo aparte para público general: el resto queda para afiliados,
+      // socios de club e invitados de patrocinador aunque el público se
+      // agote primero.
+      publicCapacity: 100,
     },
     create: {
       eventId: padel.id,
@@ -135,9 +139,10 @@ async function main() {
       label: "Segunda Parada",
       venue: "Los Establos Sports Complex, Cap Cana",
       capacity: 144,
+      publicCapacity: 100,
     },
   });
-  console.log("✔ Torneo de Pádel: Segunda Parada, 14-15 agosto (cap. 144)");
+  console.log("✔ Torneo de Pádel: Segunda Parada, 14-15 agosto (cap. 144, 100 al público)");
 }
 
 main()

@@ -30,6 +30,7 @@ export type CreateRegistrationResult =
   | { ok: false; error: string };
 
 class CapacityError extends Error {}
+class PublicCapacityError extends Error {}
 class CouponAlreadyUsedError extends Error {}
 
 export async function createRegistrationAction(
@@ -316,6 +317,27 @@ export async function createRegistrationAction(
           throw new CapacityError();
         }
 
+        // Cupo aparte para público general: el resto de la capacidad queda
+        // reservado para afiliados/patrocinadores/club aunque el público se
+        // agote primero. Mismo patrón atómico que el cupo general, y si
+        // falla aquí, la transacción entera revierte (incluido el cupo
+        // general que se acaba de tomar arriba).
+        if (isPadel && data.padelParticipantType === "PUBLICO") {
+          const updatedPublic = await tx.$executeRaw`
+            UPDATE "EventDate"
+            SET "publicReservedCount" = "publicReservedCount" + ${quantity}
+            WHERE "id" = ${eventDate.id}
+              AND "isActive" = true
+              AND (
+                "publicCapacity" IS NULL
+                OR "publicReservedCount" + ${quantity} <= "publicCapacity"
+              )
+          `;
+          if (updatedPublic === 0) {
+            throw new PublicCapacityError();
+          }
+        }
+
         const { codeSeq, codePrefix } = await tx.event.update({
           where: { id: event.id },
           data: { codeSeq: { increment: 1 } },
@@ -497,6 +519,13 @@ export async function createRegistrationAction(
         ok: false,
         error:
           "No quedan cupos suficientes para una de esas fechas. Elige otra fecha o intenta con menos participantes.",
+      };
+    }
+    if (error instanceof PublicCapacityError) {
+      return {
+        ok: false,
+        error:
+          "Los cupos para público general ya se agotaron para esa fecha. Quedan cupos solo para afiliados, socios de club o invitados de patrocinador.",
       };
     }
     if (error instanceof CouponAlreadyUsedError) {

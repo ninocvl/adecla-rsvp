@@ -101,6 +101,26 @@ export default async function HomePage({
         <HeroSection />
 
         <section
+          id="patrocinadores"
+          className="border-t bg-secondary/40 py-20 scroll-mt-20 sm:py-24"
+        >
+          <div className="mx-auto max-w-6xl px-4 text-center">
+            <span className="section-rule mx-auto" aria-hidden />
+            <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
+              <span className="text-[var(--oro)]">Patrocinadores</span>
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
+              Las empresas que hacen posible los eventos de ADECLA 2026.
+            </p>
+          </div>
+          {/* Fuera del contenedor con padding: la franja va de borde a borde
+              para que los logos entren y salgan de la pantalla. */}
+          <div className="mt-10">
+            <SponsorsMarquee />
+          </div>
+        </section>
+
+        <section
           id="circuito"
           className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:py-24"
         >
@@ -244,26 +264,6 @@ export default async function HomePage({
                 />
               </a>
             </Reveal>
-          </div>
-        </section>
-
-        <section
-          id="patrocinadores"
-          className="border-t bg-secondary/40 py-20 scroll-mt-20 sm:py-24"
-        >
-          <div className="mx-auto max-w-6xl px-4 text-center">
-            <span className="section-rule mx-auto" aria-hidden />
-            <h2 className="font-heading text-3xl font-medium text-foreground sm:text-4xl">
-              <span className="text-[var(--oro)]">Patrocinadores</span>
-            </h2>
-            <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
-              Las empresas que hacen posible los eventos de ADECLA 2026.
-            </p>
-          </div>
-          {/* Fuera del contenedor con padding: la franja va de borde a borde
-              para que los logos entren y salgan de la pantalla. */}
-          <div className="mt-10">
-            <SponsorsMarquee />
           </div>
         </section>
       </main>
