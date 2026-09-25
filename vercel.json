@@ -1,3 +1,0 @@
-{
-  "buildCommand": "npx tsx prisma/apply-public-capacity-schema.ts && npx tsx prisma/migrate-padel-public-capacity.ts && next build"
-}
