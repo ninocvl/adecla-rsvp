@@ -16,6 +16,8 @@ import { CUPON_PAREJA_GRATIS, esCodigoCuponValido } from "@/lib/coupons";
 import type { PadelCategory, PadelClub } from "@/generated/prisma/enums";
 import {
   getCategoryLabel,
+  GOLF_MEMBER_PRICE_USD,
+  GOLF_NONMEMBER_PRICE_USD,
   isItbisExempt,
   ITBIS_RATE,
   PADEL_CLUB_DISCOUNT_RATE,
@@ -89,7 +91,7 @@ export async function createRegistrationAction(
     | "DESARROLLADOR"
     | undefined;
 
-  // --- Golf: afiliación + tarifa por EventPrice ---
+  // --- Golf: tipo de empresa (perfil) + tarifa plana por membresía ---
   let affiliationType: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR" | undefined;
   let affiliateId: string | undefined;
 
@@ -205,9 +207,9 @@ export async function createRegistrationAction(
     unitPriceUsd = 0;
   } else {
     // Nunca se confía en el nombre/tipo que mande el cliente para el vínculo
-    // de afiliado: se relee el registro real del listado de socios. Para una
-    // empresa afiliada conocida, su tipo de afiliación real (no el que mandó
-    // el formulario) es el que fija la tarifa.
+    // de afiliado: se relee el registro real del listado de socios. El tipo
+    // de empresa se sigue guardando (perfil de la empresa), pero ya no fija
+    // la tarifa de golf — ver GOLF_MEMBER_PRICE_USD.
     const affiliate =
       data.isAffiliated && data.affiliateId
         ? await prisma.affiliate.findUnique({ where: { id: data.affiliateId } })
@@ -220,19 +222,11 @@ export async function createRegistrationAction(
     if (!affiliationType) {
       return { ok: false, error: "Selecciona el tipo de empresa." };
     }
-    const price = await prisma.eventPrice.findUnique({
-      where: {
-        eventId_affiliation: { eventId: event.id, affiliation: affiliationType },
-      },
-    });
-    if (!price || !price.isEnabled || price.amountUsd === null) {
-      return {
-        ok: false,
-        error:
-          "Tu categoría de membresía todavía no tiene tarifa para este evento.",
-      };
-    }
-    unitPriceUsd = Number(price.amountUsd);
+    // Tarifa plana según si la empresa ya es miembro de ADECLA, igual de
+    // simple que la de pádel — no depende del tipo de empresa.
+    unitPriceUsd = data.isAffiliated
+      ? GOLF_MEMBER_PRICE_USD
+      : GOLF_NONMEMBER_PRICE_USD;
   }
 
   const exchangeRate = Number(rateSetting?.value ?? "60");
@@ -245,7 +239,15 @@ export async function createRegistrationAction(
   const subtotalUsd = unitPriceUsd * quantity;
   const discountUsd = freeCompanion ? unitPriceUsd : 0;
   const netSubtotalUsd = subtotalUsd - discountUsd;
-  const categoryLabel = getCategoryLabel(affiliationType, padelCategory, padelClub);
+  // En golf la etiqueta que ve el cliente es la que de verdad fija el
+  // precio (miembro o no), no el tipo de empresa — evita el "Desarrollador,
+  // $150" que no explica por qué. Pádel sigue mostrando su categoría de
+  // siempre (género + nivel, más el club si aplica).
+  const categoryLabel = isPadel
+    ? getCategoryLabel(affiliationType, padelCategory, padelClub)
+    : data.isAffiliated
+      ? "Miembro ADECLA"
+      : "No es miembro de ADECLA";
   const registrationStatus = isSponsorGuest
     ? sponsorRncVerified
       ? "CONFIRMADA"

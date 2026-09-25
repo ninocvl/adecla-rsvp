@@ -7,7 +7,8 @@ import type { WizardEvent } from "@/server/queries/events.queries";
 import type { ActiveAffiliate } from "@/server/queries/affiliates.queries";
 import {
   ADECLA,
-  AFFILIATION_LABELS,
+  GOLF_MEMBER_PRICE_USD,
+  GOLF_NONMEMBER_PRICE_USD,
   isItbisExempt,
   PADEL_CATEGORY_LABELS,
   PADEL_CLUB_DISCOUNT_RATE,
@@ -93,7 +94,6 @@ export function RegistrationWizard({
   const STEP_RESUMEN = 3;
   const STEP_CONFIRMACION = 4;
 
-  const affiliation = company?.affiliationType;
   const padelCategory = company?.padelCategory;
   // Invitado de patrocinador: existe tanto en pádel como en golf.
   const isSponsorGuest = company?.isSponsorGuest === true;
@@ -110,12 +110,17 @@ export function RegistrationWizard({
     isPadelEvent &&
     company?.padelParticipantType === "AFILIADO" &&
     !!company?.couponCode?.trim();
+  // En golf, la etiqueta que se enseña es la que de verdad fija el precio
+  // (miembro o no), no el tipo de empresa — así no sale "Desarrollador,
+  // $150" sin explicar por qué.
   const categoryLabel = isPadelEvent
     ? padelCategory
       ? PADEL_CATEGORY_LABELS[padelCategory]
       : undefined
-    : affiliation
-      ? AFFILIATION_LABELS[affiliation]
+    : company
+      ? company.isAffiliated
+        ? "Miembro ADECLA"
+        : "No es miembro de ADECLA"
       : undefined;
 
   const selectedDates = useMemo(
@@ -129,7 +134,8 @@ export function RegistrationWizard({
       ) ?? [],
     [event, registeredDateIds]
   );
-  const golfPrice = event?.prices.find((p) => p.affiliation === affiliation);
+  // Golf ya no cobra por tipo de empresa: tarifa plana según si ya es
+  // miembro de ADECLA, igual de simple que la de pádel.
   const unitPriceUsd = isPadelEvent
     ? isSponsorGuest
       ? 0
@@ -138,15 +144,11 @@ export function RegistrationWizard({
         : PADEL_PRICE_USD
     : isSponsorGuest
       ? 0
-      : golfPrice?.isEnabled && golfPrice.amountUsd !== null
-        ? golfPrice.amountUsd
+      : company
+        ? company.isAffiliated
+          ? GOLF_MEMBER_PRICE_USD
+          : GOLF_NONMEMBER_PRICE_USD
         : null;
-  const priceUnavailable =
-    !isPadelEvent &&
-    !isSponsorGuest &&
-    !!event &&
-    !!affiliation &&
-    unitPriceUsd === null;
   // Si se eligieron varias fechas y no todas tienen el mismo estatus de
   // ITBIS, se cobra por seguridad (el servidor sí calcula cada fecha por
   // separado y es la fuente real de verdad en la proforma).
@@ -394,30 +396,14 @@ export function RegistrationWizard({
                 affiliates={affiliates}
                 defaultValues={company}
                 onNext={(data) => {
+                  // Tarifa plana (golf por membresía, pádel por
+                  // participante): siempre hay precio en cuanto se conoce la
+                  // empresa, así que aquí ya no hace falta comprobarlo antes
+                  // de avanzar.
                   setCompany(data);
-                  // La tarifa de golf depende de la afiliación que se acaba
-                  // de elegir: si esa combinación no tiene precio
-                  // configurado, no avanza — se queda aquí con el aviso de
-                  // abajo en vez de dejar seguir hacia un cobro imposible.
-                  const priceOk =
-                    isPadelEvent ||
-                    data.isSponsorGuest === true ||
-                    event.prices.some(
-                      (p) =>
-                        p.affiliation === data.affiliationType &&
-                        p.isEnabled &&
-                        p.amountUsd !== null
-                    );
-                  if (priceOk) setStep(STEP_PARTICIPANTES);
+                  setStep(STEP_PARTICIPANTES);
                 }}
               />
-              {company && priceUnavailable && (
-                <Alert variant="destructive" role="alert" className="mt-4">
-                  Tu categoría de membresía ({categoryLabel}) todavía no
-                  tiene tarifa para este evento. Escríbenos si crees que esto
-                  es un error.
-                </Alert>
-              )}
               <div className="mt-4">
                 <Button
                   variant="outline"

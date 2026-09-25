@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { LandingCard } from "@/server/queries/events.queries";
-import { AFFILIATION_LABELS, PADEL_PRICE_USD } from "@/lib/constants";
+import {
+  GOLF_MEMBER_PRICE_USD,
+  GOLF_NONMEMBER_PRICE_USD,
+  PADEL_PRICE_USD,
+} from "@/lib/constants";
 import { PADEL_CATEGORIES_POSTER } from "@/lib/event-media";
 import { formatDateParts, formatEventDateRange, formatUsd } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -14,19 +18,12 @@ import {
 } from "@/components/ui/card";
 import { EventRecapGallery } from "./event-recap-gallery";
 
-// Agrupa las categorías que comparten el mismo precio (ej. Constructor y
-// Desarrollador a USD 250) para no repetir el monto — nunca un precio único.
-function groupPriceTiers(tiers: LandingCard["priceTiers"]) {
-  const byAmount = new Map<number, string[]>();
-  for (const tier of tiers) {
-    const labels = byAmount.get(tier.amountUsd) ?? [];
-    labels.push(AFFILIATION_LABELS[tier.affiliation]);
-    byAmount.set(tier.amountUsd, labels);
-  }
-  return [...byAmount.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([amountUsd, labels]) => ({ amountUsd, labels }));
-}
+// Golf cobra tarifa plana por membresía (miembro/no miembro), no por tipo de
+// empresa — igual de simple que la de pádel.
+const GOLF_PRICE_TIERS = [
+  { label: "Miembros ADECLA", amountUsd: GOLF_MEMBER_PRICE_USD },
+  { label: "No miembros", amountUsd: GOLF_NONMEMBER_PRICE_USD },
+];
 
 /**
  * El estado de cupos. Cuando la parada se agota y hay pieza de "agotado",
@@ -58,7 +55,10 @@ function CuposBadge({ full, card }: { full: boolean; card: LandingCard }) {
 export function EventCard({ card }: { card: LandingCard }) {
   const isDate = card.kind === "date";
   const full = isDate && (card.available ?? 0) <= 0;
-  const priceGroups = groupPriceTiers(card.priceTiers);
+  const priceGroups = GOLF_PRICE_TIERS.map((t) => ({
+    amountUsd: t.amountUsd,
+    labels: [t.label],
+  }));
   const recapPhotos = card.recapPhotos ?? [];
   const isRecap = isDate && card.isPast;
   const isPadel = card.eventSlug === "padel";

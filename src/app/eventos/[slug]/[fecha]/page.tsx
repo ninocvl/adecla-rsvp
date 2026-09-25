@@ -15,7 +15,12 @@ import {
 } from "lucide-react";
 import { getEventDateDetail } from "@/server/queries/events.queries";
 import { getEventDetail } from "@/lib/event-details";
-import { AFFILIATION_LABELS, NOTA_PAGO, PADEL_PRICE_USD } from "@/lib/constants";
+import {
+  GOLF_MEMBER_PRICE_USD,
+  GOLF_NONMEMBER_PRICE_USD,
+  NOTA_PAGO,
+  PADEL_PRICE_USD,
+} from "@/lib/constants";
 import { formatEventDate, formatUsd } from "@/lib/format";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -162,15 +167,18 @@ export default async function EventoDetallePage({ params }: Params) {
                       <span className="text-lg font-semibold tabular-nums">
                         {formatUsd(PADEL_PRICE_USD)}
                       </span>
-                    ) : ev.prices.length ? (
+                    ) : (
                       <ul className="space-y-1">
-                        {ev.prices.map((p) => (
+                        {[
+                          { label: "Miembros ADECLA", amountUsd: GOLF_MEMBER_PRICE_USD },
+                          { label: "No miembros", amountUsd: GOLF_NONMEMBER_PRICE_USD },
+                        ].map((p) => (
                           <li
-                            key={p.affiliation}
+                            key={p.label}
                             className="flex justify-between gap-3"
                           >
                             <span className="text-muted-foreground">
-                              {AFFILIATION_LABELS[p.affiliation]}
+                              {p.label}
                             </span>
                             <span className="font-semibold tabular-nums">
                               {formatUsd(p.amountUsd)}
@@ -178,8 +186,6 @@ export default async function EventoDetallePage({ params }: Params) {
                           </li>
                         ))}
                       </ul>
-                    ) : (
-                      <span className="text-muted-foreground">Por confirmar</span>
                     )}
                   </dd>
                 </div>

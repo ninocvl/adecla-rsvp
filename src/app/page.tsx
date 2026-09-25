@@ -82,11 +82,15 @@ export default async function HomePage({
 
   const visibles = filtro ? items.filter(DISCIPLINAS[filtro].incluye) : items;
 
+  const misionYaPaso = new Date() > new Date(`${EXPOCAMACOL.fechaFinISO}T23:59:59Z`);
+
   // Lo que ya pasó deja de ser una oferta y pasa a ser memoria del año. Con
   // dos eventos vividos, mezclarlos con los que aún se venden obligaba a
   // leer la insignia de cada tarjeta para saber a cuál te puedes apuntar.
   const yaPaso = (i: ItemEvento) =>
-    i.tipo === "almuerzo" || (i.tipo === "evento" && !!i.card.isPast);
+    i.tipo === "almuerzo" ||
+    (i.tipo === "evento" && !!i.card.isPast) ||
+    (i.tipo === "mision" && misionYaPaso);
   const proximos = visibles.filter((i) => !yaPaso(i));
   const vividos = visibles.filter(yaPaso).reverse();
 
@@ -107,8 +111,6 @@ export default async function HomePage({
               <span className="text-[var(--oro)]">eventos</span>
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Dos deportes en Cap Cana y Punta Cana, más la misión empresarial
-              que ADECLA lleva a Medellín.
             </p>
           </div>
           <Reveal className="mt-10">
@@ -151,7 +153,7 @@ export default async function HomePage({
                 >
                   <Reveal delayMs={i * 70} className="h-full">
                     {item.tipo === "mision" ? (
-                      <MisionEmpresarialCard />
+                      <MisionEmpresarialCard pasado={misionYaPaso} />
                     ) : item.tipo === "almuerzo" ? (
                       <AlmuerzoMivedCard />
                     ) : (
@@ -185,7 +187,7 @@ export default async function HomePage({
                         ) : item.tipo === "evento" ? (
                           <EventCard card={item.card} />
                         ) : (
-                          <MisionEmpresarialCard />
+                          <MisionEmpresarialCard pasado={misionYaPaso} />
                         )}
                       </Reveal>
                     </li>

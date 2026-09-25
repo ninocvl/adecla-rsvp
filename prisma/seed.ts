@@ -64,10 +64,15 @@ async function main() {
       imageUrl: "/images/golf-25-julio.jpg",
     },
     {
-      date: new Date("2026-09-05T12:00:00Z"),
+      // Reprogramada: era 5 de septiembre en La Cana, ahora 31 de octubre en
+      // Hard Rock. Un script aparte migra la fila existente (ver
+      // prisma/migrate-tercera-parada-fecha.ts) porque el upsert de abajo
+      // busca por fecha — con la fecha cambiada crearía una fila nueva en vez
+      // de actualizar la que ya tiene inscripciones.
+      date: new Date("2026-10-31T12:00:00Z"),
       label: "Tercera Parada",
-      venue: "La Cana Golf Club, Punta Cana Resort",
-      imageUrl: "/images/golf-05-septiembre.jpg",
+      venue: "Hard Rock Golf Club, Punta Cana",
+      imageUrl: "/images/eventos-2026/golf-octubre.jpg",
     },
   ];
   for (const d of golfDates) {

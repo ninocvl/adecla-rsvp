@@ -12,7 +12,7 @@ const EVENTOS = [
     src: "/images/categoria-golf.jpg",
     alt: "Bola y putter sobre el green",
     nombre: "Golf",
-    detalle: "Dos torneos · Punta Espada y La Cana",
+    detalle: "Dos torneos · Punta Espada y Hard Rock",
   },
   {
     clave: "padel",

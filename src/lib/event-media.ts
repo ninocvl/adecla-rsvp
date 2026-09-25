@@ -51,11 +51,11 @@ const MEDIA: Record<string, EventMedia> = {
     cover: "/images/eventos-2026/golf-julio.jpg",
     recap: recapSeries("recap-golf-25jul", 16),
   },
-  "golf|2026-09-05": {
-    // Foto en juego, no la del grupo posando: la parada de septiembre
-    // todavía se vende, y una tarjeta que invita a jugar funciona mejor con
-    // alguien jugando.
-    cover: "/images/eventos-2026/golf-septiembre-juego.jpg",
+  // Tercera Parada: reprogramada de 5 de septiembre a 31 de octubre, en
+  // Hard Rock Golf Club (antes La Cana). La foto es del flyer oficial de esa
+  // fecha, recortada para dejar solo la foto en juego.
+  "golf|2026-10-31": {
+    cover: "/images/eventos-2026/golf-octubre.jpg",
   },
   "padel|2026-08-14": {
     cover: "/images/eventos-2026/padel-agosto.jpg",

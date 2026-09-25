@@ -65,6 +65,9 @@ export const EXPOCAMACOL = {
   // No vive en la tabla EventDate: la inscripción sigue en Tally, no en el
   // wizard, así que no es un evento del sistema.
   fechaInicioISO: "2026-08-26",
+  // Día de cierre del viaje: cuando pasa, la tarjeta se mueve a "Así se
+  // vivió" en vez de seguir invitando a reservar un cupo que ya no existe.
+  fechaFinISO: "2026-08-29",
   diaCorto: "26",
   mesCorto: "AGO",
   lugar: "Medellín, Colombia",
@@ -97,7 +100,7 @@ export const ITBIS_RATE = 0.18;
 // Fechas puntuales donde ADECLA decidió no cobrar ITBIS en la proforma.
 // Clave "slug|YYYY-MM-DD", igual convención que event-media.ts. Una fecha
 // que no aparezca aquí cobra ITBIS por defecto, que es la regla general.
-const ITBIS_EXEMPT_DATE_KEYS = ["padel|2026-08-14", "golf|2026-09-05"];
+const ITBIS_EXEMPT_DATE_KEYS = ["padel|2026-08-14", "golf|2026-10-31"];
 
 export function isItbisExempt(eventSlug: string, date: Date): boolean {
   return ITBIS_EXEMPT_DATE_KEYS.includes(
@@ -110,6 +113,14 @@ export const AFFILIATION_LABELS: Record<string, string> = {
   PROVEEDOR: "Proveedor / Entidades de apoyo",
   DESARROLLADOR: "Desarrollador",
 };
+
+// Golf ya no cobra por tipo de empresa (Constructor/Proveedor/Desarrollador):
+// desde la Tercera Parada la tarifa es plana, según si la empresa ya es
+// miembro de ADECLA o no — igual de simple que la de pádel. El tipo de
+// empresa se sigue pidiendo y guardando (sirve para el perfil de la
+// empresa), pero ya no decide el precio.
+export const GOLF_MEMBER_PRICE_USD = 150;
+export const GOLF_NONMEMBER_PRICE_USD = 250;
 
 // Pádel es abierto al público: no cobra por tipo de empresa como golf, sino
 // una tarifa plana por participante — salvo invitados de patrocinador, que

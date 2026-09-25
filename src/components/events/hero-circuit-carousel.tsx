@@ -21,10 +21,13 @@ const CIRCUIT_STOPS = [
     meta: "14-15 de agosto · Los Establos",
   },
   {
-    src: "/images/golf-05-septiembre.jpg",
-    alt: "Flyer: Tercera Parada, La Cana Golf Club, 5 de septiembre",
+    // TODO: reemplazar por el flyer completo (como las otras dos paradas)
+    // cuando se vuelva a subir — el original se recortó para la portada de
+    // la tarjeta y no se guardó una copia completa.
+    src: "/images/eventos-2026/golf-octubre.jpg",
+    alt: "Foto: Tercera Parada, Hard Rock Golf Club, 31 de octubre",
     label: "Tercera Parada",
-    meta: "5 de septiembre · La Cana Golf Club",
+    meta: "31 de octubre · Hard Rock Golf Club",
   },
 ];
 

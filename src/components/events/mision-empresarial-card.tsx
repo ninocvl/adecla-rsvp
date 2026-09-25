@@ -11,7 +11,7 @@ export const MISION_DETALLE_HREF = "/eventos/mision-empresarial";
 // contenido, pie) para que entre en la grilla sin desentonar. No reusa
 // EventCard porque esa recibe un LandingCard de la base, y la misión no vive
 // ahí: se inscribe por un formulario aparte, no por el wizard.
-export function MisionEmpresarialCard() {
+export function MisionEmpresarialCard({ pasado = false }: { pasado?: boolean }) {
   return (
     <Card className="shadow-teal-hover flex h-full flex-col overflow-hidden pt-0">
       <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
@@ -32,9 +32,15 @@ export function MisionEmpresarialCard() {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-contain"
         />
-        <Badge className="absolute top-3 left-3 bg-white/90 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-foreground uppercase backdrop-blur-sm">
-          Networking
-        </Badge>
+        {pasado ? (
+          <Badge className="absolute top-3 right-3 bg-white/90 px-3 py-1 text-sm text-foreground shadow-sm backdrop-blur-sm">
+            Así se vivió
+          </Badge>
+        ) : (
+          <Badge className="absolute top-3 left-3 bg-white/90 px-2.5 py-0.5 text-xs font-semibold tracking-wide text-foreground uppercase backdrop-blur-sm">
+            Networking
+          </Badge>
+        )}
       </div>
 
       <CardHeader>
@@ -71,20 +77,24 @@ export function MisionEmpresarialCard() {
           más grande de Colombia.
         </p>
         <p className="mt-3 border-t pt-3 text-sm text-muted-foreground">
-          La inscripción se llena en un formulario aparte.
+          {pasado
+            ? "El cupo ya cerró."
+            : "La inscripción se llena en un formulario aparte."}
         </p>
       </CardContent>
 
       <CardFooter className="flex-col gap-2">
-        <Button
-          className="w-full"
-          nativeButton={false}
-          render={
-            <a href={EXPOCAMACOL.formUrl} target="_blank" rel="noopener" />
-          }
-        >
-          Reservar mi cupo
-        </Button>
+        {!pasado && (
+          <Button
+            className="w-full"
+            nativeButton={false}
+            render={
+              <a href={EXPOCAMACOL.formUrl} target="_blank" rel="noopener" />
+            }
+          >
+            Reservar mi cupo
+          </Button>
+        )}
         <Button
           className="w-full"
           variant="outline"

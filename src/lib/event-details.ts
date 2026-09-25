@@ -39,11 +39,11 @@ const DETALLES: Record<string, EventDetail> = {
       "Se juega en parejas del mismo género y categoría, en Los Establos Sports Complex, Cap Cana. Si todavía no tienes compañero, puedes inscribirte solo y completar tu pareja más adelante.",
     ],
   },
-  "golf|2026-09-05": {
+  "golf|2026-10-31": {
     gancho:
       "Una jornada de golf donde el sector construcción se encuentra fuera de la oficina.",
     descripcion: [
-      "La tercera parada del ADECLA Golf Tour 2026 se juega en La Cana Golf Club, Punta Cana Resort, uno de los campos más prestigiosos del Caribe, reconocido por su diseño, su nivel competitivo y sus vistas al mar.",
+      "La tercera parada del ADECLA Golf Tour 2026 se juega en Hard Rock Golf Club, Punta Cana, uno de los campos más prestigiosos del Caribe, reconocido por su diseño, su nivel competitivo y sus vistas al mar.",
       "Reúne a constructores, desarrolladores, proveedores y aliados estratégicos del sector en una jornada que combina competencia deportiva, relacionamiento empresarial y networking.",
       "Se juega en parejas. Si aún no tienes compañero, puedes inscribirte de manera individual y completar tu pareja posteriormente.",
     ],
