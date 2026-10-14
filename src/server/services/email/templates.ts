@@ -1,4 +1,9 @@
-import type { ProformaEmailData, StatusChangeEmailData } from "./email.service";
+import type {
+  EntradaEmailData,
+  ProformaEmailData,
+  StatusChangeEmailData,
+} from "./email.service";
+import { CONVERSATORIO } from "@/lib/entradas";
 
 // URL estable de Vercel: funciona siempre, incluso si más adelante se agrega
 // un dominio propio como alias adicional.
@@ -150,6 +155,65 @@ export function renderStatusChangedEmail(
     "",
     `${message.charAt(0).toUpperCase()}${message.slice(1)} (${data.registrationCode}).`,
     `Nuevo estado: ${data.newStatusLabel}`,
+    "",
+    "ADECLA",
+  ].join("\n");
+
+  return { html, text, subject };
+}
+
+// El QR va en el PDF adjunto, no en el cuerpo: Gmail bloquea las imágenes en
+// base64 y una imagen remota se vería rota en cuanto el servidor no responda.
+export function renderEntradaEmail(
+  data: EntradaEmailData
+): { html: string; text: string; subject: string } {
+  const subject = "Tu entrada · Conversatorio ADECLA · 7 de octubre";
+  const cupos = `${data.cupos} ${data.cupos === 1 ? "persona" : "personas"}`;
+  const lugarLink = `<a href="${CONVERSATORIO.mapsUrl}" style="color:${COLOR.tealButton};font-weight:600;text-decoration:underline;">${CONVERSATORIO.lugar}</a>`;
+
+  const html = layout(
+    "Tu entrada · Conversatorio ADECLA",
+    `
+    <h1 style="margin:0 0 8px;font-family:${FONT_DISPLAY};font-size:24px;font-weight:600;color:${COLOR.ink};letter-spacing:-0.01em;">Tu entrada está lista</h1>
+    <p style="margin:0 0 24px;font-family:${FONT_BODY};font-size:15px;line-height:1.6;color:${COLOR.inkSoft};">
+      Hola ${data.nombre}, te esperamos en el conversatorio <strong style="color:${COLOR.ink};">${CONVERSATORIO.titulo}</strong>, con ${CONVERSATORIO.invitado}, ${CONVERSATORIO.cargo}.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${COLOR.border};border-radius:8px;overflow:hidden;margin-bottom:24px;">
+      ${detailRow("Cupos", `${data.cupos} (${cupos})`)}
+      ${detailRow("Fecha", CONVERSATORIO.fecha)}
+      ${detailRow("Hora", CONVERSATORIO.horario)}
+      ${detailRow("Lugar", lugarLink)}
+      ${detailRow("Código", data.codigo, true)}
+    </table>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="border-radius:8px;background-color:${COLOR.tealButton};">
+          <span style="display:inline-block;padding:12px 24px;font-family:${FONT_BODY};font-size:14px;font-weight:600;color:${COLOR.surface};">Tu entrada con el QR va adjunta en PDF</span>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 12px;font-family:${FONT_BODY};font-size:14px;line-height:1.6;color:${COLOR.ink};">
+      Preséntala en la entrada, impresa o en tu celular. Si el QR no se lee, basta con dictar el código <strong style="font-family:${FONT_MONO};">${data.codigo}</strong>.
+    </p>
+    <p style="margin:0;font-family:${FONT_BODY};font-size:13px;line-height:1.6;color:${COLOR.inkFaint};">
+      El QR se valida una sola vez por cupo y no debe compartirse: quien lo presente primero es quien entra. Si tienes alguna pregunta, responde este correo.
+    </p>
+    `
+  );
+
+  const text = [
+    `Hola ${data.nombre},`,
+    "",
+    `Te esperamos en el conversatorio "${CONVERSATORIO.titulo}", con ${CONVERSATORIO.invitado}, ${CONVERSATORIO.cargo}.`,
+    "",
+    `Cupos: ${data.cupos} (${cupos})`,
+    `Fecha: ${CONVERSATORIO.fecha}`,
+    `Hora: ${CONVERSATORIO.horario}`,
+    `Lugar: ${CONVERSATORIO.lugar} (${CONVERSATORIO.mapsUrl})`,
+    `Código: ${data.codigo}`,
+    "",
+    "Tu entrada con el QR va adjunta en PDF. Preséntala en la entrada, impresa o en tu celular. Si el QR no se lee, basta con dictar el código.",
+    "El QR se valida una sola vez por cupo y no debe compartirse.",
     "",
     "ADECLA",
   ].join("\n");

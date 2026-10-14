@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { emailService } from "@/server/services/email";
@@ -482,14 +483,18 @@ export async function createRegistrationAction(
         (sum, r) => sum + Number(r.snapshot.totalDopRef),
         0
       );
-      Promise.all(
-        result.registrations.map(async (r) => ({
-          filename: `proforma-${r.code}.pdf`,
-          content: await renderProformaPdf(r.snapshot),
-        }))
-      )
-        .then((attachments) =>
-          emailService.sendProformaCreated({
+      // after() mantiene viva la función en Vercel hasta que el correo salga,
+      // sin hacer esperar a quien se inscribe. Una promesa suelta se puede
+      // congelar al devolver la respuesta y el correo nunca sale.
+      after(async () => {
+        try {
+          const attachments = await Promise.all(
+            result.registrations.map(async (r) => ({
+              filename: `proforma-${r.code}.pdf`,
+              content: await renderProformaPdf(r.snapshot),
+            }))
+          );
+          await emailService.sendProformaCreated({
             to: result.company.email,
             companyName: result.company.legalName,
             contactName: result.company.contactName,
@@ -499,9 +504,11 @@ export async function createRegistrationAction(
             totalUsd: formatUsd(emailTotalUsd),
             totalDopRef: formatDop(emailTotalDopRef),
             attachments,
-          })
-        )
-        .catch((e) => console.error("Error enviando correo de proforma:", e));
+          });
+        } catch (e) {
+          console.error("Error enviando correo de proforma:", e);
+        }
+      });
     }
 
     revalidatePath("/");

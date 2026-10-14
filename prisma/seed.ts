@@ -143,6 +143,21 @@ async function main() {
     },
   });
   console.log("✔ Torneo de Pádel: Segunda Parada, 14-15 agosto (cap. 144, 100 al público)");
+  // Conversatorio: evento ARCHIVED a propósito (no se inscribe por el wizard
+  // ni sale como "próximamente"); las entradas con QR solo necesitan la fila.
+  await prisma.event.upsert({
+    where: { slug: "conversatorio" },
+    update: {},
+    create: {
+      slug: "conversatorio",
+      name: "Conversatorio: Agenda de Vivienda y Construcción para Punta Cana",
+      codePrefix: "CONV",
+      status: "ARCHIVED",
+      playersPerTeam: 1,
+      minPlayers: 1,
+    },
+  });
+  console.log("✔ Evento conversatorio (entradas)");
 }
 
 main()

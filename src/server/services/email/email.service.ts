@@ -24,7 +24,16 @@ export interface StatusChangeEmailData {
   newStatusLabel: string;
 }
 
+export interface EntradaEmailData {
+  to: string;
+  nombre: string;
+  codigo: string; // ya formateado XXXX-XXXX
+  cupos: number;
+  pdf: ProformaEmailAttachment;
+}
+
 export interface EmailService {
   sendProformaCreated(data: ProformaEmailData): Promise<void>;
   sendStatusChanged(data: StatusChangeEmailData): Promise<void>;
+  sendEntrada(data: EntradaEmailData): Promise<void>;
 }

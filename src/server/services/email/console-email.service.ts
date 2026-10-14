@@ -1,5 +1,6 @@
 import type {
   EmailService,
+  EntradaEmailData,
   ProformaEmailData,
   StatusChangeEmailData,
 } from "./email.service";
@@ -16,6 +17,12 @@ export class ConsoleEmailService implements EmailService {
   async sendStatusChanged(data: StatusChangeEmailData): Promise<void> {
     console.log(
       `[EMAIL STUB] Inscripción ${data.registrationCode} de ${data.companyName} <${data.to}> cambió a: ${data.newStatusLabel}`
+    );
+  }
+
+  async sendEntrada(data: EntradaEmailData): Promise<void> {
+    console.log(
+      `[EMAIL STUB] Entrada ${data.codigo} (${data.cupos} cupos) para ${data.nombre} <${data.to}>, adjunto: ${data.pdf.filename}`
     );
   }
 }

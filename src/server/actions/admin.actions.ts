@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -97,18 +98,20 @@ export async function changeRegistrationStatusAction(
     });
 
     if (registration.status === toStatus) {
-      emailService
-        .sendStatusChanged({
-          to: registration.company.email,
-          contactName: registration.company.contactName,
-          companyName: registration.company.legalName,
-          registrationCode: registration.code,
-          status: toStatus,
-          newStatusLabel: STATUS_LABELS[toStatus],
-        })
-        .catch((e) =>
-          console.error("Error enviando correo de cambio de estado:", e)
-        );
+      after(() =>
+        emailService
+          .sendStatusChanged({
+            to: registration.company.email,
+            contactName: registration.company.contactName,
+            companyName: registration.company.legalName,
+            registrationCode: registration.code,
+            status: toStatus,
+            newStatusLabel: STATUS_LABELS[toStatus],
+          })
+          .catch((e) =>
+            console.error("Error enviando correo de cambio de estado:", e)
+          )
+      );
     }
 
     revalidatePath("/admin");

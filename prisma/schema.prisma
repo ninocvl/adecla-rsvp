@@ -54,26 +54,27 @@ enum RegistrationStatus {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  email         String          @unique
-  passwordHash  String
-  role          Role            @default(COMPANY)
-  company       Company?
-  statusChanges StatusHistory[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id              String          @id @default(cuid())
+  email           String          @unique
+  passwordHash    String
+  role            Role            @default(COMPANY)
+  company         Company?
+  statusChanges   StatusHistory[]
+  entradasCreadas Entrada[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model Company {
-  id               String          @id @default(cuid())
+  id               String           @id @default(cuid())
   // Opcional a propósito: hoy las empresas se inscriben con un formulario,
   // sin crear cuenta (decisión de producto para no complicar el registro
   // mientras el volumen es bajo). El vínculo a User queda listo para
   // activarse más adelante sin tener que rediseñar el modelo.
-  userId           String?         @unique
-  user             User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String?          @unique
+  user             User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   legalName        String
-  rnc              String          @unique
+  rnc              String           @unique
   contactName      String
   email            String
   phone            String
@@ -85,13 +86,13 @@ model Company {
   // queda vinculada aquí — así el admin ve de un vistazo si es la misma
   // empresa que ya conocía o una nueva que se está registrando por primera vez.
   affiliateId      String?
-  affiliate        Affiliate?      @relation(fields: [affiliateId], references: [id])
+  affiliate        Affiliate?       @relation(fields: [affiliateId], references: [id])
   // Marcada por empresas que dijeron no ser afiliadas pero quieren serlo;
   // Katherin las contacta para el proceso de afiliación fuera del sistema.
-  wantsToAffiliate Boolean         @default(false)
+  wantsToAffiliate Boolean          @default(false)
   registrations    Registration[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 }
 
 // Copia de solo lectura del listado de socios de ADECLA (importado del
@@ -99,18 +100,19 @@ model Company {
 // para que el formulario de registro autocomplete datos conocidos y evite
 // que la misma empresa quede duplicada con nombres distintos.
 model Affiliate {
-  id              String           @id @default(cuid())
-  sourceId        String?
-  name            String
-  affiliationType AffiliationType?
-  contactName     String?
-  phone           String?
-  email           String?
-  status          String?
-  companies       Company[]
+  id               String            @id @default(cuid())
+  sourceId         String?
+  name             String
+  affiliationType  AffiliationType?
+  contactName      String?
+  phone            String?
+  email            String?
+  status           String?
+  companies        Company[]
   // Canje de la pareja gratis. Existe la fila = esta empresa ya la usó.
   couponRedemption CouponRedemption?
-  createdAt       DateTime         @default(now())
+  entradas         Entrada[]
+  createdAt        DateTime          @default(now())
 }
 
 /**
@@ -118,7 +120,6 @@ model Affiliate {
  * solo para todas las afiliadas (ver CUPON_PAREJA_GRATIS en lib/coupons.ts),
  * así que lo que hay que controlar no es el código sino quién ya lo usó: el
  * único por afiliada es lo que limita el beneficio a una pareja por empresa.
- *
  * Guardamos también el código tal como se canjeó, porque si algún año se
  * cambia, las inscripciones viejas siguen diciendo con qué entraron.
  */
@@ -148,31 +149,32 @@ model Event {
   dates          EventDate[]
   prices         EventPrice[]
   registrations  Registration[]
+  entradas       Entrada[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
 
 model EventDate {
-  id            String         @id @default(cuid())
-  eventId       String
-  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  date          DateTime
+  id                  String         @id @default(cuid())
+  eventId             String
+  event               Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  date                DateTime
   // Último día cuando el torneo dura más de uno. Nulo = un solo día. La
   // parada de pádel se juega 14 y 15, y mostrar solo el 14 hacía que la
   // gente creyera que era un día suelto.
-  endDate       DateTime?
-  label         String
-  venue         String
-  imageUrl      String?
-  capacity      Int            @default(150)
-  reservedCount Int            @default(0)
+  endDate             DateTime?
+  label               String
+  venue               String
+  imageUrl            String?
+  capacity            Int            @default(150)
+  reservedCount       Int            @default(0)
   // Límite aparte solo para pádel PUBLICO: el resto de la capacidad queda
   // reservado para afiliados, patrocinadores y socios de club aunque el
   // público se agote. Nulo = sin límite propio (comparte todo el cupo).
   publicCapacity      Int?
-  publicReservedCount Int      @default(0)
-  isActive      Boolean        @default(true)
-  registrations Registration[]
+  publicReservedCount Int            @default(0)
+  isActive            Boolean        @default(true)
+  registrations       Registration[]
 
   @@unique([eventId, date])
 }
@@ -189,47 +191,47 @@ model EventPrice {
 }
 
 model Registration {
-  id           String             @id @default(cuid())
-  code         String             @unique
-  companyId    String
-  company      Company            @relation(fields: [companyId], references: [id])
-  eventId      String
-  event        Event              @relation(fields: [eventId], references: [id])
-  eventDateId  String
-  eventDate    EventDate          @relation(fields: [eventDateId], references: [id])
+  id                 String             @id @default(cuid())
+  code               String             @unique
+  companyId          String
+  company            Company            @relation(fields: [companyId], references: [id])
+  eventId            String
+  event              Event              @relation(fields: [eventId], references: [id])
+  eventDateId        String
+  eventDate          EventDate          @relation(fields: [eventDateId], references: [id])
   // Solo uno de estos dos aplica según el evento: affiliation para golf,
   // padelCategory para pádel.
-  affiliation  AffiliationType?
-  padelCategory PadelCategory?
+  affiliation        AffiliationType?
+  padelCategory      PadelCategory?
   // Pádel es abierto al público: quien juega invitado por un patrocinador no
   // paga y no se le genera proforma. sponsorRncVerified queda en false
   // cuando el RNC que dio no coincidió con ninguno de la lista real de
   // patrocinadores — no bloquea la inscripción, solo la deja marcada para
   // que el admin la revise a mano.
-  isSponsorGuest      Boolean            @default(false)
-  sponsorName         String?
-  sponsorRnc          String?
-  sponsorRncVerified  Boolean            @default(false)
+  isSponsorGuest     Boolean            @default(false)
+  sponsorName        String?
+  sponsorRnc         String?
+  sponsorRncVerified Boolean            @default(false)
   // Miembro de un club de pádel con convenio: 20% de descuento sobre la
   // tarifa (ver PADEL_CLUB_DISCOUNT_RATE). No es lo mismo que isSponsorGuest:
   // aquí sí se cobra y sí se genera proforma, solo que con descuento.
-  padelClub           PadelClub?
-  status       RegistrationStatus @default(PROFORMA_GENERADA)
-  quantity     Int
-  unitPriceUsd Decimal            @db.Decimal(10, 2)
-  totalUsd     Decimal            @db.Decimal(10, 2)
-  exchangeRate Decimal            @db.Decimal(10, 2)
-  totalDopRef  Decimal            @db.Decimal(12, 2)
-  participants Participant[]
-  proforma     Proforma?
-  history      StatusHistory[]
-  couponUsed   CouponRedemption?
+  padelClub          PadelClub?
+  status             RegistrationStatus @default(PROFORMA_GENERADA)
+  quantity           Int
+  unitPriceUsd       Decimal            @db.Decimal(10, 2)
+  totalUsd           Decimal            @db.Decimal(10, 2)
+  exchangeRate       Decimal            @db.Decimal(10, 2)
+  totalDopRef        Decimal            @db.Decimal(12, 2)
+  participants       Participant[]
+  proforma           Proforma?
+  history            StatusHistory[]
+  couponUsed         CouponRedemption?
   // Archivada: sale del panel y libera el cupo, pero la fila se conserva por
   // si hay que auditar un pago o recuperarla. Es la vía reversible; el
   // borrado real elimina la fila y no deja rastro.
-  archivedAt   DateTime?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  archivedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@index([companyId])
   @@index([eventDateId, status])
@@ -271,4 +273,60 @@ model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+enum EntradaTipo {
+  AFILIADO
+  EXTERNO
+}
+
+/**
+ * Entrada con QR para un evento ya pagado por fuera (ej. el conversatorio).
+ * El sistema solo emite, envía y valida: no cobra nada.
+ * El id ES el código que se imprime y viaja en el QR: 8 caracteres sin
+ * ambiguos (ver lib/entradas.ts), no un cuid, para poder dictarlo por
+ * teléfono si el QR no se lee.
+ * `ingresados` solo se mueve con UPDATE condicional (ver el check-in): dos
+ * celulares escaneando a la vez no pueden dejar pasar más gente que `cupos`.
+ */
+model Entrada {
+  id              String           @id
+  eventoId        String
+  evento          Event            @relation(fields: [eventoId], references: [id])
+  tipoTitular     EntradaTipo
+  afiliadoId      String?
+  afiliado        Affiliate?       @relation(fields: [afiliadoId], references: [id])
+  nombreTitular   String
+  correoDestino   String
+  telefono        String?
+  cupos           Int
+  ingresados      Int              @default(0)
+  anulada         Boolean          @default(false)
+  correoEnviadoAt DateTime?
+  // Último fallo al enviar el correo, para mostrarlo junto al botón de
+  // reenviar. Se limpia cuando un envío sale bien.
+  correoError     String?
+  creadaPorId     String?
+  creadaPor       User?            @relation(fields: [creadaPorId], references: [id])
+  createdAt       DateTime         @default(now())
+  ingresos        EntradaIngreso[]
+
+  @@index([eventoId])
+}
+
+/**
+ * Un registro por cada vez que alguien marca ingreso. Deshacer no borra: marca.
+ */
+model EntradaIngreso {
+  id          String    @id @default(cuid())
+  entradaId   String
+  entrada     Entrada   @relation(fields: [entradaId], references: [id], onDelete: Cascade)
+  cantidad    Int
+  // Quién lo marcó: el correo del usuario de staff, o "PIN" si entró con el
+  // PIN del evento (no hay usuario en ese caso).
+  staff       String
+  createdAt   DateTime  @default(now())
+  revertidoAt DateTime?
+
+  @@index([entradaId])
 }

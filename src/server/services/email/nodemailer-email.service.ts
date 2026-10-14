@@ -1,10 +1,12 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import type {
   EmailService,
+  EntradaEmailData,
   ProformaEmailData,
   StatusChangeEmailData,
 } from "./email.service";
 import {
+  renderEntradaEmail,
   renderProformaCreatedEmail,
   renderStatusChangedEmail,
 } from "./templates";
@@ -48,6 +50,18 @@ export class NodemailerEmailService implements EmailService {
       subject,
       text,
       html,
+    });
+  }
+
+  async sendEntrada(data: EntradaEmailData): Promise<void> {
+    const { html, text, subject } = renderEntradaEmail(data);
+    await this.transporter.sendMail({
+      from: this.from,
+      to: data.to,
+      subject,
+      text,
+      html,
+      attachments: [data.pdf],
     });
   }
 }

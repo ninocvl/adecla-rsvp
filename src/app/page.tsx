@@ -20,6 +20,8 @@ import { SponsorsMarquee } from "@/components/events/sponsors-marquee";
 import { MisionEmpresarialCard } from "@/components/events/mision-empresarial-card";
 import { EventCard } from "@/components/events/event-card";
 import { AlmuerzoMivedCard } from "@/components/events/almuerzo-mived-card";
+import { ConversatorioCard } from "@/components/events/conversatorio-card";
+import { CONVERSATORIO } from "@/lib/entradas";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,8 @@ export const dynamic = "force-dynamic";
 type ItemEvento =
   | { tipo: "evento"; key: string; fecha: number; card: LandingCard }
   | { tipo: "mision"; key: string; fecha: number }
-  | { tipo: "almuerzo"; key: string; fecha: number };
+  | { tipo: "almuerzo"; key: string; fecha: number }
+  | { tipo: "conversatorio"; key: string; fecha: number };
 
 // Las tres disciplinas de la fila de arriba. Pulsar una filtra la lista de
 // abajo en vez de llevarse a la persona a otra página: golf tiene dos
@@ -45,7 +48,10 @@ const DISCIPLINAS: Record<string, { nombre: string; incluye: (i: ItemEvento) => 
   },
   networking: {
     nombre: "Networking",
-    incluye: (i) => i.tipo === "mision" || i.tipo === "almuerzo",
+    incluye: (i) =>
+      i.tipo === "mision" ||
+      i.tipo === "almuerzo" ||
+      i.tipo === "conversatorio",
   },
 };
 
@@ -78,6 +84,11 @@ export default async function HomePage({
       key: "almuerzo-mived",
       fecha: new Date(`${ALMUERZO_MIVED.fechaISO}T12:00:00Z`).getTime(),
     },
+    {
+      tipo: "conversatorio" as const,
+      key: "conversatorio",
+      fecha: new Date(`${CONVERSATORIO.fechaISO}T12:00:00Z`).getTime(),
+    },
   ].sort((a, b) => a.fecha - b.fecha);
 
   const visibles = filtro ? items.filter(DISCIPLINAS[filtro].incluye) : items;
@@ -87,8 +98,13 @@ export default async function HomePage({
   // Lo que ya pasó deja de ser una oferta y pasa a ser memoria del año. Con
   // dos eventos vividos, mezclarlos con los que aún se venden obligaba a
   // leer la insignia de cada tarjeta para saber a cuál te puedes apuntar.
+  // Hora de República Dominicana (UTC-4): el conversatorio sigue vigente todo
+  // el día 7, no se mueve a "vivido" a las 8 p. m. del 6.
+  const conversatorioYaPaso =
+    new Date() > new Date(`${CONVERSATORIO.fechaISO}T23:59:59-04:00`);
   const yaPaso = (i: ItemEvento) =>
     i.tipo === "almuerzo" ||
+    (i.tipo === "conversatorio" && conversatorioYaPaso) ||
     (i.tipo === "evento" && !!i.card.isPast) ||
     (i.tipo === "mision" && misionYaPaso);
   const proximos = visibles.filter((i) => !yaPaso(i));
@@ -176,6 +192,8 @@ export default async function HomePage({
                       <MisionEmpresarialCard pasado={misionYaPaso} />
                     ) : item.tipo === "almuerzo" ? (
                       <AlmuerzoMivedCard />
+                    ) : item.tipo === "conversatorio" ? (
+                      <ConversatorioCard />
                     ) : (
                       <EventCard card={item.card} />
                     )}
@@ -204,6 +222,8 @@ export default async function HomePage({
                       <Reveal delayMs={i * 70} className="h-full">
                         {item.tipo === "almuerzo" ? (
                           <AlmuerzoMivedCard />
+                        ) : item.tipo === "conversatorio" ? (
+                          <ConversatorioCard pasado />
                         ) : item.tipo === "evento" ? (
                           <EventCard card={item.card} />
                         ) : (
@@ -265,6 +285,13 @@ export default async function HomePage({
               </a>
             </Reveal>
           </div>
+        </section>
+
+        {/* Solo la franja de logos, sin encabezado: el nombre y la
+            presentación de "Patrocinadores" ya salieron arriba, justo
+            después del hero — repetirlos aquí sería redundante. */}
+        <section className="border-t bg-secondary/40 py-10 scroll-mt-20">
+          <SponsorsMarquee />
         </section>
       </main>
       <Footer />

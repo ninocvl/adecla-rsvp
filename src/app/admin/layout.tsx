@@ -19,8 +19,10 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-dvh flex-col bg-muted/30">
-      <Navbar />
-      <div className="border-b bg-white">
+      <div className="print:hidden">
+        <Navbar />
+      </div>
+      <div className="border-b bg-white print:hidden">
         <nav className="mx-auto flex max-w-6xl gap-6 px-4 text-sm">
           <Link
             href="/admin"
@@ -45,6 +47,12 @@ export default async function AdminLayout({
             className="border-b-2 border-transparent py-3 font-medium hover:border-primary"
           >
             Cupones
+          </Link>
+          <Link
+            href="/admin/entradas"
+            className="border-b-2 border-transparent py-3 font-medium hover:border-primary"
+          >
+            Entradas
           </Link>
           <Link
             href="/admin/empresas"
