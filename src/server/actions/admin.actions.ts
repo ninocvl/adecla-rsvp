@@ -14,6 +14,7 @@ import {
 import type { Prisma } from "@/generated/prisma/client";
 import type { ProformaSnapshot } from "@/lib/pdf/proforma-types";
 import { puedeEditar } from "@/lib/permissions";
+import { enviarProformaPorCorreo } from "@/server/services/proforma-email";
 
 const changeStatusSchema = z.object({
   registrationId: z.string().min(1),
@@ -171,6 +172,26 @@ function revalidarPanel() {
   revalidatePath("/admin/inscripciones");
   revalidatePath("/admin/participantes");
   revalidatePath("/dashboard");
+}
+
+/**
+ * Reenvía el correo con la proforma a la empresa. El resultado (enviado o el
+ * motivo del fallo) queda en el historial de la inscripción.
+ */
+export async function reenviarProformaAction(
+  registrationId: string
+): Promise<RegistrationActionResult> {
+  const session = await auth();
+  if (!session?.user || !puedeEditar(session.user.role)) {
+    return { ok: false, error: "Solo el administrador puede reenviar correos." };
+  }
+  if (!registrationId) return { ok: false, error: "Datos inválidos." };
+
+  const r = await enviarProformaPorCorreo([registrationId], session.user.id);
+  revalidatePath(`/admin/inscripciones/${registrationId}`);
+  return r.ok
+    ? { ok: true }
+    : { ok: false, error: `El correo no salió: ${r.error}` };
 }
 
 /**

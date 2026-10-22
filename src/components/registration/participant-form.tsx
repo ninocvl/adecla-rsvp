@@ -14,10 +14,18 @@ export interface ParticipantValue {
   fullName: string;
   email?: string;
   phone?: string;
+  ghin?: string;
+  handicap?: string;
 }
 
 interface StepValues {
-  participants: { fullName: string; email: string; phone: string }[];
+  participants: {
+    fullName: string;
+    email: string;
+    phone: string;
+    ghin: string;
+    handicap: string;
+  }[];
 }
 
 // Valida solo los jugadores activos: con 1 participante el bloque 2 se ignora.
@@ -42,6 +50,8 @@ interface ParticipantFormProps {
   onCountChange: (count: 1 | 2 | undefined) => void;
   onBack: () => void;
   onNext: (participants: ParticipantValue[]) => void;
+  /** GHIN y handicap solo se piden en golf. */
+  mostrarGolf?: boolean;
 }
 
 export function ParticipantForm({
@@ -50,6 +60,7 @@ export function ParticipantForm({
   onCountChange,
   onBack,
   onNext,
+  mostrarGolf = false,
 }: ParticipantFormProps) {
   const schema = useMemo(() => makeStepSchema(count ?? 1), [count]);
 
@@ -64,6 +75,8 @@ export function ParticipantForm({
         fullName: defaultValues[i]?.fullName ?? "",
         email: defaultValues[i]?.email ?? "",
         phone: defaultValues[i]?.phone ?? "",
+        ghin: defaultValues[i]?.ghin ?? "",
+        handicap: defaultValues[i]?.handicap ?? "",
       })),
     },
   });
@@ -75,6 +88,12 @@ export function ParticipantForm({
         fullName: p.fullName.trim(),
         email: p.email.trim() || undefined,
         phone: p.phone.trim() || undefined,
+        ...(mostrarGolf
+          ? {
+              ghin: p.ghin.trim() || undefined,
+              handicap: p.handicap.trim().replace(",", ".") || undefined,
+            }
+          : {}),
       }))
     );
   }
@@ -173,6 +192,44 @@ export function ParticipantForm({
               />
             </div>
           </div>
+          {mostrarGolf && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor={`p${index}-ghin`}>
+                  GHIN{" "}
+                  <span className="text-muted-foreground">(opcional)</span>
+                </Label>
+                <Input
+                  id={`p${index}-ghin`}
+                  inputMode="numeric"
+                  placeholder="1234567"
+                  {...register(`participants.${index}.ghin`)}
+                />
+                {errors.participants?.[index]?.ghin && (
+                  <p className="text-sm text-destructive">
+                    {errors.participants[index]?.ghin?.message as string}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`p${index}-handicap`}>
+                  Handicap{" "}
+                  <span className="text-muted-foreground">(opcional)</span>
+                </Label>
+                <Input
+                  id={`p${index}-handicap`}
+                  inputMode="decimal"
+                  placeholder="12.4"
+                  {...register(`participants.${index}.handicap`)}
+                />
+                {errors.participants?.[index]?.handicap && (
+                  <p className="text-sm text-destructive">
+                    {errors.participants[index]?.handicap?.message as string}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </fieldset>
       ))}
 

@@ -422,6 +422,7 @@ export function RegistrationWizard({
                 count={participantCount}
                 onCountChange={setParticipantCount}
                 onBack={() => setStep(STEP_EMPRESA)}
+                mostrarGolf={!isPadelEvent}
                 onNext={(p) => {
                   setParticipants(p);
                   setStep(STEP_RESUMEN);
@@ -498,6 +499,16 @@ export function RegistrationWizard({
                         {participants.map((p, i) => (
                           <li key={i} className="font-medium">
                             {i + 1}. {p.fullName}
+                            {(p.ghin || p.handicap) && (
+                              <span className="block text-sm font-normal text-muted-foreground">
+                                {[
+                                  p.ghin && `GHIN ${p.ghin}`,
+                                  p.handicap && `Handicap ${p.handicap}`,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </span>
+                            )}
                           </li>
                         ))}
                       </ul>

@@ -11,23 +11,21 @@ import { normalizeRnc } from "@/lib/validations/registration.schema";
 // comparación siempre pasa por normalizeRnc(), así que el formato de aquí no
 // importa — pero copiarlo literal evita errores de transcripción al
 // concatenar dígitos a mano.
-export const SPONSORS: { name: string; rnc: string }[] = [
-  { name: "Cobatesa", rnc: "133720272" },
-  { name: "Vemp Desing Solutions", rnc: "132-136-063" },
-  { name: "LCI Distributors Dominicana SRL", rnc: "131527231" },
-  { name: "Systemio SRL", rnc: "132183533" },
+export const SPONSORS: { name: string; rnc?: string }[] = [
   { name: "Grupo Estrella", rnc: "102-318816" },
-  { name: "Horizon Consultants", rnc: "124006392" },
-  { name: "Suplementos Industriales Punta Cana, S.R.L.", rnc: "130321108" },
-  { name: "Gemsa", rnc: "130389209" },
-  { name: "Picky Plants SRL", rnc: "1-24-02299-1" },
-  { name: "Metalsider", rnc: "1-32-11355-1" },
-  { name: "Banco Múltiple Vimenca", rnc: "101021411" },
-  { name: "Nardi", rnc: "130362483" },
+  // Sin RNC en el Excel de patrocinios: se elige igual, y quien se inscribe
+  // escribe el RNC (queda marcado para revisión hasta que se agregue aquí).
+  { name: "Mived" },
+  { name: "IDEA (Idea Diseño y Supervisión SRL)", rnc: "130687161" },
+  { name: "Alaver", rnc: "4-03-00063-1" },
   { name: "DOWNTOWN SOLUTIONS SERVICES YAR, SRL", rnc: "1-31-31251-9" },
+  { name: "Sumo Constructora, S.R.L.", rnc: "132-14375-2" },
+  { name: "Depósito Ferretero" },
 ];
 
 export function findMatchingSponsor(rnc: string) {
   const target = normalizeRnc(rnc);
-  return SPONSORS.find((s) => normalizeRnc(s.rnc) === target) ?? null;
+  return (
+    SPONSORS.find((s) => s.rnc && normalizeRnc(s.rnc) === target) ?? null
+  );
 }

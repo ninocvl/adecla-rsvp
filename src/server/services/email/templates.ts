@@ -4,6 +4,7 @@ import type {
   StatusChangeEmailData,
 } from "./email.service";
 import { CONVERSATORIO } from "@/lib/entradas";
+import { ADECLA } from "@/lib/constants";
 
 // URL estable de Vercel: funciona siempre, incluso si más adelante se agrega
 // un dominio propio como alias adicional.
@@ -78,7 +79,7 @@ export function renderProformaCreatedEmail(
   const html = layout(
     `Proforma ${data.registrationCode}`,
     `
-    <h1 style="margin:0 0 8px;font-family:${FONT_DISPLAY};font-size:24px;font-weight:600;color:${COLOR.ink};letter-spacing:-0.01em;">Inscripción confirmada</h1>
+    <h1 style="margin:0 0 8px;font-family:${FONT_DISPLAY};font-size:24px;font-weight:600;color:${COLOR.ink};letter-spacing:-0.01em;">Recibimos tu inscripción</h1>
     <p style="margin:0 0 24px;font-family:${FONT_BODY};font-size:15px;line-height:1.6;color:${COLOR.inkSoft};">
       Hola ${data.contactName}, recibimos la inscripción de <strong style="color:${COLOR.ink};">${data.companyName}</strong> para <strong style="color:${COLOR.ink};">${data.eventName}</strong>.
     </p>
@@ -94,6 +95,9 @@ export function renderProformaCreatedEmail(
         </td>
       </tr>
     </table>
+    <p style="margin:0 0 12px;font-family:${FONT_BODY};font-size:14px;line-height:1.6;color:${COLOR.ink};">
+      Tu cupo se confirma cuando recibamos el pago. Haz la transferencia con los datos de la proforma y envíanos el comprobante respondiendo este correo o por WhatsApp al ${ADECLA.contacto.telefono}.
+    </p>
     <p style="margin:0;font-family:${FONT_BODY};font-size:13px;line-height:1.6;color:${COLOR.inkFaint};">
       Los pagos se realizan en pesos dominicanos utilizando la tasa del día. Si tienes alguna pregunta, responde este correo.
     </p>
@@ -107,8 +111,9 @@ export function renderProformaCreatedEmail(
     `Código de inscripción: ${data.registrationCode}`,
     `Total: ${data.totalUsd} (referencia ${data.totalDopRef})`,
     "",
-    "Los pagos se realizan en pesos dominicanos utilizando la tasa del día.",
     "Adjuntamos la proforma oficial en PDF.",
+    `Tu cupo se confirma cuando recibamos el pago. Haz la transferencia con los datos de la proforma y envíanos el comprobante respondiendo este correo o por WhatsApp al ${ADECLA.contacto.telefono}.`,
+    "Los pagos se realizan en pesos dominicanos utilizando la tasa del día.",
     "",
     "ADECLA",
   ].join("\n");

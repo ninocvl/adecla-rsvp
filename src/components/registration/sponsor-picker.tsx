@@ -146,10 +146,12 @@ export function SponsorPicker({
             ) : (
               resultados.map((s) => (
                 <button
-                  key={s.rnc}
+                  key={s.name}
                   type="button"
                   onClick={() => {
-                    onPick(s);
+                    onPick({ name: s.name, rnc: s.rnc ?? "" });
+                    // Sin RNC en la lista: se pasa directo a pedirlo.
+                    if (!s.rnc) setManual(true);
                     setSearch(s.name);
                     setAbierto(false);
                     onAcknowledge(false);
@@ -169,10 +171,24 @@ export function SponsorPicker({
       )}
 
       {elegido ? (
-        <p className="text-sm text-primary">
-          RNC <span className="font-mono">{sponsorRnc}</span>. No hace falta
-          que lo escribas.
-        </p>
+        <div className="space-y-1 text-sm">
+          <p className="text-primary">
+            RNC <span className="font-mono">{sponsorRnc}</span>. No hace falta
+            que lo escribas.
+          </p>
+          {/* Los datos salen de la lista de ADECLA; si alguno cambió, se
+              corrige aquí sin perder lo elegido (la vía manual los conserva). */}
+          <p className="text-muted-foreground">
+            ¿Es correcto?{" "}
+            <button
+              type="button"
+              className="underline underline-offset-4 hover:text-foreground"
+              onClick={() => setManual(true)}
+            >
+              No, corregir el nombre o el RNC
+            </button>
+          </p>
+        </div>
       ) : (
         <button
           type="button"

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   archiveRegistrationAction,
+  reenviarProformaAction,
   restoreRegistrationAction,
 } from "@/server/actions/admin.actions";
 import { DeleteDialog } from "./delete-registration-dialog";
@@ -19,6 +20,8 @@ interface Props {
   registrationId: string;
   code: string;
   archivada: boolean;
+  /** Los invitados de patrocinador no tienen proforma que reenviar. */
+  conProforma?: boolean;
 }
 
 /**
@@ -34,6 +37,7 @@ export function RegistrationRowMenu({
   registrationId,
   code,
   archivada,
+  conProforma = true,
 }: Props) {
   const [borrarAbierto, setBorrarAbierto] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -42,6 +46,14 @@ export function RegistrationRowMenu({
     startTransition(async () => {
       const r = await archiveRegistrationAction(registrationId);
       if (r.ok) toast.success(`${code} archivada. Liberó sus cupos.`);
+      else toast.error(r.error);
+    });
+  }
+
+  function reenviar() {
+    startTransition(async () => {
+      const r = await reenviarProformaAction(registrationId);
+      if (r.ok) toast.success(`Proforma de ${code} reenviada.`);
       else toast.error(r.error);
     });
   }
@@ -81,6 +93,11 @@ export function RegistrationRowMenu({
           >
             Ver proforma
           </DropdownMenuItem>
+          {conProforma && (
+            <DropdownMenuItem onClick={reenviar} className="px-2 py-1.5">
+              Reenviar proforma
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={archivada ? restaurar : archivar}
             className="px-2 py-1.5"

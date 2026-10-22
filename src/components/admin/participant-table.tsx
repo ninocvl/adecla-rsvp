@@ -97,7 +97,16 @@ export function ParticipantTable({
                 >
                   {i + 1}
                 </TableCell>
-                <TableCell className="font-medium">{p.fullName}</TableCell>
+                <TableCell className="font-medium">
+                  {p.fullName}
+                  {(p.ghin || p.handicap) && (
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {[p.ghin && `GHIN ${p.ghin}`, p.handicap && `HCP ${p.handicap}`]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell className="whitespace-nowrap">
                   {primeroDelGrupo ? (
                     <>

@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { emailService } from "@/server/services/email";
-import { renderProformaPdf } from "@/lib/pdf/render-proforma-pdf";
+import { enviarProformaPorCorreo } from "@/server/services/proforma-email";
 import type { ProformaSnapshot } from "@/lib/pdf/proforma-types";
 import {
   createRegistrationSchema,
@@ -24,7 +23,6 @@ import {
   PADEL_CLUB_DISCOUNT_RATE,
   PADEL_PRICE_USD,
 } from "@/lib/constants";
-import { formatDop, formatEventDate, formatUsd } from "@/lib/format";
 
 export type CreateRegistrationResult =
   | { ok: true; registrations: { registrationId: string; code: string }[] }
@@ -371,6 +369,8 @@ export async function createRegistrationAction(
                 fullName: p.fullName,
                 email: p.email,
                 phone: p.phone,
+                // Solo golf: pádel no pide GHIN ni handicap.
+                ...(isPadel ? {} : { ghin: p.ghin, handicap: p.handicap }),
                 position: index + 1,
               })),
             },
@@ -471,43 +471,13 @@ export async function createRegistrationAction(
     // inscripción: se genera y se envía sin esperar su resultado. No aplica
     // para invitados de patrocinador, que no tienen proforma que cobrar.
     if (!isSponsorGuest) {
-      // Cada fecha puede tener su propio total (una está exenta de ITBIS y
-      // otra no), así que el total del correo se suma desde los snapshots
-      // reales en vez de asumir el mismo monto multiplicado por la cantidad
-      // de fechas.
-      const emailTotalUsd = result.registrations.reduce(
-        (sum, r) => sum + Number(r.snapshot.totalUsd),
-        0
-      );
-      const emailTotalDopRef = result.registrations.reduce(
-        (sum, r) => sum + Number(r.snapshot.totalDopRef),
-        0
-      );
       // after() mantiene viva la función en Vercel hasta que el correo salga,
       // sin hacer esperar a quien se inscribe. Una promesa suelta se puede
-      // congelar al devolver la respuesta y el correo nunca sale.
+      // congelar al devolver la respuesta y el correo nunca sale. El
+      // resultado (enviado o el motivo del fallo) queda en el historial.
+      const ids = result.registrations.map((r) => r.registrationId);
       after(async () => {
-        try {
-          const attachments = await Promise.all(
-            result.registrations.map(async (r) => ({
-              filename: `proforma-${r.code}.pdf`,
-              content: await renderProformaPdf(r.snapshot),
-            }))
-          );
-          await emailService.sendProformaCreated({
-            to: result.company.email,
-            companyName: result.company.legalName,
-            contactName: result.company.contactName,
-            registrationCode: result.registrations.map((r) => r.code).join(", "),
-            eventName: event.name,
-            eventDate: eventDates.map((d) => formatEventDate(d.date)).join(" y "),
-            totalUsd: formatUsd(emailTotalUsd),
-            totalDopRef: formatDop(emailTotalDopRef),
-            attachments,
-          });
-        } catch (e) {
-          console.error("Error enviando correo de proforma:", e);
-        }
+        await enviarProformaPorCorreo(ids);
       });
     }
 

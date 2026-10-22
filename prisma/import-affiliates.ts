@@ -24,6 +24,9 @@ interface AffiliateRow {
   // renombra la fila existente en vez de crear otra, para no partirle el
   // historial ni el cupón de pareja gratis a la empresa.
   previousName?: string | null;
+  // Solo dígitos (9 u 11). null si el listado no lo trae: en ese caso no se
+  // pisa un RNC que ya estuviera guardado.
+  rnc?: string | null;
   affiliationType: "CONSTRUCTOR" | "PROVEEDOR" | "DESARROLLADOR" | null;
   contactName: string | null;
   phone: string | null;
@@ -70,6 +73,7 @@ async function main() {
     const data = {
       sourceId: row.sourceId,
       name: row.name,
+      ...(row.rnc ? { rnc: row.rnc } : {}),
       affiliationType: row.affiliationType,
       contactName: row.contactName,
       phone: row.phone,

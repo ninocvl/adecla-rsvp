@@ -99,6 +99,7 @@ export function RegistrationTable({
                       registrationId={r.id}
                       code={r.code}
                       archivada={!!r.archivedAt}
+                      conProforma={!r.isSponsorGuest}
                     />
                   ) : (
                     <Button

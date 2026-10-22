@@ -35,6 +35,13 @@ import {
 type PadelParticipantType = (typeof PADEL_PARTICIPANT_TYPES)[number];
 type GolfSituation = "AFILIADO" | "PATROCINADOR" | "PUBLICO";
 
+const CORREO = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/;
+
+/** El listado de socios a veces trae varios correos juntos: se ofrece el primero. */
+function primerCorreo(valor: string | null | undefined): string | null {
+  return valor?.match(CORREO)?.[0] ?? null;
+}
+
 interface FieldProps {
   id: keyof CompanyStepInput;
   label: string;
@@ -124,12 +131,19 @@ export function CompanyStep({
   // envío, pero exige que la persona confirme explícitamente antes de dejarla
   // seguir. El admin igual la ve marcada para revisarla (sponsorRncVerified).
   const [sponsorRncAcknowledged, setSponsorRncAcknowledged] = useState(false);
+  // Correo y RNC que vienen del listado de socios. El correo se muestra con
+  // la pregunta "¿es correcto?"; si no lo es, se libera el campo para cambiarlo.
+  const [correoDeLista, setCorreoDeLista] = useState<string | null>(null);
+  const [correoConfirmado, setCorreoConfirmado] = useState(false);
+  const [cambiandoCorreo, setCambiandoCorreo] = useState(false);
+  const [rncDeLista, setRncDeLista] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
     setValue,
+    getValues,
     watch,
     formState: { errors },
   } = useForm<CompanyStepInput>({
@@ -191,7 +205,7 @@ export function CompanyStep({
       setValue("wantsToAffiliate", false);
     } else {
       setValue("affiliateId", undefined);
-      setSelectedAffiliate(null);
+      soltarEmpresa();
     }
     if (value !== "PATROCINADOR") {
       setValue("sponsorName", "");
@@ -209,7 +223,7 @@ export function CompanyStep({
     setValue("wantsToAffiliate", false);
     setValue("sponsorName", "");
     setValue("sponsorRnc", "");
-    setSelectedAffiliate(null);
+    soltarEmpresa();
     setSearch("");
     setSponsorRncAcknowledged(false);
   }
@@ -220,7 +234,7 @@ export function CompanyStep({
     setValue("isAffiliated", value === "AFILIADO");
     setSponsorRncAcknowledged(false);
     if (value !== "AFILIADO") {
-      setSelectedAffiliate(null);
+      soltarEmpresa();
       setSearch("");
       setValue("affiliateId", undefined);
       setValue("couponCode", "");
@@ -243,7 +257,7 @@ export function CompanyStep({
     setValue("padelClub", undefined);
     setValue("sponsorName", "");
     setValue("sponsorRnc", "");
-    setSelectedAffiliate(null);
+    soltarEmpresa();
     setSearch("");
     setSponsorRncAcknowledged(false);
   }
@@ -261,6 +275,44 @@ export function CompanyStep({
     if (affiliate.affiliationType) {
       setValue("affiliationType", affiliate.affiliationType);
     }
+
+    // Lo que ADECLA ya tiene de la empresa se ofrece prellenado: el RNC se
+    // puede corregir y el correo se pregunta antes de darlo por bueno.
+    const correo = primerCorreo(affiliate.email);
+    setCorreoDeLista(correo);
+    setCorreoConfirmado(false);
+    setCambiandoCorreo(false);
+    setValue("email", correo ?? "", { shouldValidate: !!correo });
+    setRncDeLista(affiliate.rnc ?? null);
+    setValue("rnc", affiliate.rnc ?? "", { shouldValidate: !!affiliate.rnc });
+  }
+
+  // Si la persona borra o cambia la empresa elegida, lo que vino de la empresa
+  // anterior no puede quedarse en el formulario.
+  function soltarEmpresa() {
+    setSelectedAffiliate(null);
+    if (correoDeLista && getValues("email") === correoDeLista) {
+      setValue("email", "");
+    }
+    if (rncDeLista && getValues("rnc") === rncDeLista) {
+      setValue("rnc", "");
+    }
+    setCorreoDeLista(null);
+    setCorreoConfirmado(false);
+    setCambiandoCorreo(false);
+    setRncDeLista(null);
+  }
+
+  function cambiarCorreo() {
+    setCambiandoCorreo(true);
+    setValue("email", "");
+    setTimeout(() => document.getElementById("email")?.focus(), 0);
+  }
+
+  function usarCorreoDeLista() {
+    setCambiandoCorreo(false);
+    setCorreoConfirmado(true);
+    setValue("email", correoDeLista ?? "", { shouldValidate: true });
   }
 
   // Para un miembro conocido, la categoría ya está fijada en el registro de
@@ -268,6 +320,49 @@ export function CompanyStep({
   const affiliationTypeLocked = !!selectedAffiliate?.affiliationType;
 
   function renderField(field: FieldProps, disabled = false) {
+    if (field.id === "email" && correoDeLista && !cambiandoCorreo) {
+      return (
+        <div key={field.id} className="space-y-2">
+          <Label htmlFor={field.id}>{field.label}</Label>
+          <Input
+            id={field.id}
+            type="email"
+            readOnly
+            autoComplete={field.autoComplete}
+            {...register("email")}
+          />
+          <div className="space-y-2 rounded-lg border bg-muted/40 p-3 text-sm">
+            <p>
+              {correoConfirmado
+                ? "Listo, usaremos este correo."
+                : "Este es el correo que tenemos de tu empresa. ¿Es correcto?"}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {!correoConfirmado && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCorreoConfirmado(true)}
+                >
+                  Sí, es correcto
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={cambiarCorreo}
+              >
+                No, usar otro correo
+              </Button>
+            </div>
+          </div>
+          {errors.email && (
+            <p className="text-sm text-destructive">{errors.email.message}</p>
+          )}
+        </div>
+      );
+    }
     return (
       <div key={field.id} className="space-y-2">
         <Label htmlFor={field.id}>{field.label}</Label>
@@ -282,6 +377,21 @@ export function CompanyStep({
         {errors[field.id] && (
           <p className="text-sm text-destructive">
             {errors[field.id]?.message as string}
+          </p>
+        )}
+        {field.id === "email" && correoDeLista && cambiandoCorreo && (
+          <button
+            type="button"
+            onClick={usarCorreoDeLista}
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            Volver al correo que tiene ADECLA ({correoDeLista})
+          </button>
+        )}
+        {field.id === "rnc" && rncDeLista && (
+          <p className="text-xs text-muted-foreground">
+            Lo tomamos de tu registro de membresía. Corrígelo si no es el
+            de tu empresa.
           </p>
         )}
       </div>
@@ -339,7 +449,7 @@ export function CompanyStep({
                   onChange={(e) => {
                     setSearch(e.target.value);
                     setComboboxOpen(true);
-                    if (selectedAffiliate) setSelectedAffiliate(null);
+                    if (selectedAffiliate) soltarEmpresa();
                   }}
                   onFocus={() => setComboboxOpen(true)}
                   autoComplete="off"
@@ -568,7 +678,7 @@ export function CompanyStep({
                   onChange={(e) => {
                     setSearch(e.target.value);
                     setComboboxOpen(true);
-                    if (selectedAffiliate) setSelectedAffiliate(null);
+                    if (selectedAffiliate) soltarEmpresa();
                   }}
                   onFocus={() => setComboboxOpen(true)}
                   autoComplete="off"

@@ -7,6 +7,7 @@ export async function getActiveAffiliates() {
     select: {
       id: true,
       name: true,
+      rnc: true,
       affiliationType: true,
       contactName: true,
       phone: true,

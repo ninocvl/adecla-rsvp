@@ -56,6 +56,34 @@ export const participantSchema = z.object({
     .max(20, "Máximo 20 caracteres")
     .optional()
     .transform((v) => (v === "" ? undefined : v)),
+  // Solo golf, y opcionales: no todo jugador tiene GHIN. Se validan al
+  // escribirlos porque un número mal tecleado no se nota hasta el día del
+  // torneo.
+  ghin: z
+    .union([
+      z
+        .string()
+        .trim()
+        .regex(/^\d{5,10}$/, "El GHIN son solo números (de 5 a 10 dígitos)"),
+      z.literal(""),
+    ])
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+  // Índice de handicap: 0 a 54, un decimal, y "+" para los de scratch hacia
+  // arriba (ej. +1.2). Acepta coma o punto y se guarda con punto.
+  handicap: z
+    .union([
+      z
+        .string()
+        .trim()
+        .regex(
+          /^\+?\d{1,2}([.,]\d)?$/,
+          "Escribe el handicap como 12.4 (o +1.2 si es positivo)"
+        ),
+      z.literal(""),
+    ])
+    .optional()
+    .transform((v) => (v ? v.replace(",", ".") : undefined)),
 });
 
 export type ParticipantInput = z.input<typeof participantSchema>;

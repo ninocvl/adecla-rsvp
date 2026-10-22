@@ -169,7 +169,12 @@ export async function getWizardEvents(): Promise<WizardEvent[]> {
     orderBy: { createdAt: "asc" },
   });
 
-  return events.map((event) => ({
+  // Un torneo sin ninguna fecha por venir ya terminó (pádel, por ejemplo):
+  // ofrecerlo en el formulario solo lo deja elegible sin nada que reservar y
+  // hace dudar a quien viene a inscribirse en golf.
+  return events
+    .filter((event) => event.dates.length > 0)
+    .map((event) => ({
     id: event.id,
     slug: event.slug,
     name: event.name,

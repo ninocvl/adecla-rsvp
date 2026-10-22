@@ -103,6 +103,9 @@ model Affiliate {
   id               String            @id @default(cuid())
   sourceId         String?
   name             String
+  // Solo dígitos, sin guiones. Viene del listado de socios; se ofrece en el
+  // formulario para que la empresa no lo teclee (y lo confirme si cambió).
+  rnc              String?
   affiliationType  AffiliationType?
   contactName      String?
   phone            String?
@@ -245,6 +248,11 @@ model Participant {
   fullName       String
   email          String?
   phone          String?
+  // Solo golf. GHIN es el número de la federación (dígitos); handicap es el
+  // índice tal como lo escribe el jugador, con coma o punto y "+" si es de
+  // scratch para arriba (ej. "+1.2"), por eso va como texto y no como número.
+  ghin           String?
+  handicap       String?
   position       Int          @default(1)
 }
 

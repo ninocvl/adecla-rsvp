@@ -19,6 +19,7 @@ import {
 import { StatusBadge } from "@/components/shared/status-badge";
 import { StatusChangeDialog } from "@/components/admin/status-change-dialog";
 import { CategoriaChangeDialog } from "@/components/admin/categoria-change-dialog";
+import { ReenviarProformaButton } from "@/components/admin/reenviar-proforma-button";
 import { auth } from "@/auth";
 import { puedeEditar } from "@/lib/permissions";
 
@@ -121,10 +122,18 @@ export default async function AdminInscripcionDetallePage({
                 <span className="font-medium">
                   {p.position}. {p.fullName}
                 </span>
-                {(p.email || p.phone) && (
+                {(p.email || p.phone || p.ghin || p.handicap) && (
                   <span className="text-muted-foreground">
                     {" "}
-                    · {[p.email, p.phone].filter(Boolean).join(" · ")}
+                    ·{" "}
+                    {[
+                      p.email,
+                      p.phone,
+                      p.ghin && `GHIN ${p.ghin}`,
+                      p.handicap && `Handicap ${p.handicap}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 )}
               </li>
@@ -227,9 +236,11 @@ export default async function AdminInscripcionDetallePage({
             {registration.history.map((h) => (
               <li key={h.id} className="flex justify-between gap-3">
                 <span>
-                  {h.fromStatus
-                    ? `${STATUS_LABELS[h.fromStatus]} → ${STATUS_LABELS[h.toStatus]}`
-                    : STATUS_LABELS[h.toStatus]}
+                  {h.fromStatus && h.fromStatus === h.toStatus
+                    ? "Correo"
+                    : h.fromStatus
+                      ? `${STATUS_LABELS[h.fromStatus]} → ${STATUS_LABELS[h.toStatus]}`
+                      : STATUS_LABELS[h.toStatus]}
                   {h.changedBy && (
                     <span className="text-muted-foreground">
                       {" "}
@@ -249,7 +260,13 @@ export default async function AdminInscripcionDetallePage({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        {!registration.isSponsorGuest && editable && (
+          <ReenviarProformaButton
+            registrationId={registration.id}
+            email={registration.company.email}
+          />
+        )}
         {!registration.isSponsorGuest && (
           <Button
             nativeButton={false}
